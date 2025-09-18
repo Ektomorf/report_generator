@@ -1,0 +1,333 @@
+{
+    "created": 1758119517.3248618,
+    "duration": 119.48911118507385,
+    "exitcode": 2,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 4,
+        "total": 4,
+        "collected": 5
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 411
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 396
+                },
+                {
+                    "nodeid": "::test_fwd_enable",
+                    "type": "Function",
+                    "lineno": 158
+                },
+                {
+                    "nodeid": "::test_fwd_enable_all",
+                    "type": "Function",
+                    "lineno": 225
+                },
+                {
+                    "nodeid": "::test_fwd_freq_sweep",
+                    "type": "Function",
+                    "lineno": 101
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 411,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4360616200137883,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 60.09196515195072,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.040530654950998724,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 396,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00599023699760437,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 2.027547535020858,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.0035275210393592715,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable",
+            "lineno": 158,
+            "outcome": "passed",
+            "keywords": [
+                "test_fwd_enable",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 8.321858753915876,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 33.31651374907233,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "test_fwd_enable",
+                        "msg": "Found highest peak at 10.847500 GHz, -70.48 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758119471.6052368,
+                        "msecs": 605.0,
+                        "relativeCreated": 73959.58089828491,
+                        "thread": 135023780388864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1389363,
+                        "asctime": "15:31:11"
+                    },
+                    {
+                        "name": "test_fwd_enable",
+                        "msg": "Found highest peak at 11.800000 GHz, -70.30 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758119475.996883,
+                        "msecs": 996.0,
+                        "relativeCreated": 78351.2270450592,
+                        "thread": 135023780388864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1389363,
+                        "asctime": "15:31:15"
+                    },
+                    {
+                        "name": "test_fwd_enable",
+                        "msg": "Found highest peak at 12.892500 GHz, -70.39 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758119480.117078,
+                        "msecs": 117.0,
+                        "relativeCreated": 82471.42219543457,
+                        "thread": 135023780388864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1389363,
+                        "asctime": "15:31:20"
+                    },
+                    {
+                        "name": "test_fwd_enable",
+                        "msg": "Found highest peak at 11.800000 GHz, -66.08 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758119484.245589,
+                        "msecs": 245.0,
+                        "relativeCreated": 86599.93314743042,
+                        "thread": 135023780388864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1389363,
+                        "asctime": "15:31:24"
+                    },
+                    {
+                        "name": "test_fwd_enable",
+                        "msg": "Found highest peak at 11.800000 GHz, -55.63 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758119488.3713944,
+                        "msecs": 371.0,
+                        "relativeCreated": 90725.73852539062,
+                        "thread": 135023780388864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1389363,
+                        "asctime": "15:31:28"
+                    },
+                    {
+                        "name": "test_fwd_enable",
+                        "msg": "Found highest peak at 11.222500 GHz, -57.43 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758119492.4978755,
+                        "msecs": 497.0,
+                        "relativeCreated": 94852.219581604,
+                        "thread": 135023780388864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1389363,
+                        "asctime": "15:31:32"
+                    },
+                    {
+                        "name": "test_fwd_enable",
+                        "msg": "Found highest peak at 11.122500 GHz, -70.75 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758119496.641695,
+                        "msecs": 641.0,
+                        "relativeCreated": 98996.03915214539,
+                        "thread": 135023780388864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1389363,
+                        "asctime": "15:31:36"
+                    },
+                    {
+                        "name": "test_fwd_enable",
+                        "msg": "Found highest peak at 11.410000 GHz, -60.64 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758119500.7857473,
+                        "msecs": 785.0,
+                        "relativeCreated": 103140.09141921997,
+                        "thread": 135023780388864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1389363,
+                        "asctime": "15:31:40"
+                    }
+                ]
+            },
+            "teardown": {
+                "duration": 0.6585177490487695,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable_all",
+            "lineno": 225,
+            "outcome": "passed",
+            "keywords": [
+                "test_fwd_enable_all",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 6.119520167005248,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

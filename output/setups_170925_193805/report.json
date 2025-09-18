@@ -1,0 +1,260 @@
+{
+    "created": 1758134295.8401713,
+    "duration": 9.748119831085205,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "error": 7,
+        "total": 7,
+        "collected": 7
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 516
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 494
+                },
+                {
+                    "nodeid": "::test_fwd_defaults",
+                    "type": "Function",
+                    "lineno": 365
+                },
+                {
+                    "nodeid": "::test_fwd_disable_all",
+                    "type": "Function",
+                    "lineno": 251
+                },
+                {
+                    "nodeid": "::test_fwd_enable",
+                    "type": "Function",
+                    "lineno": 216
+                },
+                {
+                    "nodeid": "::test_fwd_enable_all",
+                    "type": "Function",
+                    "lineno": 305
+                },
+                {
+                    "nodeid": "::test_fwd_freq_sweep",
+                    "type": "Function",
+                    "lineno": 142
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 516,
+            "outcome": "error",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4389347729738802,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/rf_matrix/rf_matrix_driver.py",
+                    "lineno": 31,
+                    "message": "devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+                },
+                "longrepr": "E   ConnectionRefusedError: [Errno 111] Connection refused\n\nDuring handling of the above exception, another exception occurred:\nE   devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+            },
+            "teardown": {
+                "duration": 0.03873567597474903,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 494,
+            "outcome": "error",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00421565305441618,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/rf_matrix/rf_matrix_driver.py",
+                    "lineno": 31,
+                    "message": "devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+                },
+                "longrepr": "E   ConnectionRefusedError: [Errno 111] Connection refused\n\nDuring handling of the above exception, another exception occurred:\nE   devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+            },
+            "teardown": {
+                "duration": 0.0027663500513881445,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_defaults",
+            "lineno": 365,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_defaults",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.437233310076408,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/rf_matrix/rf_matrix_driver.py",
+                    "lineno": 31,
+                    "message": "devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+                },
+                "longrepr": "E   ConnectionRefusedError: [Errno 111] Connection refused\n\nDuring handling of the above exception, another exception occurred:\nE   devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+            },
+            "teardown": {
+                "duration": 0.03808206599205732,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_disable_all",
+            "lineno": 251,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_disable_all",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.433806704939343,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/rf_matrix/rf_matrix_driver.py",
+                    "lineno": 31,
+                    "message": "devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+                },
+                "longrepr": "E   ConnectionRefusedError: [Errno 111] Connection refused\n\nDuring handling of the above exception, another exception occurred:\nE   devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+            },
+            "teardown": {
+                "duration": 0.03771646390669048,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable",
+            "lineno": 216,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_enable",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4344332810724154,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/rf_matrix/rf_matrix_driver.py",
+                    "lineno": 31,
+                    "message": "devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+                },
+                "longrepr": "E   ConnectionRefusedError: [Errno 111] Connection refused\n\nDuring handling of the above exception, another exception occurred:\nE   devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+            },
+            "teardown": {
+                "duration": 0.03828287497162819,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable_all",
+            "lineno": 305,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_enable_all",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.437775359954685,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/rf_matrix/rf_matrix_driver.py",
+                    "lineno": 31,
+                    "message": "devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+                },
+                "longrepr": "E   ConnectionRefusedError: [Errno 111] Connection refused\n\nDuring handling of the above exception, another exception occurred:\nE   devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+            },
+            "teardown": {
+                "duration": 0.037878178991377354,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_freq_sweep",
+            "lineno": 142,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_freq_sweep",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4302867070073262,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/rf_matrix/rf_matrix_driver.py",
+                    "lineno": 31,
+                    "message": "devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+                },
+                "longrepr": "E   ConnectionRefusedError: [Errno 111] Connection refused\n\nDuring handling of the above exception, another exception occurred:\nE   devices.rf_matrix.rf_matrix_driver.RFMatrixConnectionError: TCP connect failed: [Errno 111] Connection refused"
+            },
+            "teardown": {
+                "duration": 0.0381819560425356,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

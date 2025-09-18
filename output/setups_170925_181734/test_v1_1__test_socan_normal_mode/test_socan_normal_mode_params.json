@@ -1,0 +1,8 @@
+{
+	"params": {
+		"device": "soCAN",
+		"dev_str": "",
+		"fwd_address": 13,
+		"rtn_address": 3
+	}
+}
