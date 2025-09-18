@@ -213,17 +213,23 @@ class HTMLReportGenerator:
         
         # Handle different value types
         if isinstance(value, dict):
-            return str(value)
+            content = str(value)
+            # Wrap large dict content in scrollable div
+            if len(content) > 100:
+                return f'<div class="cell-content">{content}</div>'
+            return content
         elif isinstance(value, list):
-            # For lists, show count or truncated content
+            # For lists, show count or full content if small
             if len(value) > 10:
-                return f"[{len(value)} items]"
-            elif len(str(value)) > 100:
-                return f"{str(value)[:100]}..."
-            return str(value)
-        elif isinstance(value, str) and len(value) > 150:
-            # Truncate long strings
-            return f"{value[:150]}..."
+                content = f"[{len(value)} items]"
+            else:
+                content = str(value)
+                if len(content) > 100:
+                    content = f'<div class="cell-content">{content}</div>'
+            return content
+        elif isinstance(value, str) and len(value) > 100:
+            # Wrap long strings in scrollable div
+            return f'<div class="cell-content">{value}</div>'
         
         # Special formatting for specific keys
         if 'peak_frequency' in key.lower() and isinstance(value, (int, float)):
@@ -435,6 +441,36 @@ class HTMLReportGenerator:
             vertical-align: top;
             word-wrap: break-word;
             max-width: 200px;  /* Prevent columns from becoming too wide */
+            max-height: 120px;  /* Limit cell height */
+            overflow: auto;     /* Add scrolling for overflow content */
+            position: relative;
+        }}
+        
+        /* Scrollable content wrapper for cells with large data */
+        .cell-content {{
+            max-height: 100px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }}
+        
+        .cell-content::-webkit-scrollbar {{
+            width: 6px;
+        }}
+        
+        .cell-content::-webkit-scrollbar-track {{
+            background: #f1f1f1;
+            border-radius: 3px;
+        }}
+        
+        .cell-content::-webkit-scrollbar-thumb {{
+            background: #888;
+            border-radius: 3px;
+        }}
+        
+        .cell-content::-webkit-scrollbar-thumb:hover {{
+            background: #555;
         }}
         
         th:last-child, td:last-child {{
@@ -477,7 +513,14 @@ class HTMLReportGenerator:
             font-size: 11px;
             max-width: 300px;
             word-wrap: break-word;
-            white-space: pre-wrap;
+        }}
+        
+        /* Override cell-content styles for specific cell types */
+        .command .cell-content,
+        .response .cell-content,
+        .parsed-response .cell-content {{
+            font-family: inherit;
+            font-size: inherit;
         }}
         
         .numeric {{
