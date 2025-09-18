@@ -1,0 +1,93 @@
+{
+    "created": 1758186865.24455,
+    "duration": 44.37351584434509,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "failed": 1,
+        "passed": 1,
+        "total": 2,
+        "collected": 2
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 505
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 490
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 505,
+            "outcome": "failed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 30.510301452999556,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 6.0234945649999645,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_v1_1.py",
+                    "lineno": 513,
+                    "message": "AssertionError: Should receive a response from soCAN address 19\nassert False\n +  where False = <tests_automation.sdk.socan_sdk.socan_commands.SoCANCommandGenerator object at 0x762885cf8940>.response_is_valid"
+                },
+                "longrepr": "E   AssertionError: Should receive a response from soCAN address 19\n    assert False\n     +  where False = <tests_automation.sdk.socan_sdk.socan_commands.SoCANCommandGenerator object at 0x762885cf8940>.response_is_valid"
+            },
+            "teardown": {
+                "duration": 0.0035640840005726204,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 490,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.003285796000454866,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 7.031482332999985,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.003959962999942945,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

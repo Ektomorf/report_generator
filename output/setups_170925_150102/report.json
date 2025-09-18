@@ -1,0 +1,189 @@
+{
+    "created": 1758117673.1146,
+    "duration": 9.980704069137573,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 2,
+        "error": 3,
+        "total": 5,
+        "collected": 5
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 414
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 399
+                },
+                {
+                    "nodeid": "::test_fwd_enable",
+                    "type": "Function",
+                    "lineno": 157
+                },
+                {
+                    "nodeid": "::test_fwd_enable_all",
+                    "type": "Function",
+                    "lineno": 229
+                },
+                {
+                    "nodeid": "::test_fwd_freq_sweep",
+                    "type": "Function",
+                    "lineno": 101
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 414,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4361552979098633,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.031173430965282023,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.039666502038016915,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 399,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.005163460969924927,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 2.9929276930633932,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.004789171041920781,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable",
+            "lineno": 157,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_enable",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4786902519408613,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/web_control.py",
+                    "lineno": 14,
+                    "message": "AttributeError: 'KeysightXSANDriver' object has no attribute 'web_control'"
+                },
+                "longrepr": "E   AttributeError: 'KeysightXSANDriver' object has no attribute 'web_control'"
+            },
+            "teardown": {
+                "duration": 0.07451673201285303,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable_all",
+            "lineno": 229,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_enable_all",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4680330449482426,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/web_control.py",
+                    "lineno": 14,
+                    "message": "AttributeError: 'KeysightXSANDriver' object has no attribute 'web_control'"
+                },
+                "longrepr": "E   AttributeError: 'KeysightXSANDriver' object has no attribute 'web_control'"
+            },
+            "teardown": {
+                "duration": 0.08323399804066867,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_freq_sweep",
+            "lineno": 101,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_freq_sweep",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4649301179451868,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/web_control.py",
+                    "lineno": 14,
+                    "message": "AttributeError: 'KeysightXSANDriver' object has no attribute 'web_control'"
+                },
+                "longrepr": "E   AttributeError: 'KeysightXSANDriver' object has no attribute 'web_control'"
+            },
+            "teardown": {
+                "duration": 0.07844506902620196,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

@@ -1,0 +1,98 @@
+{
+    "created": 1758130298.848209,
+    "duration": 11.124650239944458,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "failed": 2,
+        "total": 2,
+        "collected": 2
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 516
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 494
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 516,
+            "outcome": "failed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.437534756027162,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.002093425951898098,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/rf_matrix/rf_matrix_driver.py",
+                    "lineno": 54,
+                    "message": "BrokenPipeError: [Errno 32] Broken pipe"
+                },
+                "longrepr": "E   BrokenPipeError: [Errno 32] Broken pipe"
+            },
+            "teardown": {
+                "duration": 0.041251048096455634,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 494,
+            "outcome": "failed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 8.204074521898292,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.0017853730823844671,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/rf_matrix/rf_matrix_driver.py",
+                    "lineno": 54,
+                    "message": "BrokenPipeError: [Errno 32] Broken pipe"
+                },
+                "longrepr": "E   BrokenPipeError: [Errno 32] Broken pipe"
+            },
+            "teardown": {
+                "duration": 0.6544916200218722,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

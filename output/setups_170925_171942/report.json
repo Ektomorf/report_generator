@@ -1,0 +1,247 @@
+{
+    "created": 1758126026.5432072,
+    "duration": 44.16826033592224,
+    "exitcode": 2,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 3,
+        "error": 2,
+        "total": 5,
+        "collected": 7
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 506
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 491
+                },
+                {
+                    "nodeid": "::test_fwd_defaults",
+                    "type": "Function",
+                    "lineno": 362
+                },
+                {
+                    "nodeid": "::test_fwd_disable_all",
+                    "type": "Function",
+                    "lineno": 248
+                },
+                {
+                    "nodeid": "::test_fwd_enable",
+                    "type": "Function",
+                    "lineno": 217
+                },
+                {
+                    "nodeid": "::test_fwd_enable_all",
+                    "type": "Function",
+                    "lineno": 302
+                },
+                {
+                    "nodeid": "::test_fwd_freq_sweep",
+                    "type": "Function",
+                    "lineno": 143
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 506,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4412935529835522,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.0324261070927605,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.040352515992708504,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 491,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.006527426070533693,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 2.9878467629896477,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.004287961055524647,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_defaults",
+            "lineno": 362,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_defaults",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 8.188630767981522,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 6.438838514033705,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "test_fwd_defaults",
+                        "msg": "Found highest peak at 11.800000 GHz, -65.71 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758125998.9254923,
+                        "msecs": 925.0,
+                        "relativeCreated": 16769.70100402832,
+                        "thread": 129577980624896,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1418093,
+                        "asctime": "17:19:58"
+                    }
+                ]
+            },
+            "teardown": {
+                "duration": 0.6411048450972885,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/usr/lib/python3.10/json/encoder.py",
+                    "lineno": 179,
+                    "message": "TypeError: Object of type ChannelConfig is not JSON serializable"
+                },
+                "longrepr": "E   TypeError: Object of type ChannelConfig is not JSON serializable"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_disable_all",
+            "lineno": 248,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_disable_all",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 6.281353869009763,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 4.385240694973618,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "test_fwd_disable_all",
+                        "msg": "Found highest peak at 11.800000 GHz, -68.06 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758126010.2645366,
+                        "msecs": 264.0,
+                        "relativeCreated": 28108.745336532593,
+                        "thread": 129577980624896,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1418093,
+                        "asctime": "17:20:10"
+                    }
+                ]
+            },
+            "teardown": {
+                "duration": 0.6244151309365407,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/usr/lib/python3.10/json/encoder.py",
+                    "lineno": 179,
+                    "message": "TypeError: Object of type ChannelConfig is not JSON serializable"
+                },
+                "longrepr": "E   TypeError: Object of type ChannelConfig is not JSON serializable"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable",
+            "lineno": 217,
+            "outcome": "passed",
+            "keywords": [
+                "test_fwd_enable",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 6.247437326004729,
+                "outcome": "passed"
+            }
+        }
+    ]
+}
