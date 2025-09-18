@@ -1,0 +1,89 @@
+{
+    "created": 1758129798.1215873,
+    "duration": 11.20044755935669,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 1,
+        "error": 1,
+        "total": 2,
+        "collected": 2
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 516
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 494
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 516,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4378002199809998,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.03297593700699508,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.03915752004832029,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 494,
+            "outcome": "error",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 8.295083562959917,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_v1_1.py",
+                    "lineno": 76,
+                    "message": "KeyError: 'fwd_address'"
+                },
+                "longrepr": "E   KeyError: 'fwd_address'"
+            },
+            "teardown": {
+                "duration": 0.643481764011085,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

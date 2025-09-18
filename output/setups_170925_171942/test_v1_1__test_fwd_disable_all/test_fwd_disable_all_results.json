@@ -1,0 +1,1 @@
+[{"Timestamp": "2025-17-09 17:20:13", "frequency_0": 0, "enabled_0": false, "gain_0": null, "parsed_socan_response": {"channels": []}, "raw_socan_response": "> $3E7 $041 $220 $231 $220 $231 $000 $000 Hg $201 : OK\n\r>", "socan_command_method": "set_channel", "socan_command_args": {"channels": [

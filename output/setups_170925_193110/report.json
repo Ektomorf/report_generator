@@ -1,0 +1,237 @@
+{
+    "created": 1758134274.037115,
+    "duration": 403.5958163738251,
+    "exitcode": 2,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 4,
+        "error": 1,
+        "total": 5,
+        "collected": 7
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 516
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 494
+                },
+                {
+                    "nodeid": "::test_fwd_defaults",
+                    "type": "Function",
+                    "lineno": 365
+                },
+                {
+                    "nodeid": "::test_fwd_disable_all",
+                    "type": "Function",
+                    "lineno": 251
+                },
+                {
+                    "nodeid": "::test_fwd_enable",
+                    "type": "Function",
+                    "lineno": 216
+                },
+                {
+                    "nodeid": "::test_fwd_enable_all",
+                    "type": "Function",
+                    "lineno": 305
+                },
+                {
+                    "nodeid": "::test_fwd_freq_sweep",
+                    "type": "Function",
+                    "lineno": 142
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 516,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4407404490048066,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 1.0273783229058608,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.038326241075992584,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 494,
+            "outcome": "error",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 8.1286747030681,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_v1_1.py",
+                    "lineno": 76,
+                    "message": "KeyError: 'fwd_address'"
+                },
+                "longrepr": "E   KeyError: 'fwd_address'"
+            },
+            "teardown": {
+                "duration": 0.6291266400367022,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_defaults",
+            "lineno": 365,
+            "outcome": "passed",
+            "keywords": [
+                "test_fwd_defaults",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 5.993268565041944,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 6.462070415960625,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "test_fwd_defaults",
+                        "msg": "Found highest peak at 11.385000 GHz, -64.49 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758133891.5374374,
+                        "msecs": 537.0,
+                        "relativeCreated": 21279.669284820557,
+                        "thread": 133853064318976,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1465696,
+                        "asctime": "19:31:31"
+                    }
+                ]
+            },
+            "teardown": {
+                "duration": 0.6566646719584242,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_disable_all",
+            "lineno": 251,
+            "outcome": "passed",
+            "keywords": [
+                "test_fwd_disable_all",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 6.253127865958959,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 4.409854605910368,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "test_fwd_disable_all",
+                        "msg": "Found highest peak at 11.290000 GHz, -63.28 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758133902.8781006,
+                        "msecs": 878.0,
+                        "relativeCreated": 32620.33247947693,
+                        "thread": 133853064318976,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1465696,
+                        "asctime": "19:31:42"
+                    }
+                ]
+            },
+            "teardown": {
+                "duration": 0.6470490039791912,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable",
+            "lineno": 216,
+            "outcome": "passed",
+            "keywords": [
+                "test_fwd_enable",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 5.961948952055536,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

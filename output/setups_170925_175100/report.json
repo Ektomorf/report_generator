@@ -1,0 +1,91 @@
+{
+    "created": 1758127867.6394844,
+    "duration": 7.465528964996338,
+    "exitcode": 2,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 2,
+        "total": 2,
+        "collected": 3
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 509
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 494
+                },
+                {
+                    "nodeid": "::test_fwd_enable",
+                    "type": "Function",
+                    "lineno": 216
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 509,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4328362559899688,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.028572890907526016,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.03867427306249738,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 494,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.0026627720799297094,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 3.971382668009028,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.003692044992931187,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

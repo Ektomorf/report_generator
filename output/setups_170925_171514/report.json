@@ -1,0 +1,118 @@
+{
+    "created": 1758125730.4117048,
+    "duration": 15.608235836029053,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 1,
+        "failed": 1,
+        "total": 2,
+        "collected": 2
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 505
+                },
+                {
+                    "nodeid": "::test_fwd_freq_sweep",
+                    "type": "Function",
+                    "lineno": 142
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 505,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.436065664049238,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.03142901905812323,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.03975381294731051,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_freq_sweep",
+            "lineno": 142,
+            "outcome": "failed",
+            "keywords": [
+                "test_fwd_freq_sweep",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 8.241174535010941,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 4.412862082011998,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_v1_1.py",
+                    "lineno": 113,
+                    "message": "AttributeError: 'ChannelConfig' object has no attribute 'enabled'. Did you mean: 'enable'?"
+                },
+                "log": [
+                    {
+                        "name": "test_fwd_freq_sweep",
+                        "msg": "Found highest peak at 10.757500 GHz, -62.93 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758125726.397378,
+                        "msecs": 397.0,
+                        "relativeCreated": 11758.17060470581,
+                        "thread": 125665159540736,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1413790,
+                        "asctime": "17:15:26"
+                    }
+                ],
+                "longrepr": "E   AttributeError: 'ChannelConfig' object has no attribute 'enabled'. Did you mean: 'enable'?"
+            },
+            "teardown": {
+                "duration": 0.6441875780001283,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

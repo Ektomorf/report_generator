@@ -1,0 +1,110 @@
+{
+    "created": 1758126613.4443336,
+    "duration": 34.27851366996765,
+    "exitcode": 2,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 3,
+        "total": 3,
+        "collected": 3
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 505
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 490
+                },
+                {
+                    "nodeid": "::test_fwd_enable_all",
+                    "type": "Function",
+                    "lineno": 301
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 505,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4363863209728152,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.03196880000177771,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.039930657017976046,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 490,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.003743479959666729,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 2.9949517579516396,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.004620778956450522,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable_all",
+            "lineno": 301,
+            "outcome": "passed",
+            "keywords": [
+                "test_fwd_enable_all",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 8.091136554954574,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

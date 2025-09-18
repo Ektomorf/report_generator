@@ -1,0 +1,266 @@
+{
+    "created": 1758118739.0921695,
+    "duration": 83.58802366256714,
+    "exitcode": 2,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "failed": 3,
+        "passed": 2,
+        "total": 5,
+        "collected": 5
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 417
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 402
+                },
+                {
+                    "nodeid": "::test_fwd_enable",
+                    "type": "Function",
+                    "lineno": 158
+                },
+                {
+                    "nodeid": "::test_fwd_enable_all",
+                    "type": "Function",
+                    "lineno": 231
+                },
+                {
+                    "nodeid": "::test_fwd_freq_sweep",
+                    "type": "Function",
+                    "lineno": 101
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 417,
+            "outcome": "failed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4390732059255242,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.021694710943847895,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_v1_1.py",
+                    "lineno": 425,
+                    "message": "AssertionError: Should receive a response from soCAN address 19\nassert False\n +  where False = <tests_automation.sdk.socan_sdk.socan_commands.SoCANCommandGenerator object at 0x77ba6feb2440>.response_is_valid"
+                },
+                "longrepr": "E   AssertionError: Should receive a response from soCAN address 19\n    assert False\n     +  where False = <tests_automation.sdk.socan_sdk.socan_commands.SoCANCommandGenerator object at 0x77ba6feb2440>.response_is_valid"
+            },
+            "teardown": {
+                "duration": 0.039987503085285425,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 402,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.006106163957156241,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 2.997286703088321,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.004234823049046099,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable",
+            "lineno": 158,
+            "outcome": "failed",
+            "keywords": [
+                "test_fwd_enable",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 8.15177457802929,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 8.618567483033985,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/socan_sdk/utils/commands/generic_msg.py",
+                    "lineno": 108,
+                    "message": "ValueError: Invalid frequency 0 for channel 1. Must be between 2 and 6 inclusive."
+                },
+                "log": [
+                    {
+                        "name": "test_fwd_enable",
+                        "msg": "Found highest peak at 12.920000 GHz, -71.12 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758118670.0403144,
+                        "msecs": 40.0,
+                        "relativeCreated": 14724.89047050476,
+                        "thread": 131643046821888,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1383358,
+                        "asctime": "15:17:50"
+                    },
+                    {
+                        "name": "test_fwd_enable",
+                        "msg": "Found highest peak at 12.767500 GHz, -71.85 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758118674.4648442,
+                        "msecs": 464.0,
+                        "relativeCreated": 19149.420261383057,
+                        "thread": 131643046821888,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1383358,
+                        "asctime": "15:17:54"
+                    }
+                ],
+                "longrepr": "E   ValueError: Invalid frequency 0 for channel 1. Must be between 2 and 6 inclusive."
+            },
+            "teardown": {
+                "duration": 0.6601218580035493,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable_all",
+            "lineno": 231,
+            "outcome": "failed",
+            "keywords": [
+                "test_fwd_enable_all",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 6.100763690075837,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 4.407537007005885,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/utils/commands/switch_matrix.py",
+                    "lineno": 38,
+                    "message": "ValueError: Y must be 1 (AC1/BC1) or 5 (AC2/BC2)"
+                },
+                "log": [
+                    {
+                        "name": "test_fwd_enable_all",
+                        "msg": "Found highest peak at 12.230000 GHz, -71.17 dBm",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/keysight_xsan_sdk/utils/commands/peak_detection.py",
+                        "filename": "peak_detection.py",
+                        "module": "peak_detection",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 155,
+                        "funcName": "find_highest_peak",
+                        "created": 1758118685.434999,
+                        "msecs": 434.0,
+                        "relativeCreated": 30119.575023651123,
+                        "thread": 131643046821888,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1383358,
+                        "asctime": "15:18:05"
+                    }
+                ],
+                "longrepr": "E   ValueError: Y must be 1 (AC1/BC1) or 5 (AC2/BC2)"
+            },
+            "teardown": {
+                "duration": 0.6372136399149895,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_freq_sweep",
+            "lineno": 101,
+            "outcome": "passed",
+            "keywords": [
+                "test_fwd_freq_sweep",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 6.282723020063713,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

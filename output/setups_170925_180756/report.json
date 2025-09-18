@@ -1,0 +1,123 @@
+{
+    "created": 1758128878.1210787,
+    "duration": 1.9288051128387451,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "error": 2,
+        "passed": 1,
+        "total": 3,
+        "collected": 3
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 509
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 494
+                },
+                {
+                    "nodeid": "::test_fwd_enable",
+                    "type": "Function",
+                    "lineno": 216
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 509,
+            "outcome": "error",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.003700380912050605,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/soCAN_egse/socan_egse.py",
+                    "lineno": 55,
+                    "message": "devices.soCAN_egse.socan_egse.SoCANConnectionError: Serial connection failed: [Errno 11] Could not exclusively lock port /dev/ttyACM0: [Errno 11] Resource temporarily unavailable"
+                },
+                "longrepr": "E   BlockingIOError: [Errno 11] Resource temporarily unavailable\n\nDuring handling of the above exception, another exception occurred:\nE   serial.serialutil.SerialException: [Errno 11] Could not exclusively lock port /dev/ttyACM0: [Errno 11] Resource temporarily unavailable\n\nDuring handling of the above exception, another exception occurred:\nE   devices.soCAN_egse.socan_egse.SoCANConnectionError: Serial connection failed: [Errno 11] Could not exclusively lock port /dev/ttyACM0: [Errno 11] Resource temporarily unavailable"
+            },
+            "teardown": {
+                "duration": 0.003335629007779062,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 494,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00441253196913749,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 1.041657158988528,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.0039947699988260865,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_fwd_enable",
+            "lineno": 216,
+            "outcome": "error",
+            "keywords": [
+                "test_fwd_enable",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.0037628139834851027,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/soCAN_egse/socan_egse.py",
+                    "lineno": 55,
+                    "message": "devices.soCAN_egse.socan_egse.SoCANConnectionError: Serial connection failed: [Errno 11] Could not exclusively lock port /dev/ttyACM0: [Errno 11] Resource temporarily unavailable"
+                },
+                "longrepr": "E   BlockingIOError: [Errno 11] Resource temporarily unavailable\n\nDuring handling of the above exception, another exception occurred:\nE   serial.serialutil.SerialException: [Errno 11] Could not exclusively lock port /dev/ttyACM0: [Errno 11] Resource temporarily unavailable\n\nDuring handling of the above exception, another exception occurred:\nE   devices.soCAN_egse.socan_egse.SoCANConnectionError: Serial connection failed: [Errno 11] Could not exclusively lock port /dev/ttyACM0: [Errno 11] Resource temporarily unavailable"
+            },
+            "teardown": {
+                "duration": 0.0018284489633515477,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

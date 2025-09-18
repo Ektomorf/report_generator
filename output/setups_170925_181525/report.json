@@ -1,0 +1,93 @@
+{
+    "created": 1758129331.59599,
+    "duration": 5.479995012283325,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 1,
+        "failed": 1,
+        "total": 2,
+        "collected": 2
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 514
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 494
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 514,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4355177849065512,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.03378219006117433,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.03879134403541684,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 494,
+            "outcome": "failed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00574471103027463,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 3.1828738300828263,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_v1_1.py",
+                    "lineno": 503,
+                    "message": "AttributeError: 'UpDownConverterCommandBuilder' object has no attribute 'get_lo_frequency'. Did you mean: 'set_lo_frequency'?"
+                },
+                "longrepr": "E   AttributeError: 'UpDownConverterCommandBuilder' object has no attribute 'get_lo_frequency'. Did you mean: 'set_lo_frequency'?"
+            },
+            "teardown": {
+                "duration": 0.002543536014854908,
+                "outcome": "passed"
+            }
+        }
+    ]
+}
