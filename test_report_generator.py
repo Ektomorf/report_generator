@@ -85,6 +85,7 @@ class HTMLReportGenerator:
         """Generate HTML report for a single test"""
         
         # Process results data for table
+        table_headers = self._generate_table_headers(test_results['results_data'])
         table_rows = self._generate_table_rows(test_results['results_data'])
         
         # Process screenshots
@@ -101,6 +102,7 @@ class HTMLReportGenerator:
             test_name=test_results['test_name'],
             status_info=status_info,
             params_info=params_info,
+            table_headers=table_headers,
             table_rows=table_rows,
             screenshot_html=screenshot_html,
             generation_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -112,64 +114,177 @@ class HTMLReportGenerator:
             
         print(f"Generated report: {output_file}")
     
+    def _get_all_unique_keys(self, results_data: List[Dict]) -> List[str]:
+        """Get all unique keys from the results data in a consistent order"""
+        if not results_data:
+            return []
+        
+        # Collect all unique keys
+        all_keys = set()
+        for entry in results_data:
+            all_keys.update(entry.keys())
+        
+        # Define a preferred order for common keys
+        key_order = [
+            'Timestamp',
+            # Channel-related keys (dynamic - can be enabled_0, enabled_1, etc.)
+            'channel', 'frequency', 'enabled', 'gain',  # Base names
+            'spectrum_frequencies',
+            'spectrum_amplitudes',
+            'peak_frequency',
+            'peak_amplitude',
+            'screenshot_filepath',
+            # SOCAN-related keys
+            'socan_command_method',
+            'socan_command_args', 
+            'socan_command',
+            'parsed_socan_response',
+            'raw_socan_response',
+            # RF Matrix-related keys
+            'rf_matrix_command_method',
+            'rf_matrix_command_args',
+            'rf_matrix_command', 
+            'parsed_rf_matrix_response',
+            'raw_rf_matrix_response',
+            # Keysight-related keys
+            'keysight_xsan_command_method',
+            'keysight_xsan_command_args',
+            'keysight_xsan_command',
+            # Measurement data
+            'frequencies',
+            'amplitudes',
+        ]
+        
+        # Sort keys: preferred order first, then alphabetically for others
+        ordered_keys = []
+        remaining_keys = set(all_keys)
+        
+        # Add keys in preferred order if they exist
+        for key in key_order:
+            if key in remaining_keys:
+                ordered_keys.append(key)
+                remaining_keys.remove(key)
+        
+        # Add channel-specific keys (enabled_0, frequency_1, etc.) in order
+        channel_keys = [k for k in remaining_keys if any(k.startswith(base) for base in ['enabled_', 'frequency_', 'gain_'])]
+        for key in sorted(channel_keys):
+            ordered_keys.append(key)
+            remaining_keys.remove(key)
+        
+        # Add any remaining keys alphabetically
+        ordered_keys.extend(sorted(remaining_keys))
+        
+        return ordered_keys
+
+    def _generate_table_headers(self, results_data: List[Dict]) -> str:
+        """Generate HTML table headers based on available data"""
+        if not results_data:
+            return "<tr><th>No Data</th></tr>"
+        
+        all_keys = self._get_all_unique_keys(results_data)
+        
+        # Generate headers
+        headers = ["#"]  # Row number column
+        
+        for key in all_keys:
+            # Format key names for display
+            display_name = key.replace('_', ' ').title()
+            # Special formatting for some keys
+            if 'socan' in key.lower():
+                display_name = display_name.replace('Socan', 'SOCAN')
+            elif 'rf' in key.lower() and 'matrix' in key.lower():
+                display_name = display_name.replace('Rf Matrix', 'RF Matrix')
+            elif 'xsan' in key.lower():
+                display_name = display_name.replace('Xsan', 'XSAN')
+            elif 'ghz' in key.lower():
+                display_name = display_name.replace('Ghz', 'GHz')
+            elif 'dbm' in key.lower():
+                display_name = display_name.replace('Dbm', 'dBm')
+            
+            headers.append(display_name)
+        
+        header_row = "<tr>" + "".join(f"<th>{header}</th>" for header in headers) + "</tr>"
+        return header_row
+
+    def _format_cell_value(self, key: str, value: Any) -> str:
+        """Format cell value based on the key type"""
+        if value is None:
+            return 'N/A'
+        
+        # Handle different value types
+        if isinstance(value, dict):
+            return str(value)
+        elif isinstance(value, list):
+            # For lists, show count or truncated content
+            if len(value) > 10:
+                return f"[{len(value)} items]"
+            elif len(str(value)) > 100:
+                return f"{str(value)[:100]}..."
+            return str(value)
+        elif isinstance(value, str) and len(value) > 150:
+            # Truncate long strings
+            return f"{value[:150]}..."
+        
+        # Special formatting for specific keys
+        if 'peak_frequency' in key.lower() and isinstance(value, (int, float)):
+            if 'ghz' not in key.lower():  # Convert Hz to GHz if not already in GHz
+                return f"{value / 1e9:.3f} GHz"
+            else:
+                return f"{value:.3f} GHz"
+        elif 'peak_amplitude' in key.lower() and isinstance(value, (int, float)):
+            if 'dbm' not in key.lower():  # Add dBm unit if not already present
+                return f"{value:.2f} dBm"
+            else:
+                return f"{value:.2f}"
+        elif 'frequency' in key.lower() and isinstance(value, (int, float)):
+            if value > 1000000:  # Likely in Hz, convert to more readable format
+                return f"{value / 1e9:.3f} GHz"
+            return str(value)
+        elif 'screenshot_filepath' in key.lower() and value:
+            # For screenshot filepaths, create a link
+            screenshot_filename = Path(str(value)).name
+            return f"<a href='#{screenshot_filename}' class='screenshot-link'>View</a>"
+        
+        return str(value)
+
     def _generate_table_rows(self, results_data: List[Dict]) -> str:
         """Generate HTML table rows from results data"""
         if not results_data:
             return "<tr><td colspan='100%'>No test data available</td></tr>"
-            
+        
+        all_keys = self._get_all_unique_keys(results_data)
         rows = []
+        
         for i, entry in enumerate(results_data):
             row = f"<tr class='{'even' if i % 2 == 0 else 'odd'}'>"
             
             # Row number
             row += f"<td>{i + 1}</td>"
             
-            # Timestamp
-            timestamp = entry.get('Timestamp', 'N/A')
-            row += f"<td>{timestamp}</td>"
-            
-            # SOCAN Command
-            socan_cmd = entry.get('socan_command', 'N/A')
-            row += f"<td class='command'>{socan_cmd}</td>"
-            
-            # SOCAN Response
-            socan_response = entry.get('raw_socan_response', 'N/A')
-            if len(str(socan_response)) > 100:
-                socan_response = str(socan_response)[:100] + "..."
-            row += f"<td class='response'>{socan_response}</td>"
-            
-            # RF Matrix Command
-            rf_cmd = entry.get('rf_matrix_command', 'N/A')
-            row += f"<td class='command'>{rf_cmd}</td>"
-            
-            # Keysight Command
-            keysight_cmd = entry.get('keysight_xsan_command', 'N/A')
-            row += f"<td class='command'>{keysight_cmd}</td>"
-            
-            # Peak Frequency
-            peak_freq = entry.get('peak_frequency', 'N/A')
-            if isinstance(peak_freq, (int, float)):
-                peak_freq = f"{peak_freq / 1e9:.3f} GHz"
-            row += f"<td class='numeric'>{peak_freq}</td>"
-            
-            # Peak Amplitude
-            peak_amp = entry.get('peak_amplitude', 'N/A')
-            if isinstance(peak_amp, (int, float)):
-                peak_amp = f"{peak_amp:.2f} dBm"
-            row += f"<td class='numeric'>{peak_amp}</td>"
-            
-            # Screenshot
-            screenshot = entry.get('screenshot_filepath', '')
-            if screenshot:
-                # Extract just the filename from the screenshot path
-                screenshot_filename = Path(screenshot).name
-                row += f"<td><a href='#{screenshot_filename}' class='screenshot-link'>View</a></td>"
-            else:
-                row += f"<td>N/A</td>"
+            # Add data for each column
+            for key in all_keys:
+                value = entry.get(key, 'N/A')
+                formatted_value = self._format_cell_value(key, value)
                 
+                # Apply appropriate CSS class based on content type
+                css_class = ''
+                if 'command' in key.lower():
+                    css_class = 'command'
+                elif 'parsed' in key.lower() and 'response' in key.lower():
+                    css_class = 'parsed-response'
+                elif 'response' in key.lower():
+                    css_class = 'response'
+                elif any(word in key.lower() for word in ['frequency', 'amplitude', 'peak']):
+                    css_class = 'numeric'
+                
+                if css_class:
+                    row += f"<td class='{css_class}'>{formatted_value}</td>"
+                else:
+                    row += f"<td>{formatted_value}</td>"
+            
             row += "</tr>"
             rows.append(row)
-            
+        
         return '\n'.join(rows)
     
     def _generate_screenshot_html(self, screenshots: List[str]) -> str:
@@ -296,18 +411,34 @@ class HTMLReportGenerator:
             margin-bottom: 20px;
         }}
         
+        .table-container {{
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        
         table {{
             width: 100%;
+            min-width: 1500px;  /* Ensure minimum width for many columns */
             border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 14px;
+            margin: 0;
+            font-size: 13px;
         }}
         
         th, td {{
-            padding: 12px 8px;
+            padding: 8px 6px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            border-right: 1px solid #eee;
             vertical-align: top;
+            word-wrap: break-word;
+            max-width: 200px;  /* Prevent columns from becoming too wide */
+        }}
+        
+        th:last-child, td:last-child {{
+            border-right: none;
         }}
         
         th {{
@@ -316,6 +447,43 @@ class HTMLReportGenerator:
             font-weight: bold;
             position: sticky;
             top: 0;
+            font-size: 12px;
+            white-space: nowrap;
+        }}
+        
+        /* Specific column widths for better layout */
+        th:first-child, td:first-child {{
+            width: 40px;
+            text-align: center;
+        }}
+        
+        .command {{
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-width: 180px;
+            word-wrap: break-word;
+        }}
+        
+        .response {{
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            max-width: 200px;
+            word-wrap: break-word;
+        }}
+        
+        /* Special styling for parsed responses */
+        .parsed-response {{
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-width: 300px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }}
+        
+        .numeric {{
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            white-space: nowrap;
         }}
         
         tr:nth-child(even) {{
@@ -324,25 +492,6 @@ class HTMLReportGenerator:
         
         tr:hover {{
             background-color: #e3f2fd;
-        }}
-        
-        .command {{
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-width: 200px;
-            word-wrap: break-word;
-        }}
-        
-        .response {{
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            max-width: 250px;
-            word-wrap: break-word;
-        }}
-        
-        .numeric {{
-            text-align: right;
-            font-family: 'Courier New', monospace;
         }}
         
         .screenshot-link {{
@@ -379,11 +528,6 @@ class HTMLReportGenerator:
             font-size: 12px;
             text-align: center;
         }}
-        
-        .table-container {{
-            overflow-x: auto;
-            margin: 20px 0;
-        }}
     </style>
 </head>
 <body>
@@ -398,17 +542,7 @@ class HTMLReportGenerator:
         <div class="table-container">
             <table>
                 <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Timestamp</th>
-                        <th>SOCAN Command</th>
-                        <th>SOCAN Response</th>
-                        <th>RF Matrix Command</th>
-                        <th>Keysight Command</th>
-                        <th>Peak Frequency</th>
-                        <th>Peak Amplitude</th>
-                        <th>Screenshot</th>
-                    </tr>
+                    {table_headers}
                 </thead>
                 <tbody>
                     {table_rows}
