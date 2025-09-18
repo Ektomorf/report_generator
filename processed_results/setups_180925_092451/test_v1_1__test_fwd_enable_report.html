@@ -60,18 +60,64 @@
             margin-bottom: 20px;
         }
         
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
         table {
             width: 100%;
+            min-width: 1500px;  /* Ensure minimum width for many columns */
             border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 14px;
+            margin: 0;
+            font-size: 13px;
         }
         
         th, td {
-            padding: 12px 8px;
+            padding: 8px 6px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            border-right: 1px solid #eee;
             vertical-align: top;
+            word-wrap: break-word;
+            max-width: 200px;  /* Prevent columns from becoming too wide */
+            max-height: 120px;  /* Limit cell height */
+            overflow: auto;     /* Add scrolling for overflow content */
+            position: relative;
+        }
+        
+        /* Scrollable content wrapper for cells with large data */
+        .cell-content {
+            max-height: 100px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .cell-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .cell-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .cell-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        .cell-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        th:last-child, td:last-child {
+            border-right: none;
         }
         
         th {
@@ -80,6 +126,50 @@
             font-weight: bold;
             position: sticky;
             top: 0;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        /* Specific column widths for better layout */
+        th:first-child, td:first-child {
+            width: 40px;
+            text-align: center;
+        }
+        
+        .command {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-width: 180px;
+            word-wrap: break-word;
+        }
+        
+        .response {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+        
+        /* Special styling for parsed responses */
+        .parsed-response {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+        
+        /* Override cell-content styles for specific cell types */
+        .command .cell-content,
+        .response .cell-content,
+        .parsed-response .cell-content {
+            font-family: inherit;
+            font-size: inherit;
+        }
+        
+        .numeric {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            white-space: nowrap;
         }
         
         tr:nth-child(even) {
@@ -88,25 +178,6 @@
         
         tr:hover {
             background-color: #e3f2fd;
-        }
-        
-        .command {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-width: 200px;
-            word-wrap: break-word;
-        }
-        
-        .response {
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            max-width: 250px;
-            word-wrap: break-word;
-        }
-        
-        .numeric {
-            text-align: right;
-            font-family: 'Courier New', monospace;
         }
         
         .screenshot-link {
@@ -143,11 +214,6 @@
             font-size: 12px;
             text-align: center;
         }
-        
-        .table-container {
-            overflow-x: auto;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
@@ -178,35 +244,25 @@
         <div class="table-container">
             <table>
                 <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Timestamp</th>
-                        <th>SOCAN Command</th>
-                        <th>SOCAN Response</th>
-                        <th>RF Matrix Command</th>
-                        <th>Keysight Command</th>
-                        <th>Peak Frequency</th>
-                        <th>Peak Amplitude</th>
-                        <th>Screenshot</th>
-                    </tr>
+                    <tr><th>#</th><th>Timestamp</th><th>Peak Frequency</th><th>Peak Amplitude</th><th>Screenshot Filepath</th><th>SOCAN Command Method</th><th>SOCAN Command Args</th><th>SOCAN Command</th><th>Parsed SOCAN Response</th><th>Raw SOCAN Response</th><th>RF Matrix Command Method</th><th>RF Matrix Command Args</th><th>RF Matrix Command</th><th>Parsed RF Matrix Response</th><th>Raw RF Matrix Response</th><th>Keysight XSAN Command Method</th><th>Keysight XSAN Command Args</th><th>Keysight XSAN Command</th><th>Frequencies</th><th>Amplitudes</th><th>Enabled 0</th><th>Enabled 1</th><th>Enabled 2</th><th>Enabled 3</th><th>Enabled 4</th><th>Enabled 5</th><th>Enabled 6</th><th>Enabled 7</th><th>Frequency 0</th><th>Frequency 1</th><th>Frequency 2</th><th>Frequency 3</th><th>Frequency 4</th><th>Frequency 5</th><th>Frequency 6</th><th>Frequency 7</th><th>Gain 0</th><th>Gain 1</th><th>Gain 2</th><th>Gain 3</th><th>Gain 4</th><th>Gain 5</th><th>Gain 6</th><th>Gain 7</th></tr>
                 </thead>
                 <tbody>
-                    <tr class='even'><td>1</td><td>2025-18-09 09:25:40</td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $01</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $201 $201 Hg $201 : OK
-></td><td class='command'>SB:S101:1;</td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch0_freq0.png')</td><td class='numeric'>10.925 GHz</td><td class='numeric'>-34.67 dBm</td><td><a href='#fwd_ch0_freq0.png' class='screenshot-link'>View</a></td></tr>
-<tr class='odd'><td>2</td><td>2025-18-09 09:25:45</td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $02</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $202 $202 Hg $201 : OK
-></td><td class='command'>SB:S102:1;</td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch1_freq2.png')</td><td class='numeric'>10.925 GHz</td><td class='numeric'>-45.60 dBm</td><td><a href='#fwd_ch1_freq2.png' class='screenshot-link'>View</a></td></tr>
-<tr class='even'><td>3</td><td>2025-18-09 09:25:49</td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $04</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $204 $204 Hg $201 : OK
-></td><td class='command'>SB:S103:1;</td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch2_freq1.png')</td><td class='numeric'>10.910 GHz</td><td class='numeric'>-54.50 dBm</td><td><a href='#fwd_ch2_freq1.png' class='screenshot-link'>View</a></td></tr>
-<tr class='odd'><td>4</td><td>2025-18-09 09:25:53</td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $08</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $208 $208 Hg $201 : OK
-></td><td class='command'>SB:S104:1;</td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch3_freq3.png')</td><td class='numeric'>11.015 GHz</td><td class='numeric'>-52.88 dBm</td><td><a href='#fwd_ch3_freq3.png' class='screenshot-link'>View</a></td></tr>
-<tr class='even'><td>5</td><td>2025-18-09 09:25:57</td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $10</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $210 $210 Hg $201 : OK
-></td><td class='command'>SB:S105:1;</td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch4_freq0.png')</td><td class='numeric'>11.565 GHz</td><td class='numeric'>-50.09 dBm</td><td><a href='#fwd_ch4_freq0.png' class='screenshot-link'>View</a></td></tr>
-<tr class='odd'><td>6</td><td>2025-18-09 09:26:01</td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $20</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $220 $220 Hg $201 : OK
-></td><td class='command'>SB:S106:1;</td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch5_freq2.png')</td><td class='numeric'>11.425 GHz</td><td class='numeric'>-52.00 dBm</td><td><a href='#fwd_ch5_freq2.png' class='screenshot-link'>View</a></td></tr>
-<tr class='even'><td>7</td><td>2025-18-09 09:26:05</td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $40</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $240 $240 Hg $201 : OK
-></td><td class='command'>SB:S107:1;</td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch6_freq1.png')</td><td class='numeric'>10.865 GHz</td><td class='numeric'>-65.25 dBm</td><td><a href='#fwd_ch6_freq1.png' class='screenshot-link'>View</a></td></tr>
-<tr class='odd'><td>8</td><td>2025-18-09 09:26:09</td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $80</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $280 $280 Hg $201 : OK
-></td><td class='command'>SB:S108:1;</td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch7_freq3.png')</td><td class='numeric'>11.445 GHz</td><td class='numeric'>-52.22 dBm</td><td><a href='#fwd_ch7_freq3.png' class='screenshot-link'>View</a></td></tr>
+                    <tr class='even'><td>1</td><td>2025-18-09 09:25:40</td><td class='numeric'>10.925 GHz</td><td class='numeric'>-34.67 dBm</td><td><a href='#fwd_ch0_freq0.png' class='screenshot-link'>View</a></td><td class='command'>set_channel</td><td class='command'><div class="cell-content">{'channels': [<tests_automation.sdk.socan_sdk.utils.commands.generic_msg.ChannelConfig object at 0x7f1fc1a7e5c0>], 'address': 19, 'packed_data': [32, 49, 32, 49, 1], 'data_str': '$20 $31 $20 $31 $01'}</div></td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $01</td><td class='parsed-response'>{'channels': [{'number': 0, 'frequency': 0, 'enabled': True}]}</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $201 $201 Hg $201 : OK
+></td><td class='command'>switch_connection</td><td class='command'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 1}</td><td class='command'>SB:S101:1;</td><td class='parsed-response'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 1}</td><td class='response'>N/A</td><td class='command'>take_screenshot</td><td class='command'><div class="cell-content">{'self': <sdk.keysight_xsan_sdk.utils.commands.web_control.WebControlCommandBuilder object at 0x7f1fc1a7e230>, 'filename': 'test_v1_1__test_fwd_enable/fwd_ch0_freq0.png', 'command_str': "take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch0_freq0.png')", 'output_dir': None}</div></td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch0_freq0.png')</td><td>[1001 items]</td><td class='numeric'>[1001 items]</td><td>True</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td class='numeric'>0</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+<tr class='odd'><td>2</td><td>2025-18-09 09:25:45</td><td class='numeric'>10.925 GHz</td><td class='numeric'>-45.60 dBm</td><td><a href='#fwd_ch1_freq2.png' class='screenshot-link'>View</a></td><td class='command'>set_channel</td><td class='command'><div class="cell-content">{'channels': [<tests_automation.sdk.socan_sdk.utils.commands.generic_msg.ChannelConfig object at 0x7f1fc1a7ea70>], 'address': 19, 'packed_data': [32, 49, 32, 49, 2], 'data_str': '$20 $31 $20 $31 $02'}</div></td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $02</td><td class='parsed-response'>{'channels': [{'number': 1, 'frequency': 2, 'enabled': True}]}</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $202 $202 Hg $201 : OK
+></td><td class='command'>switch_connection</td><td class='command'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 2}</td><td class='command'>SB:S102:1;</td><td class='parsed-response'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 2}</td><td class='response'>N/A</td><td class='command'>take_screenshot</td><td class='command'><div class="cell-content">{'self': <sdk.keysight_xsan_sdk.utils.commands.web_control.WebControlCommandBuilder object at 0x7f1fc1a7e230>, 'filename': 'test_v1_1__test_fwd_enable/fwd_ch1_freq2.png', 'command_str': "take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch1_freq2.png')", 'output_dir': None}</div></td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch1_freq2.png')</td><td>[1001 items]</td><td class='numeric'>[1001 items]</td><td>N/A</td><td>True</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td class='numeric'>N/A</td><td class='numeric'>2</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+<tr class='even'><td>3</td><td>2025-18-09 09:25:49</td><td class='numeric'>10.910 GHz</td><td class='numeric'>-54.50 dBm</td><td><a href='#fwd_ch2_freq1.png' class='screenshot-link'>View</a></td><td class='command'>set_channel</td><td class='command'><div class="cell-content">{'channels': [<tests_automation.sdk.socan_sdk.utils.commands.generic_msg.ChannelConfig object at 0x7f1fc1a7e9b0>], 'address': 19, 'packed_data': [32, 49, 32, 49, 4], 'data_str': '$20 $31 $20 $31 $04'}</div></td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $04</td><td class='parsed-response'>{'channels': [{'number': 2, 'frequency': 1, 'enabled': True}]}</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $204 $204 Hg $201 : OK
+></td><td class='command'>switch_connection</td><td class='command'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 3}</td><td class='command'>SB:S103:1;</td><td class='parsed-response'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 3}</td><td class='response'>N/A</td><td class='command'>take_screenshot</td><td class='command'><div class="cell-content">{'self': <sdk.keysight_xsan_sdk.utils.commands.web_control.WebControlCommandBuilder object at 0x7f1fc1a7e230>, 'filename': 'test_v1_1__test_fwd_enable/fwd_ch2_freq1.png', 'command_str': "take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch2_freq1.png')", 'output_dir': None}</div></td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch2_freq1.png')</td><td>[1001 items]</td><td class='numeric'>[1001 items]</td><td>N/A</td><td>N/A</td><td>True</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>1</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+<tr class='odd'><td>4</td><td>2025-18-09 09:25:53</td><td class='numeric'>11.015 GHz</td><td class='numeric'>-52.88 dBm</td><td><a href='#fwd_ch3_freq3.png' class='screenshot-link'>View</a></td><td class='command'>set_channel</td><td class='command'><div class="cell-content">{'channels': [<tests_automation.sdk.socan_sdk.utils.commands.generic_msg.ChannelConfig object at 0x7f1fc1a7ea70>], 'address': 19, 'packed_data': [32, 49, 32, 49, 8], 'data_str': '$20 $31 $20 $31 $08'}</div></td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $08</td><td class='parsed-response'>{'channels': [{'number': 3, 'frequency': 3, 'enabled': True}]}</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $208 $208 Hg $201 : OK
+></td><td class='command'>switch_connection</td><td class='command'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 4}</td><td class='command'>SB:S104:1;</td><td class='parsed-response'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 4}</td><td class='response'>N/A</td><td class='command'>take_screenshot</td><td class='command'><div class="cell-content">{'self': <sdk.keysight_xsan_sdk.utils.commands.web_control.WebControlCommandBuilder object at 0x7f1fc1a7e230>, 'filename': 'test_v1_1__test_fwd_enable/fwd_ch3_freq3.png', 'command_str': "take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch3_freq3.png')", 'output_dir': None}</div></td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch3_freq3.png')</td><td>[1001 items]</td><td class='numeric'>[1001 items]</td><td>N/A</td><td>N/A</td><td>N/A</td><td>True</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>3</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+<tr class='even'><td>5</td><td>2025-18-09 09:25:57</td><td class='numeric'>11.565 GHz</td><td class='numeric'>-50.09 dBm</td><td><a href='#fwd_ch4_freq0.png' class='screenshot-link'>View</a></td><td class='command'>set_channel</td><td class='command'><div class="cell-content">{'channels': [<tests_automation.sdk.socan_sdk.utils.commands.generic_msg.ChannelConfig object at 0x7f1fc1b42c80>], 'address': 19, 'packed_data': [32, 49, 32, 49, 16], 'data_str': '$20 $31 $20 $31 $10'}</div></td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $10</td><td class='parsed-response'>{'channels': [{'number': 4, 'frequency': 0, 'enabled': True}]}</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $210 $210 Hg $201 : OK
+></td><td class='command'>switch_connection</td><td class='command'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 5}</td><td class='command'>SB:S105:1;</td><td class='parsed-response'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 5}</td><td class='response'>N/A</td><td class='command'>take_screenshot</td><td class='command'><div class="cell-content">{'self': <sdk.keysight_xsan_sdk.utils.commands.web_control.WebControlCommandBuilder object at 0x7f1fc1a7e230>, 'filename': 'test_v1_1__test_fwd_enable/fwd_ch4_freq0.png', 'command_str': "take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch4_freq0.png')", 'output_dir': None}</div></td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch4_freq0.png')</td><td>[1001 items]</td><td class='numeric'>[1001 items]</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>True</td><td>N/A</td><td>N/A</td><td>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>0</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+<tr class='odd'><td>6</td><td>2025-18-09 09:26:01</td><td class='numeric'>11.425 GHz</td><td class='numeric'>-52.00 dBm</td><td><a href='#fwd_ch5_freq2.png' class='screenshot-link'>View</a></td><td class='command'>set_channel</td><td class='command'><div class="cell-content">{'channels': [<tests_automation.sdk.socan_sdk.utils.commands.generic_msg.ChannelConfig object at 0x7f2009d8a920>], 'address': 19, 'packed_data': [32, 49, 32, 49, 32], 'data_str': '$20 $31 $20 $31 $20'}</div></td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $20</td><td class='parsed-response'>{'channels': [{'number': 5, 'frequency': 2, 'enabled': True}]}</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $220 $220 Hg $201 : OK
+></td><td class='command'>switch_connection</td><td class='command'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 6}</td><td class='command'>SB:S106:1;</td><td class='parsed-response'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 6}</td><td class='response'>N/A</td><td class='command'>take_screenshot</td><td class='command'><div class="cell-content">{'self': <sdk.keysight_xsan_sdk.utils.commands.web_control.WebControlCommandBuilder object at 0x7f1fc1a7e230>, 'filename': 'test_v1_1__test_fwd_enable/fwd_ch5_freq2.png', 'command_str': "take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch5_freq2.png')", 'output_dir': None}</div></td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch5_freq2.png')</td><td>[1001 items]</td><td class='numeric'>[1001 items]</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>True</td><td>N/A</td><td>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>2</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+<tr class='even'><td>7</td><td>2025-18-09 09:26:05</td><td class='numeric'>10.865 GHz</td><td class='numeric'>-65.25 dBm</td><td><a href='#fwd_ch6_freq1.png' class='screenshot-link'>View</a></td><td class='command'>set_channel</td><td class='command'><div class="cell-content">{'channels': [<tests_automation.sdk.socan_sdk.utils.commands.generic_msg.ChannelConfig object at 0x7f2009d8af80>], 'address': 19, 'packed_data': [32, 49, 32, 49, 64], 'data_str': '$20 $31 $20 $31 $40'}</div></td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $40</td><td class='parsed-response'>{'channels': [{'number': 6, 'frequency': 1, 'enabled': True}]}</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $240 $240 Hg $201 : OK
+></td><td class='command'>switch_connection</td><td class='command'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 7}</td><td class='command'>SB:S107:1;</td><td class='parsed-response'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 7}</td><td class='response'>N/A</td><td class='command'>take_screenshot</td><td class='command'><div class="cell-content">{'self': <sdk.keysight_xsan_sdk.utils.commands.web_control.WebControlCommandBuilder object at 0x7f1fc1a7e230>, 'filename': 'test_v1_1__test_fwd_enable/fwd_ch6_freq1.png', 'command_str': "take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch6_freq1.png')", 'output_dir': None}</div></td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch6_freq1.png')</td><td>[1001 items]</td><td class='numeric'>[1001 items]</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>True</td><td>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>1</td><td class='numeric'>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+<tr class='odd'><td>8</td><td>2025-18-09 09:26:09</td><td class='numeric'>11.445 GHz</td><td class='numeric'>-52.22 dBm</td><td><a href='#fwd_ch7_freq3.png' class='screenshot-link'>View</a></td><td class='command'>set_channel</td><td class='command'><div class="cell-content">{'channels': [<tests_automation.sdk.socan_sdk.utils.commands.generic_msg.ChannelConfig object at 0x7f2009d8ab90>], 'address': 19, 'packed_data': [32, 49, 32, 49, 128], 'data_str': '$20 $31 $20 $31 $80'}</div></td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $80</td><td class='parsed-response'>{'channels': [{'number': 7, 'frequency': 3, 'enabled': True}]}</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $280 $280 Hg $201 : OK
+></td><td class='command'>switch_connection</td><td class='command'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 8}</td><td class='command'>SB:S108:1;</td><td class='parsed-response'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 8}</td><td class='response'>N/A</td><td class='command'>take_screenshot</td><td class='command'><div class="cell-content">{'self': <sdk.keysight_xsan_sdk.utils.commands.web_control.WebControlCommandBuilder object at 0x7f1fc1a7e230>, 'filename': 'test_v1_1__test_fwd_enable/fwd_ch7_freq3.png', 'command_str': "take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch7_freq3.png')", 'output_dir': None}</div></td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_enable/fwd_ch7_freq3.png')</td><td>[1001 items]</td><td class='numeric'>[1001 items]</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>True</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>3</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
                 </tbody>
             </table>
         </div>
@@ -257,7 +313,7 @@
 
         
         <div class="footer">
-            <p>Report generated on 2025-09-18 13:12:04</p>
+            <p>Report generated on 2025-09-18 15:45:38</p>
         </div>
     </div>
 </body>

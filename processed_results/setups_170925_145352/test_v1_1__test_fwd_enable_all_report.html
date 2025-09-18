@@ -60,18 +60,64 @@
             margin-bottom: 20px;
         }
         
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
         table {
             width: 100%;
+            min-width: 1500px;  /* Ensure minimum width for many columns */
             border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 14px;
+            margin: 0;
+            font-size: 13px;
         }
         
         th, td {
-            padding: 12px 8px;
+            padding: 8px 6px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            border-right: 1px solid #eee;
             vertical-align: top;
+            word-wrap: break-word;
+            max-width: 200px;  /* Prevent columns from becoming too wide */
+            max-height: 120px;  /* Limit cell height */
+            overflow: auto;     /* Add scrolling for overflow content */
+            position: relative;
+        }
+        
+        /* Scrollable content wrapper for cells with large data */
+        .cell-content {
+            max-height: 100px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .cell-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .cell-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .cell-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        .cell-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        th:last-child, td:last-child {
+            border-right: none;
         }
         
         th {
@@ -80,6 +126,50 @@
             font-weight: bold;
             position: sticky;
             top: 0;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        /* Specific column widths for better layout */
+        th:first-child, td:first-child {
+            width: 40px;
+            text-align: center;
+        }
+        
+        .command {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-width: 180px;
+            word-wrap: break-word;
+        }
+        
+        .response {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+        
+        /* Special styling for parsed responses */
+        .parsed-response {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+        
+        /* Override cell-content styles for specific cell types */
+        .command .cell-content,
+        .response .cell-content,
+        .parsed-response .cell-content {
+            font-family: inherit;
+            font-size: inherit;
+        }
+        
+        .numeric {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            white-space: nowrap;
         }
         
         tr:nth-child(even) {
@@ -88,25 +178,6 @@
         
         tr:hover {
             background-color: #e3f2fd;
-        }
-        
-        .command {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-width: 200px;
-            word-wrap: break-word;
-        }
-        
-        .response {
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            max-width: 250px;
-            word-wrap: break-word;
-        }
-        
-        .numeric {
-            text-align: right;
-            font-family: 'Courier New', monospace;
         }
         
         .screenshot-link {
@@ -143,11 +214,6 @@
             font-size: 12px;
             text-align: center;
         }
-        
-        .table-container {
-            overflow-x: auto;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
@@ -178,20 +244,10 @@
         <div class="table-container">
             <table>
                 <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Timestamp</th>
-                        <th>SOCAN Command</th>
-                        <th>SOCAN Response</th>
-                        <th>RF Matrix Command</th>
-                        <th>Keysight Command</th>
-                        <th>Peak Frequency</th>
-                        <th>Peak Amplitude</th>
-                        <th>Screenshot</th>
-                    </tr>
+                    <tr><th>#</th><th>Timestamp</th><th>Spectrum Frequencies</th><th>Spectrum Amplitudes</th><th>Parsed Response</th><th>Peak Amplitude dBm</th><th>Peak Frequency GHz</th></tr>
                 </thead>
                 <tbody>
-                    <tr class='even'><td>1</td><td>2025-17-09 14:54:00</td><td class='command'>N/A</td><td class='response'>N/A</td><td class='command'>N/A</td><td class='command'>N/A</td><td class='numeric'>N/A</td><td class='numeric'>N/A</td><td>N/A</td></tr>
+                    <tr class='even'><td>1</td><td>2025-17-09 14:54:00</td><td>[1001 items]</td><td class='numeric'>[1001 items]</td><td class='parsed-response'><div class="cell-content">{'channels': [{'number': 0, 'frequency': 0, 'enabled': True}, {'number': 1, 'frequency': 2, 'enabled': True}, {'number': 2, 'frequency': 1, 'enabled': True}, {'number': 3, 'frequency': 3, 'enabled': True}, {'number': 4, 'frequency': 0, 'enabled': True}, {'number': 5, 'frequency': 2, 'enabled': True}, {'number': 6, 'frequency': 1, 'enabled': True}, {'number': 7, 'frequency': 3, 'enabled': True}]}</div></td><td class='numeric'>-64.68</td><td class='numeric'>11.800 GHz</td></tr>
                 </tbody>
             </table>
         </div>
@@ -200,7 +256,7 @@
         <p>No screenshots available</p>
         
         <div class="footer">
-            <p>Report generated on 2025-09-18 13:12:02</p>
+            <p>Report generated on 2025-09-18 15:45:36</p>
         </div>
     </div>
 </body>

@@ -60,18 +60,64 @@
             margin-bottom: 20px;
         }
         
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
         table {
             width: 100%;
+            min-width: 1500px;  /* Ensure minimum width for many columns */
             border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 14px;
+            margin: 0;
+            font-size: 13px;
         }
         
         th, td {
-            padding: 12px 8px;
+            padding: 8px 6px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            border-right: 1px solid #eee;
             vertical-align: top;
+            word-wrap: break-word;
+            max-width: 200px;  /* Prevent columns from becoming too wide */
+            max-height: 120px;  /* Limit cell height */
+            overflow: auto;     /* Add scrolling for overflow content */
+            position: relative;
+        }
+        
+        /* Scrollable content wrapper for cells with large data */
+        .cell-content {
+            max-height: 100px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .cell-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .cell-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .cell-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        .cell-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        th:last-child, td:last-child {
+            border-right: none;
         }
         
         th {
@@ -80,6 +126,50 @@
             font-weight: bold;
             position: sticky;
             top: 0;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        /* Specific column widths for better layout */
+        th:first-child, td:first-child {
+            width: 40px;
+            text-align: center;
+        }
+        
+        .command {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-width: 180px;
+            word-wrap: break-word;
+        }
+        
+        .response {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+        
+        /* Special styling for parsed responses */
+        .parsed-response {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+        
+        /* Override cell-content styles for specific cell types */
+        .command .cell-content,
+        .response .cell-content,
+        .parsed-response .cell-content {
+            font-family: inherit;
+            font-size: inherit;
+        }
+        
+        .numeric {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            white-space: nowrap;
         }
         
         tr:nth-child(even) {
@@ -88,25 +178,6 @@
         
         tr:hover {
             background-color: #e3f2fd;
-        }
-        
-        .command {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-width: 200px;
-            word-wrap: break-word;
-        }
-        
-        .response {
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            max-width: 250px;
-            word-wrap: break-word;
-        }
-        
-        .numeric {
-            text-align: right;
-            font-family: 'Courier New', monospace;
         }
         
         .screenshot-link {
@@ -143,11 +214,6 @@
             font-size: 12px;
             text-align: center;
         }
-        
-        .table-container {
-            overflow-x: auto;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
@@ -178,21 +244,11 @@
         <div class="table-container">
             <table>
                 <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Timestamp</th>
-                        <th>SOCAN Command</th>
-                        <th>SOCAN Response</th>
-                        <th>RF Matrix Command</th>
-                        <th>Keysight Command</th>
-                        <th>Peak Frequency</th>
-                        <th>Peak Amplitude</th>
-                        <th>Screenshot</th>
-                    </tr>
+                    <tr><th>#</th><th>Timestamp</th><th>Peak Frequency</th><th>Peak Amplitude</th><th>Screenshot Filepath</th><th>SOCAN Command Method</th><th>SOCAN Command Args</th><th>SOCAN Command</th><th>Parsed SOCAN Response</th><th>Raw SOCAN Response</th><th>RF Matrix Command Method</th><th>RF Matrix Command Args</th><th>RF Matrix Command</th><th>Parsed RF Matrix Response</th><th>Raw RF Matrix Response</th><th>Keysight XSAN Command Method</th><th>Keysight XSAN Command Args</th><th>Keysight XSAN Command</th><th>Frequencies</th><th>Amplitudes</th><th>Enabled 0</th><th>Frequency 0</th><th>Gain 0</th></tr>
                 </thead>
                 <tbody>
-                    <tr class='even'><td>1</td><td>2025-17-09 17:22:41</td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $00</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $000 $000 Hg $201 : OK
-></td><td class='command'>SB:S101:1;</td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_disable_all/fwd_disable_all.png')</td><td class='numeric'>11.800 GHz</td><td class='numeric'>-68.94 dBm</td><td><a href='#fwd_disable_all.png' class='screenshot-link'>View</a></td></tr>
+                    <tr class='even'><td>1</td><td>2025-17-09 17:22:41</td><td class='numeric'>11.800 GHz</td><td class='numeric'>-68.94 dBm</td><td><a href='#fwd_disable_all.png' class='screenshot-link'>View</a></td><td class='command'>set_channel</td><td class='command'><div class="cell-content">{'channels': [<tests_automation.sdk.socan_sdk.utils.commands.generic_msg.ChannelConfig object at 0x77a0d2b13970>], 'address': 19, 'packed_data': [32, 49, 32, 49, 0], 'data_str': '$20 $31 $20 $31 $00'}</div></td><td class='command'>sendCMD $13 $00 $20 $31 $20 $31 $00</td><td class='parsed-response'>{'channels': []}</td><td class='response'>> $3E7 $041 $220 $231 $220 $231 $000 $000 Hg $201 : OK
+></td><td class='command'>switch_connection</td><td class='command'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 1}</td><td class='command'>SB:S101:1;</td><td class='parsed-response'>{'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 1}</td><td class='response'>N/A</td><td class='command'>take_screenshot</td><td class='command'><div class="cell-content">{'self': <sdk.keysight_xsan_sdk.utils.commands.web_control.WebControlCommandBuilder object at 0x77a0d2b130d0>, 'filename': 'test_v1_1__test_fwd_disable_all/fwd_disable_all.png', 'command_str': "take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_disable_all/fwd_disable_all.png')", 'output_dir': None}</div></td><td class='command'>take_screenshot(output_dir='None', filename='test_v1_1__test_fwd_disable_all/fwd_disable_all.png')</td><td>[1001 items]</td><td class='numeric'>[1001 items]</td><td>False</td><td class='numeric'>0</td><td>N/A</td></tr>
                 </tbody>
             </table>
         </div>
@@ -208,7 +264,7 @@
 
         
         <div class="footer">
-            <p>Report generated on 2025-09-18 13:12:03</p>
+            <p>Report generated on 2025-09-18 15:45:37</p>
         </div>
     </div>
 </body>
