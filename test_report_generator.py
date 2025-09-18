@@ -35,20 +35,32 @@ class TestResultParser:
         # Parse results JSON
         results_file = self._find_file_with_suffix('_results.json')
         if results_file:
-            with open(results_file, 'r') as f:
-                results['results_data'] = json.load(f)
+            try:
+                with open(results_file, 'r') as f:
+                    results['results_data'] = json.load(f)
+            except json.JSONDecodeError as e:
+                print(f"Warning: Invalid JSON in {results_file.name}: {str(e)}")
+                results['results_data'] = []
         
         # Parse params JSON  
         params_file = self._find_file_with_suffix('_params.json')
         if params_file:
-            with open(params_file, 'r') as f:
-                results['params'] = json.load(f)
+            try:
+                with open(params_file, 'r') as f:
+                    results['params'] = json.load(f)
+            except json.JSONDecodeError as e:
+                print(f"Warning: Invalid JSON in {params_file.name}: {str(e)}")
+                results['params'] = {}
                 
         # Parse status JSON
         status_file = self._find_file_with_suffix('_status.json')
         if status_file:
-            with open(status_file, 'r') as f:
-                results['status'] = json.load(f)
+            try:
+                with open(status_file, 'r') as f:
+                    results['status'] = json.load(f)
+            except json.JSONDecodeError as e:
+                print(f"Warning: Invalid JSON in {status_file.name}: {str(e)}")
+                results['status'] = {}
                 
         # Find screenshots
         for file in self.test_folder.glob('*.png'):
@@ -149,7 +161,9 @@ class HTMLReportGenerator:
             # Screenshot
             screenshot = entry.get('screenshot_filepath', '')
             if screenshot:
-                row += f"<td><a href='#{screenshot}' class='screenshot-link'>View</a></td>"
+                # Extract just the filename from the screenshot path
+                screenshot_filename = Path(screenshot).name
+                row += f"<td><a href='#{screenshot_filename}' class='screenshot-link'>View</a></td>"
             else:
                 row += f"<td>N/A</td>"
                 
@@ -430,13 +444,16 @@ Examples:
     parser.add_argument(
         'input_dir',
         type=Path,
-        help='Input directory containing test result folders'
+        nargs='?',
+        default=Path('output'),
+        help='Input directory containing test result folders (default: output)'
     )
     
     parser.add_argument(
         '--output-dir', '-o',
         type=Path,
-        default=None,
+        default='processed_results',
+        required=False,
         help='Output directory for HTML reports (default: same as input)'
     )
     
@@ -454,48 +471,64 @@ Examples:
     else:
         output_dir = input_dir
     
-    # Find all test folders (those starting with "test_")
-    test_folders = [d for d in input_dir.iterdir() 
-                   if d.is_dir() and d.name.startswith('test_')]
-    
-    if not test_folders:
-        print(f"No test folders found in {input_dir}")
+    # Recursively find all subfolders containing *_results.json files
+    valid_folders = []
+    for root, dirs, files in os.walk(input_dir):
+        folder_path = Path(root)
+        if any(f.endswith('_results.json') for f in files):
+            valid_folders.append(folder_path)
+
+    if not valid_folders:
+        print(f"No result folders found in {input_dir}")
         return 1
-    
-    print(f"Found {len(test_folders)} test folders")
-    
-    # Generate reports for each test
+
+    print(f"Found {len(valid_folders)} result folders")
+
+    # Generate reports for each result folder
     report_generator = HTMLReportGenerator()
     generated_reports = []
-    
-    for test_folder in sorted(test_folders):
-        print(f"Processing {test_folder.name}...")
-        
+
+    for result_folder in sorted(valid_folders):
+        print(f"Processing {result_folder.name}...")
+
         try:
             # Parse test results
-            parser = TestResultParser(test_folder)
+            parser = TestResultParser(result_folder)
             test_results = parser.parse_results()
-            
-            # Generate HTML report
-            output_file = output_dir / f"{test_folder.name}_report.html"
+
+            # Create output directory for this test run (parent folder name)
+            test_run_name = result_folder.parent.name if result_folder.parent != input_dir else result_folder.name
+            test_run_output_dir = output_dir / test_run_name
+            test_run_output_dir.mkdir(parents=True, exist_ok=True)
+
+            # Generate HTML report in the test run folder
+            output_file = test_run_output_dir / f"{result_folder.name}_report.html"
             report_generator.generate_report(test_results, output_file)
             generated_reports.append(output_file)
-            
+
         except Exception as e:
-            print(f"Error processing {test_folder.name}: {str(e)}")
-    
+            print(f"Error processing {result_folder.name}: {str(e)}")
+
     # Generate index page
     index_file = output_dir / "index.html"
     _generate_index_page(generated_reports, index_file, input_dir.name)
-    
+
     print(f"\nGenerated {len(generated_reports)} test reports in {output_dir}")
     print(f"Open {index_file} to view all reports")
-    
+
     return 0
 
 
 def _generate_index_page(report_files: List[Path], index_file: Path, test_session: str):
     """Generate an index page with links to all reports"""
+    
+    # Group reports by test run (parent folder)
+    test_runs = {}
+    for report_file in report_files:
+        test_run = report_file.parent.name
+        if test_run not in test_runs:
+            test_runs[test_run] = []
+        test_runs[test_run].append(report_file)
     
     index_html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -511,7 +544,7 @@ def _generate_index_page(report_files: List[Path], index_file: Path, test_sessio
             background-color: #f5f5f5;
         }}
         .container {{
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
             padding: 30px;
@@ -523,16 +556,32 @@ def _generate_index_page(report_files: List[Path], index_file: Path, test_sessio
             border-bottom: 3px solid #3498db;
             padding-bottom: 10px;
         }}
+        .test-run {{
+            margin: 30px 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }}
+        .test-run-header {{
+            background-color: #3498db;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            font-size: 18px;
+        }}
         .report-list {{
             list-style: none;
             padding: 0;
+            margin: 0;
         }}
         .report-list li {{
-            margin: 10px 0;
+            margin: 0;
             padding: 15px;
             background-color: #f8f9fa;
-            border-left: 4px solid #3498db;
-            border-radius: 4px;
+            border-bottom: 1px solid #e0e0e0;
+        }}
+        .report-list li:last-child {{
+            border-bottom: none;
         }}
         .report-list a {{
             color: #2c3e50;
@@ -555,18 +604,28 @@ def _generate_index_page(report_files: List[Path], index_file: Path, test_sessio
         <h1>Test Reports Index</h1>
         <h2>Test Session: {test_session}</h2>
         
-        <ul class="report-list">
 """
     
-    for report_file in sorted(report_files):
-        test_name = report_file.stem.replace('_report', '')
-        index_html += f'            <li><a href="{report_file.name}">{test_name}</a></li>\n'
-    
-    index_html += f"""        </ul>
+    for test_run_name in sorted(test_runs.keys()):
+        reports = test_runs[test_run_name]
+        index_html += f"""
+        <div class="test-run">
+            <div class="test-run-header">{test_run_name}</div>
+            <ul class="report-list">
+"""
+        for report_file in sorted(reports):
+            test_name = report_file.stem.replace('_report', '')
+            relative_path = f"{test_run_name}/{report_file.name}"
+            index_html += f'                <li><a href="{relative_path}">{test_name}</a></li>\n'
         
+        index_html += """            </ul>
+        </div>
+"""
+    
+    index_html += f"""        
         <div class="footer">
             <p>Generated on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
-            <p>{len(report_files)} test reports available</p>
+            <p>{len(report_files)} test reports available across {len(test_runs)} test runs</p>
         </div>
     </div>
 </body>
