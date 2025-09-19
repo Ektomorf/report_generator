@@ -94,6 +94,9 @@ class HTMLReportGenerator:
         # Generate status info
         status_info = self._generate_status_info(test_results['status'])
         
+        # Generate test description info
+        description_info = self._generate_description_info(test_results['params'])
+        
         # Generate params info
         params_info = self._generate_params_info(test_results['params'])
         
@@ -101,6 +104,7 @@ class HTMLReportGenerator:
         html_content = self.html_template.format(
             test_name=test_results['test_name'],
             status_info=status_info,
+            description_info=description_info,
             params_info=params_info,
             table_headers=table_headers,
             table_rows=table_rows,
@@ -348,8 +352,34 @@ class HTMLReportGenerator:
         params_data = params.get('params', params)
         
         for key, value in params_data.items():
+            # Skip description fields as they're handled separately
+            if key in ['test_description', 'description']:
+                continue
             html += f"<li><strong>{key}:</strong> {value}</li>\n"
         html += "</ul>\n</div>\n"
+        
+        return html
+    
+    def _generate_description_info(self, params: Dict) -> str:
+        """Generate test description HTML from docstring in params"""
+        if not params:
+            return ""
+        
+        # Handle nested params structure
+        params_data = params.get('params', params)
+        
+        # Look for description in various possible keys
+        description = (params_data.get('test_description') or 
+                      params_data.get('description') or 
+                      params.get('test_description') or 
+                      params.get('description'))
+        
+        if not description:
+            return ""
+        
+        html = "<div class='description-info'>\n<h3>Test Description</h3>\n"
+        html += f"<p class='test-description'>{description}</p>\n"
+        html += "</div>\n"
         
         return html
     
@@ -415,6 +445,21 @@ class HTMLReportGenerator:
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
+        }}
+        
+        .description-info {{
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }}
+        
+        .test-description {{
+            margin: 0;
+            font-style: italic;
+            line-height: 1.6;
+            color: #495057;
         }}
         
         .table-container {{
@@ -578,6 +623,8 @@ class HTMLReportGenerator:
         <h1>Test Report: {test_name}</h1>
         
         {status_info}
+        
+        {description_info}
         
         {params_info}
         
