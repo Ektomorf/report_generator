@@ -12,6 +12,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 import base64
+import re
 
 
 class TestResultParser:
@@ -72,6 +73,124 @@ class TestResultParser:
         """Find file with specific suffix in test folder"""
         for file in self.test_folder.glob(f'*{suffix}'):
             return file
+        return None
+
+
+class SetupReportParser:
+    """Parser for setup report.json files"""
+    
+    def __init__(self, setup_folder: Path):
+        self.setup_folder = setup_folder
+        self.setup_name = setup_folder.name
+        
+    def parse_report(self) -> Dict[str, Any]:
+        """Parse report.json and collect test logs"""
+        report_data = {
+            'setup_name': self.setup_name,
+            'setup_folder': str(self.setup_folder),
+            'test_summary': {},
+            'tests': [],
+            'logs': []
+        }
+        
+        # Parse report.json
+        report_file = self.setup_folder / 'report.json'
+        if report_file.exists():
+            try:
+                with open(report_file, 'r') as f:
+                    report_json = json.load(f)
+                    
+                # Extract summary information
+                report_data['test_summary'] = {
+                    'total': report_json.get('summary', {}).get('total', 0),
+                    'passed': report_json.get('summary', {}).get('passed', 0),
+                    'failed': report_json.get('summary', {}).get('failed', 0),
+                    'error': report_json.get('summary', {}).get('error', 0),
+                    'duration': report_json.get('duration', 0),
+                    'created': report_json.get('created', 0)
+                }
+                
+                # Extract test results
+                for test in report_json.get('tests', []):
+                    test_info = {
+                        'name': test.get('nodeid', '').replace('::', ''),
+                        'outcome': test.get('outcome', 'unknown'),
+                        'duration': 0,
+                        'error_message': ''
+                    }
+                    
+                    # Calculate total test duration
+                    if 'setup' in test:
+                        test_info['duration'] += test['setup'].get('duration', 0)
+                    if 'call' in test:
+                        test_info['duration'] += test['call'].get('duration', 0)
+                    if 'teardown' in test:
+                        test_info['duration'] += test['teardown'].get('duration', 0)
+                    
+                    # Get error message if test failed
+                    if test.get('outcome') in ['failed', 'error']:
+                        if 'setup' in test and test['setup'].get('outcome') == 'failed':
+                            crash = test['setup'].get('crash', {})
+                            test_info['error_message'] = crash.get('message', test['setup'].get('longrepr', ''))
+                        elif 'call' in test and test['call'].get('outcome') == 'failed':
+                            crash = test['call'].get('crash', {})
+                            test_info['error_message'] = crash.get('message', test['call'].get('longrepr', ''))
+                    
+                    report_data['tests'].append(test_info)
+                    
+            except json.JSONDecodeError as e:
+                print(f"Warning: Invalid JSON in {report_file}: {str(e)}")
+                
+        # Collect logs from test subdirectories
+        report_data['logs'] = self._collect_test_logs()
+        
+        return report_data
+        
+    def _collect_test_logs(self) -> List[Dict[str, Any]]:
+        """Collect logs from all test subdirectories"""
+        logs = []
+        
+        # Find all test subdirectories
+        for test_dir in self.setup_folder.iterdir():
+            if test_dir.is_dir() and test_dir.name.startswith('test_'):
+                log_file = None
+                # Look for .log files in the test directory
+                for file in test_dir.glob('*.log'):
+                    log_file = file
+                    break
+                    
+                if log_file and log_file.exists():
+                    try:
+                        with open(log_file, 'r') as f:
+                            content = f.read().strip()
+                            if content:  # Only process non-empty logs
+                                # Parse log lines with timestamp and level
+                                for line in content.split('\n'):
+                                    line = line.strip()
+                                    if line:
+                                        log_entry = self._parse_log_line(line)
+                                        if log_entry:
+                                            log_entry['test_name'] = test_dir.name
+                                            logs.append(log_entry)
+                    except Exception as e:
+                        print(f"Warning: Could not read log file {log_file}: {str(e)}")
+                        
+        return sorted(logs, key=lambda x: x.get('timestamp', ''))
+        
+    def _parse_log_line(self, line: str) -> Optional[Dict[str, Any]]:
+        """Parse a single log line to extract timestamp, level, and message"""
+        # Expected format: HH:MM:SS - LEVEL - message
+        log_pattern = r'^(\d{2}:\d{2}:\d{2})\s*-\s*(INFO|DEBUG|ERROR|WARNING|WARN)\s*-\s*(.+)$'
+        match = re.match(log_pattern, line)
+        
+        if match:
+            timestamp, level, message = match.groups()
+            return {
+                'timestamp': timestamp,
+                'level': level.upper(),
+                'message': message.strip()
+            }
+        
         return None
 
 
@@ -695,23 +814,30 @@ Examples:
     else:
         output_dir = input_dir
     
-    # Recursively find all subfolders containing *_results.json files
+    # Recursively find all subfolders containing *_results.json files OR report.json files
     valid_folders = []
+    setup_folders = []
+    
     for root, dirs, files in os.walk(input_dir):
         folder_path = Path(root)
+        # Look for test result folders (existing logic)
         if any(f.endswith('_results.json') for f in files):
             valid_folders.append(folder_path)
+        # Look for setup report folders (new logic)
+        elif 'report.json' in files:
+            setup_folders.append(folder_path)
 
-    if not valid_folders:
+    if not valid_folders and not setup_folders:
         print(f"No result folders found in {input_dir}")
         return 1
 
-    print(f"Found {len(valid_folders)} result folders")
+    print(f"Found {len(valid_folders)} result folders and {len(setup_folders)} setup folders")
 
     # Generate reports for each result folder
     report_generator = HTMLReportGenerator()
     generated_reports = []
 
+    # Process regular test result folders
     for result_folder in sorted(valid_folders):
         print(f"Processing {result_folder.name}...")
 
@@ -733,9 +859,21 @@ Examples:
         except Exception as e:
             print(f"Error processing {result_folder.name}: {str(e)}")
 
+    # Process setup folders with report.json
+    setup_report_data = []
+    for setup_folder in sorted(setup_folders):
+        print(f"Processing setup {setup_folder.name}...")
+        
+        try:
+            parser = SetupReportParser(setup_folder)
+            setup_data = parser.parse_report()
+            setup_report_data.append(setup_data)
+        except Exception as e:
+            print(f"Error processing setup {setup_folder.name}: {str(e)}")
+
     # Generate index page
     index_file = output_dir / "index.html"
-    _generate_index_page(generated_reports, index_file, input_dir.name)
+    _generate_index_page(generated_reports, index_file, input_dir.name, setup_report_data)
 
     print(f"\nGenerated {len(generated_reports)} test reports in {output_dir}")
     print(f"Open {index_file} to view all reports")
@@ -743,8 +881,11 @@ Examples:
     return 0
 
 
-def _generate_index_page(report_files: List[Path], index_file: Path, test_session: str):
-    """Generate an index page with links to all reports"""
+def _generate_index_page(report_files: List[Path], index_file: Path, test_session: str, setup_data: List[Dict[str, Any]] = None):
+    """Generate an index page with links to all reports and setup test results"""
+    
+    if setup_data is None:
+        setup_data = []
     
     # Group reports by test run (parent folder)
     test_runs = {}
@@ -753,6 +894,48 @@ def _generate_index_page(report_files: List[Path], index_file: Path, test_sessio
         if test_run not in test_runs:
             test_runs[test_run] = []
         test_runs[test_run].append(report_file)
+    
+    # Create comprehensive test results table data
+    all_test_results = []
+    all_logs = []
+    
+    for setup in setup_data:
+        setup_name = setup['setup_name']
+        setup_summary = setup['test_summary']
+        
+        # Add overall setup result
+        setup_result = {
+            'setup_name': setup_name,
+            'test_name': 'Overall',
+            'outcome': 'passed' if setup_summary.get('error', 0) == 0 and setup_summary.get('failed', 0) == 0 else 'failed',
+            'duration': f"{setup_summary.get('duration', 0):.2f}s",
+            'passed_tests': setup_summary.get('passed', 0),
+            'failed_tests': setup_summary.get('failed', 0) + setup_summary.get('error', 0),
+            'total_tests': setup_summary.get('total', 0),
+            'created': setup_summary.get('created', 0)
+        }
+        all_test_results.append(setup_result)
+        
+        # Add individual test results
+        for test in setup['tests']:
+            test_result = {
+                'setup_name': setup_name,
+                'test_name': test['name'],
+                'outcome': test['outcome'],
+                'duration': f"{test['duration']:.2f}s",
+                'error_message': test.get('error_message', ''),
+                'created': setup_summary.get('created', 0)
+            }
+            all_test_results.append(test_result)
+        
+        # Add logs
+        for log in setup['logs']:
+            log['setup_name'] = setup_name
+            all_logs.append(log)
+    
+    # Sort results by creation time and setup name
+    all_test_results.sort(key=lambda x: (x['created'], x['setup_name'], x['test_name']))
+    all_logs.sort(key=lambda x: (x.get('setup_name', ''), x.get('timestamp', '')))
     
     index_html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -766,19 +949,23 @@ def _generate_index_page(report_files: List[Path], index_file: Path, test_sessio
             margin: 0;
             padding: 20px;
             background-color: #f5f5f5;
+            font-size: 14px;
         }}
         .container {{
-            max-width: 1000px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }}
-        h1 {{
+        h1, h2 {{
             color: #2c3e50;
             border-bottom: 3px solid #3498db;
             padding-bottom: 10px;
+        }}
+        .section {{
+            margin: 30px 0;
         }}
         .test-run {{
             margin: 30px 0;
@@ -815,41 +1002,332 @@ def _generate_index_page(report_files: List[Path], index_file: Path, test_sessio
         .report-list a:hover {{
             color: #3498db;
         }}
+        .results-table, .logs-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 12px;
+        }}
+        .results-table th, .results-table td,
+        .logs-table th, .logs-table td {{
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }}
+        .results-table th, .logs-table th {{
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }}
+        .results-table tr:nth-child(even), .logs-table tr:nth-child(even) {{
+            background-color: #f2f2f2;
+        }}
+        .passed {{
+            background-color: #d4edda !important;
+            color: #155724;
+        }}
+        .failed, .error {{
+            background-color: #f8d7da !important;
+            color: #721c24;
+        }}
+        .log-info {{
+            color: #0c5460;
+        }}
+        .log-debug {{
+            color: #6c757d;
+        }}
+        .log-error {{
+            color: #721c24;
+            font-weight: bold;
+        }}
+        .log-warning {{
+            color: #856404;
+        }}
+        .error-message {{
+            font-family: monospace;
+            font-size: 10px;
+            max-width: 300px;
+            word-wrap: break-word;
+            color: #721c24;
+        }}
         .footer {{
             margin-top: 30px;
             text-align: center;
             color: #666;
             font-size: 12px;
         }}
+        .tabs {{
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }}
+        .tab {{
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            background-color: #f5f5f5;
+            margin-right: 5px;
+        }}
+        .tab.active {{
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+        }}
+        .tab-content {{
+            display: none;
+        }}
+        .tab-content.active {{
+            display: block;
+        }}
     </style>
+    <script>
+        function showTab(tabName) {{
+            // Hide all tab contents
+            const contents = document.getElementsByClassName('tab-content');
+            for (let content of contents) {{
+                content.classList.remove('active');
+            }}
+            
+            // Remove active class from all tabs
+            const tabs = document.getElementsByClassName('tab');
+            for (let tab of tabs) {{
+                tab.classList.remove('active');
+            }}
+            
+            // Show selected tab content and mark tab as active
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }}
+        
+        function formatTimestamp(timestamp) {{
+            const date = new Date(timestamp * 1000);
+            return date.toLocaleString();
+        }}
+        
+        window.onload = function() {{
+            // Show first tab by default
+            document.getElementById('detailed-reports').classList.add('active');
+            document.getElementsByClassName('tab')[0].classList.add('active');
+        }}
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>Test Reports Index</h1>
         <h2>Test Session: {test_session}</h2>
         
+        <div class="tabs">
+            <div class="tab" onclick="showTab('detailed-reports')">Detailed Reports</div>
+            <div class="tab" onclick="showTab('test-logs')">Test Logs</div>
+        </div>
+        
+        <!-- Test Logs Tab -->
+        <div id="test-logs" class="tab-content">
+            <h3>Test Execution Logs</h3>
 """
     
-    for test_run_name in sorted(test_runs.keys()):
-        reports = test_runs[test_run_name]
-        index_html += f"""
-        <div class="test-run">
-            <div class="test-run-header">{test_run_name}</div>
-            <ul class="report-list">
+    if all_logs:
+        index_html += """
+            <table class="logs-table">
+                <thead>
+                    <tr>
+                        <th>Setup</th>
+                        <th>Test</th>
+                        <th>Time</th>
+                        <th>Level</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
 """
-        for report_file in sorted(reports):
-            test_name = report_file.stem.replace('_report', '')
-            relative_path = f"{test_run_name}/{report_file.name}"
-            index_html += f'                <li><a href="{relative_path}">{test_name}</a></li>\n'
+        for log in all_logs:
+            level_class = f"log-{log.get('level', 'info').lower()}"
+            index_html += f"""
+                    <tr>
+                        <td>{log.get('setup_name', 'Unknown')}</td>
+                        <td>{log.get('test_name', 'Unknown')}</td>
+                        <td>{log.get('timestamp', 'N/A')}</td>
+                        <td class="{level_class}">{log.get('level', 'INFO')}</td>
+                        <td>{log.get('message', '')}</td>
+                    </tr>
+"""
+        index_html += """
+                </tbody>
+            </table>
+"""
+    else:
+        index_html += "<p>No logs available.</p>"
+    
+    index_html += """
+        </div>
         
-        index_html += """            </ul>
+        <!-- Detailed Reports Tab -->
+        <div id="detailed-reports" class="tab-content">
+            <h3>Test Results and Detailed Reports</h3>
+"""
+    
+    # Group setup data by setup name for easy lookup
+    setup_results_map = {}
+    for setup in setup_data:
+        setup_results_map[setup['setup_name']] = setup
+    
+    # Create sections for each setup with test results and links to detailed reports
+    processed_setups = set()
+    
+    # First, show setups that have both results and detailed reports
+    for test_run_name in sorted(test_runs.keys()):
+        if test_run_name in setup_results_map:
+            setup = setup_results_map[test_run_name]
+            reports = test_runs[test_run_name]
+            processed_setups.add(test_run_name)
+            
+            # Get setup summary
+            setup_summary = setup['test_summary']
+            created_date = datetime.fromtimestamp(setup_summary.get('created', 0)).strftime('%Y-%m-%d %H:%M:%S') if setup_summary.get('created') else 'Unknown'
+            
+            index_html += f"""
+            <div class="test-run">
+                <div class="test-run-header">
+                    {test_run_name} 
+                    <span style="float: right; font-size: 14px;">
+                        {setup_summary.get('passed', 0)} Passed | {setup_summary.get('failed', 0) + setup_summary.get('error', 0)} Failed | 
+                        Duration: {setup_summary.get('duration', 0):.1f}s | {created_date}
+                    </span>
+                </div>
+                
+                <!-- Test Results Table -->
+                <div style="padding: 15px;">
+                    <h4>Test Results</h4>
+                    <table class="results-table" style="margin: 10px 0;">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Result</th>
+                                <th>Duration</th>
+                                <th>Error Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+"""
+            for test in setup['tests']:
+                outcome_class = test['outcome'] if test['outcome'] in ['passed', 'failed', 'error'] else ''
+                error_msg = test.get('error_message', '')[:80] + ('...' if len(test.get('error_message', '')) > 80 else '')
+                
+                index_html += f"""
+                            <tr class="{outcome_class}">
+                                <td>{test['name']}</td>
+                                <td>{test['outcome'].upper()}</td>
+                                <td>{test['duration']:.2f}s</td>
+                                <td class="error-message">{error_msg}</td>
+                            </tr>
+"""
+            index_html += """
+                        </tbody>
+                    </table>
+                    
+                    <h4>Detailed Reports</h4>
+                    <ul class="report-list">
+"""
+            for report_file in sorted(reports):
+                test_name = report_file.stem.replace('_report', '')
+                relative_path = f"{test_run_name}/{report_file.name}"
+                index_html += f'                        <li><a href="{relative_path}">{test_name}</a></li>\n'
+            
+            index_html += """                    </ul>
+                </div>
+            </div>
+"""
+    
+    # Then, show setups that only have test results (no detailed reports)
+    for setup in setup_data:
+        setup_name = setup['setup_name']
+        if setup_name not in processed_setups:
+            setup_summary = setup['test_summary']
+            created_date = datetime.fromtimestamp(setup_summary.get('created', 0)).strftime('%Y-%m-%d %H:%M:%S') if setup_summary.get('created') else 'Unknown'
+            
+            index_html += f"""
+            <div class="test-run">
+                <div class="test-run-header">
+                    {setup_name} 
+                    <span style="float: right; font-size: 14px;">
+                        {setup_summary.get('passed', 0)} Passed | {setup_summary.get('failed', 0) + setup_summary.get('error', 0)} Failed | 
+                        Duration: {setup_summary.get('duration', 0):.1f}s | {created_date}
+                    </span>
+                </div>
+                
+                <!-- Test Results Table -->
+                <div style="padding: 15px;">
+                    <h4>Test Results</h4>
+                    <table class="results-table" style="margin: 10px 0;">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Result</th>
+                                <th>Duration</th>
+                                <th>Error Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+"""
+            for test in setup['tests']:
+                outcome_class = test['outcome'] if test['outcome'] in ['passed', 'failed', 'error'] else ''
+                error_msg = test.get('error_message', '')[:80] + ('...' if len(test.get('error_message', '')) > 80 else '')
+                
+                index_html += f"""
+                            <tr class="{outcome_class}">
+                                <td>{test['name']}</td>
+                                <td>{test['outcome'].upper()}</td>
+                                <td>{test['duration']:.2f}s</td>
+                                <td class="error-message">{error_msg}</td>
+                            </tr>
+"""
+            index_html += """
+                        </tbody>
+                    </table>
+                    <p><em>No detailed reports available for this setup.</em></p>
+                </div>
+            </div>
+"""
+    
+    # Finally, show test runs that only have detailed reports (no setup results)
+    for test_run_name in sorted(test_runs.keys()):
+        if test_run_name not in setup_results_map:
+            reports = test_runs[test_run_name]
+            index_html += f"""
+            <div class="test-run">
+                <div class="test-run-header">{test_run_name}</div>
+                <div style="padding: 15px;">
+                    <h4>Detailed Reports</h4>
+                    <ul class="report-list">
+"""
+            for report_file in sorted(reports):
+                test_name = report_file.stem.replace('_report', '')
+                relative_path = f"{test_run_name}/{report_file.name}"
+                index_html += f'                        <li><a href="{relative_path}">{test_name}</a></li>\n'
+            
+            index_html += """                    </ul>
+                    <p><em>No test results summary available for this setup.</em></p>
+                </div>
+            </div>
+"""
+        
+    index_html += """
         </div>
 """
+    
+    total_reports = len(report_files)
+    total_setups = len(setup_data)
+    total_tests = sum(result.get('total_tests', 0) for result in all_test_results if result.get('total_tests'))
+    total_passed = sum(result.get('passed_tests', 0) for result in all_test_results if result.get('passed_tests'))
+    total_failed = sum(result.get('failed_tests', 0) for result in all_test_results if result.get('failed_tests'))
     
     index_html += f"""        
         <div class="footer">
             <p>Generated on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
-            <p>{len(report_files)} test reports available across {len(test_runs)} test runs</p>
+            <p>{total_setups} setup runs • {total_tests} tests • {total_passed} passed • {total_failed} failed • {len(all_logs)} log entries • {total_reports} detailed reports</p>
         </div>
     </div>
 </body>
