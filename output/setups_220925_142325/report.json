@@ -1,0 +1,56 @@
+{
+    "created": 1758547406.7033653,
+    "duration": 0.7681865692138672,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "error": 1,
+        "total": 1,
+        "collected": 1
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_fetch_system_status_basic",
+                    "type": "Function",
+                    "lineno": 49
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_fetch_system_status_basic",
+            "lineno": 49,
+            "outcome": "error",
+            "keywords": [
+                "test_fetch_system_status_basic",
+                "test_fetch_system_status.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.002675696974620223,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_fetch_system_status.py",
+                    "lineno": 26,
+                    "message": "AttributeError: 'NoneType' object has no attribute 'connect'"
+                },
+                "longrepr": "E   AttributeError: 'NoneType' object has no attribute 'connect'"
+            },
+            "teardown": {
+                "duration": 0.0013198289670981467,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

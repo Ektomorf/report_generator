@@ -1,0 +1,154 @@
+{
+    "created": 1758299933.6012707,
+    "duration": 5.898162364959717,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "failed": 1,
+        "total": 1,
+        "collected": 1
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 518
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 518,
+            "outcome": "failed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1_fwd.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.0038893040036782622,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 5.030520235988661,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/utils/commands/updown_converter.py",
+                    "lineno": 92,
+                    "message": "ValueError: Invalid converter (must be C12 or C34)"
+                },
+                "log": [
+                    {
+                        "name": "test_setup_updown_fwd",
+                        "msg": "{'command_method': 'reset_eeprom', 'command_str': 'C12:*:1;', '**kwargs': {'reset_converter': 'C12'}, 'raw_response': 'O', 'parsed_response': {'converter_C12_eeprom_reset_step1': True}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758299928.5644236,
+                        "msecs": 564.0,
+                        "relativeCreated": 1047.999620437622,
+                        "thread": 134874783625216,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 452866,
+                        "asctime": "17:38:48"
+                    },
+                    {
+                        "name": "test_setup_updown_fwd",
+                        "msg": "{'command_method': 'reset_eeprom', 'command_str': 'C12:z:1;', '**kwargs': {'reset_converter': 'C12'}, 'raw_response': 'O', 'parsed_response': {'converter_C12_eeprom_reset_step2': True}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758299928.5666788,
+                        "msecs": 566.0,
+                        "relativeCreated": 1050.2548217773438,
+                        "thread": 134874783625216,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 452866,
+                        "asctime": "17:38:48"
+                    },
+                    {
+                        "name": "test_setup_updown_fwd",
+                        "msg": "{'command_method': 'switch_connection', 'command_str': 'SB:S116:1;', '**kwargs': {'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 16}, 'raw_response': 'O', 'parsed_response': {'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 16}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758299933.5794096,
+                        "msecs": 579.0,
+                        "relativeCreated": 6062.98565864563,
+                        "thread": 134874783625216,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 452866,
+                        "asctime": "17:38:53"
+                    },
+                    {
+                        "name": "test_setup_updown_fwd",
+                        "msg": "{'command_method': 'switch_connection', 'command_str': 'SB:S501:1;', '**kwargs': {'switch_connection_matrix': 'B', 'switch_connection_y': 5, 'switch_connection_port': 1}, 'raw_response': 'O', 'parsed_response': {'switch_connection_matrix': 'B', 'switch_connection_y': 5, 'switch_connection_port': 1}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758299933.587234,
+                        "msecs": 587.0,
+                        "relativeCreated": 6070.810079574585,
+                        "thread": 134874783625216,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 452866,
+                        "asctime": "17:38:53"
+                    }
+                ],
+                "longrepr": "E   ValueError: Invalid converter (must be C12 or C34)"
+            },
+            "teardown": {
+                "duration": 0.004122787999222055,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

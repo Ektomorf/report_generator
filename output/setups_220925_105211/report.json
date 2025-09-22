@@ -1,0 +1,46 @@
+{
+    "created": 1758534757.5427947,
+    "duration": 25.919779300689697,
+    "exitcode": 2,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 1,
+        "total": 1,
+        "collected": 1
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_setup_upconverted_input_frequency_sweep",
+                    "type": "Function",
+                    "lineno": 207
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_setup_upconverted_input_frequency_sweep",
+            "lineno": 207,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_upconverted_input_frequency_sweep",
+                "SW-1911.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 6.9855080540291965,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

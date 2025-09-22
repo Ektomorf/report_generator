@@ -1,0 +1,344 @@
+{
+    "created": 1758290744.2817607,
+    "duration": 21.115565061569214,
+    "exitcode": 0,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 3,
+        "total": 3,
+        "collected": 3
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 659
+                },
+                {
+                    "nodeid": "::test_setup_updown_rtn",
+                    "type": "Function",
+                    "lineno": 624
+                },
+                {
+                    "nodeid": "::test_rtn_enable_all",
+                    "type": "Function",
+                    "lineno": 377
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 659,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1_rtn.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.433879418997094,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 5.037232440998196,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "test_socan_normal_mode",
+                        "msg": "{'command_method': 'reset_eeprom', 'command_str': 'C12:*:1;', '**kwargs': {'reset_converter': 'C12'}, 'raw_response': 'O', 'parsed_response': {'converter_C12_eeprom_reset_step1': True}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758290725.3832233,
+                        "msecs": 383.0,
+                        "relativeCreated": 2417.818069458008,
+                        "thread": 127476624453632,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 376065,
+                        "asctime": "15:05:25"
+                    },
+                    {
+                        "name": "test_socan_normal_mode",
+                        "msg": "{'command_method': 'reset_eeprom', 'command_str': 'C12:z:1;', '**kwargs': {'reset_converter': 'C12'}, 'raw_response': 'O', 'parsed_response': {'converter_C12_eeprom_reset_step2': True}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758290725.3841999,
+                        "msecs": 384.0,
+                        "relativeCreated": 2418.794631958008,
+                        "thread": 127476624453632,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 376065,
+                        "asctime": "15:05:25"
+                    },
+                    {
+                        "name": "test_socan_normal_mode",
+                        "msg": "{'command_method': 'normal_mode', 'command_str': 'normalMode $13', '**kwargs': {'address': 19, 'direction': 'fwd'}, 'raw_response': '> $3E7 $01D $000 Hg $01D : OK\\n\\r>', 'parsed_response': 'normal_mode_ok'}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/socan_sdk/socan_commands.py",
+                        "filename": "socan_commands.py",
+                        "module": "socan_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 62,
+                        "funcName": "execute_command",
+                        "created": 1758290730.401851,
+                        "msecs": 401.0,
+                        "relativeCreated": 7436.445713043213,
+                        "thread": 127476624453632,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 376065,
+                        "asctime": "15:05:30"
+                    },
+                    {
+                        "name": "test_socan_normal_mode",
+                        "msg": "{'command_method': 'normal_mode', 'command_str': 'normalMode $03', '**kwargs': {'address': 3, 'direction': 'rtn'}, 'raw_response': '> $347 $01D $000 Hg $01D : OK\\n\\r>', 'parsed_response': 'normal_mode_ok'}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/socan_sdk/socan_commands.py",
+                        "filename": "socan_commands.py",
+                        "module": "socan_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 62,
+                        "funcName": "execute_command",
+                        "created": 1758290730.413014,
+                        "msecs": 413.0,
+                        "relativeCreated": 7447.608709335327,
+                        "thread": 127476624453632,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 376065,
+                        "asctime": "15:05:30"
+                    }
+                ]
+            },
+            "teardown": {
+                "duration": 0.040280581000843085,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_rtn",
+            "lineno": 624,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_updown_rtn",
+                "test_v1_1_rtn.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.007596163006382994,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.04062825700384565,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "test_setup_updown_rtn",
+                        "msg": "{'command_method': 'switch_connection', 'command_str': 'SB:S501:1;', '**kwargs': {'switch_connection_matrix': 'B', 'switch_connection_y': 5, 'switch_connection_port': 1}, 'raw_response': 'O', 'parsed_response': {'switch_connection_matrix': 'B', 'switch_connection_y': 5, 'switch_connection_port': 1}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758290730.4753747,
+                        "msecs": 475.0,
+                        "relativeCreated": 7509.969472885132,
+                        "thread": 127476624453632,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 376065,
+                        "asctime": "15:05:30"
+                    },
+                    {
+                        "name": "test_setup_updown_rtn",
+                        "msg": "{'command_method': 'switch_connection', 'command_str': 'SB:S109:1;', '**kwargs': {'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 9}, 'raw_response': 'O', 'parsed_response': {'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 9}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758290730.4830544,
+                        "msecs": 483.0,
+                        "relativeCreated": 7517.649173736572,
+                        "thread": 127476624453632,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 376065,
+                        "asctime": "15:05:30"
+                    },
+                    {
+                        "name": "test_setup_updown_rtn",
+                        "msg": "{'command_method': 'enable_up_conversion', 'command_str': 'C34:U23:1;', '**kwargs': {'enable_up_conversion_converter': 'C34', 'enable_up_conversion_channel': 2, 'enable_up_conversion_rf_band': 3}, 'raw_response': 'O', 'parsed_response': {'enable_up_conversion_converter': 'C34', 'enable_up_conversion_channel': 2, 'enable_up_conversion_rf_band': 3}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758290730.4863536,
+                        "msecs": 486.0,
+                        "relativeCreated": 7520.94841003418,
+                        "thread": 127476624453632,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 376065,
+                        "asctime": "15:05:30"
+                    },
+                    {
+                        "name": "test_setup_updown_rtn",
+                        "msg": "{'command_method': 'set_digital_attenuation', 'command_str': 'C34:A02:1;', '**kwargs': {'set_digital_attenuation_converter': 'C34', 'set_digital_attenuation_attenuation': 0, 'set_digital_attenuation_channel': 2}, 'raw_response': 'O', 'parsed_response': {'set_digital_attenuation_converter': 'C34', 'set_digital_attenuation_attenuation': 0, 'set_digital_attenuation_channel': 2}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758290730.4923599,
+                        "msecs": 492.0,
+                        "relativeCreated": 7526.954650878906,
+                        "thread": 127476624453632,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 376065,
+                        "asctime": "15:05:30"
+                    },
+                    {
+                        "name": "test_setup_updown_rtn",
+                        "msg": "{'command_method': 'set_reference_source', 'command_str': 'C34:R1:1;', '**kwargs': {'reference_source_converter': 'C34', 'reference_source_src': 1}, 'raw_response': 'O', 'parsed_response': {'converter_C34_reference_source': 1}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758290730.5044138,
+                        "msecs": 504.0,
+                        "relativeCreated": 7539.008617401123,
+                        "thread": 127476624453632,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 376065,
+                        "asctime": "15:05:30"
+                    },
+                    {
+                        "name": "test_setup_updown_rtn",
+                        "msg": "{'command_method': 'set_lo_frequency', 'command_str': 'C34:K11162:1;', '**kwargs': {'set_lo_frequency_converter': 'C34', 'set_lo_frequency_freq': 11162}, 'raw_response': 'O', 'parsed_response': {'set_lo_frequency_converter': 'C34', 'set_lo_frequency_freq': 11162}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 38,
+                        "funcName": "_update_generator",
+                        "created": 1758290730.5076883,
+                        "msecs": 507.0,
+                        "relativeCreated": 7542.283058166504,
+                        "thread": 127476624453632,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 376065,
+                        "asctime": "15:05:30"
+                    }
+                ]
+            },
+            "teardown": {
+                "duration": 0.0028286990127526224,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_rtn_enable_all",
+            "lineno": 377,
+            "outcome": "passed",
+            "keywords": [
+                "test_rtn_enable_all",
+                "test_v1_1_rtn.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 8.273304043003009,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

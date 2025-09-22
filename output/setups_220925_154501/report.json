@@ -1,0 +1,99 @@
+{
+    "created": 1758552303.1510403,
+    "duration": 1.333448886871338,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "error": 1,
+        "total": 1,
+        "collected": 1
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_fetch_system_status_basic",
+                    "type": "Function",
+                    "lineno": 39
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_fetch_system_status_basic",
+            "lineno": 39,
+            "outcome": "error",
+            "keywords": [
+                "test_fetch_system_status_basic",
+                "test_fetch_system_status.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.5823167799971998,
+                "outcome": "failed",
+                "log": [
+                    {
+                        "name": "paramiko.transport",
+                        "msg": "Connected (version 2.0, client OpenSSH_9.0)",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/home/george/.local/lib/python3.10/site-packages/paramiko/transport.py",
+                        "filename": "transport.py",
+                        "module": "transport",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 1938,
+                        "funcName": "_log",
+                        "created": 1758552302.860249,
+                        "msecs": 860.0,
+                        "relativeCreated": 1204.5199871063232,
+                        "thread": 133451819775552,
+                        "threadName": "Thread-6",
+                        "processName": "MainProcess",
+                        "process": 1113552,
+                        "_threadid": 1
+                    },
+                    {
+                        "name": "paramiko.transport",
+                        "msg": "Authentication (password) successful!",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/home/george/.local/lib/python3.10/site-packages/paramiko/transport.py",
+                        "filename": "transport.py",
+                        "module": "transport",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 1938,
+                        "funcName": "_log",
+                        "created": 1758552302.96185,
+                        "msecs": 961.0,
+                        "relativeCreated": 1306.1208724975586,
+                        "thread": 133451819775552,
+                        "threadName": "Thread-6",
+                        "processName": "MainProcess",
+                        "process": 1113552,
+                        "_threadid": 1
+                    }
+                ],
+                "longrepr": "file /mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_fetch_system_status.py, line 40\n  def test_fetch_system_status_basic(versal_command_generator, target_scripts_dir, my_results, logger):\nE       fixture 'target_scripts_dir' not found\n>       available fixtures: cache, capfd, capfdbinary, caplog, capsys, capsysbinary, doctest_namespace, extra, extras, include_metadata_in_junit_xml, json_metadata, log_test_result, logger, metadata, monkeypatch, my_params, my_results, my_setup, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, test_results, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, versal_command_generator, versal_device\n>       use 'pytest --fixtures [testpath]' for help on them.\n\n/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_fetch_system_status.py:40"
+            },
+            "teardown": {
+                "duration": 0.005012689041905105,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

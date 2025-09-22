@@ -1,0 +1,81 @@
+{
+    "created": 1758547624.6474483,
+    "duration": 22.031895637512207,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "error": 1,
+        "total": 1,
+        "collected": 1
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_fetch_system_status_basic",
+                    "type": "Function",
+                    "lineno": 49
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_fetch_system_status_basic",
+            "lineno": 49,
+            "outcome": "error",
+            "keywords": [
+                "test_fetch_system_status_basic",
+                "test_fetch_system_status.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 21.254521269001998,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/devices/versal_egse/versal_egse.py",
+                    "lineno": 47,
+                    "message": "tests_automation.devices.versal_egse.versal_egse.VersalConnectionError: Versal SSH connection failed: No authentication methods available"
+                },
+                "log": [
+                    {
+                        "name": "paramiko.transport",
+                        "msg": "Connected (version 2.0, client OpenSSH_9.0)",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/home/george/.local/lib/python3.10/site-packages/paramiko/transport.py",
+                        "filename": "transport.py",
+                        "module": "transport",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 1938,
+                        "funcName": "_log",
+                        "created": 1758547624.574564,
+                        "msecs": 574.0,
+                        "relativeCreated": 22120.062828063965,
+                        "thread": 136135847175744,
+                        "threadName": "Thread-7",
+                        "processName": "MainProcess",
+                        "process": 1094540,
+                        "_threadid": 1
+                    }
+                ],
+                "longrepr": "E   paramiko.ssh_exception.SSHException: No authentication methods available\n\nDuring handling of the above exception, another exception occurred:\nE   tests_automation.devices.versal_egse.versal_egse.VersalConnectionError: Versal SSH connection failed: No authentication methods available"
+            },
+            "teardown": {
+                "duration": 0.00307364301988855,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

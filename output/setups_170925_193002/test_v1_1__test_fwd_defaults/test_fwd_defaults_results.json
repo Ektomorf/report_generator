@@ -1,1 +1,0 @@
-[{"Timestamp": "2025-17-09 19:30:19", "parsed_socan_response": {"channels": []}, "raw_socan_response": "> $3E7 $0E1 Hg $021 $220 $231 $220 $231 $000 $000 : OK\n\r>", "socan_command_method": "get_channel", "socan_command_args": "{'address': 19}", "socan_command": "sendACQ $13 $00 5", "initial_state": {"channels": []}}]

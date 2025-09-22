@@ -1,0 +1,4 @@
+16:19:09 - INFO - Starting resolve_and_sync_time test
+16:19:09 - INFO - Resolved digichan-devel.local to 10.1.1.2
+16:19:09 - INFO - Successfully synchronized time on digichan-devel (10.1.1.2)
+16:19:09 - INFO - ✓ resolve_and_sync_time test passed: {'success': True, 'resolved_ip': '10.1.1.2', 'resolved_hostname': 'digichan-devel', 'timestamp': '1758554349', 'time_sync_result': {'stdout': 'Mon Sep 22 15:19:09 UTC 2025', 'stderr': '', 'exit_code': 0}}

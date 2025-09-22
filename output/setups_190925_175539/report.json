@@ -1,0 +1,197 @@
+{
+    "created": 1758300949.2374945,
+    "duration": 10.020131826400757,
+    "exitcode": 0,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 2,
+        "total": 2,
+        "collected": 7
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 558
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 518
+                },
+                {
+                    "nodeid": "::test_fwd_defaults",
+                    "type": "Function",
+                    "lineno": 442
+                },
+                {
+                    "nodeid": "::test_fwd_disable_all",
+                    "type": "Function",
+                    "lineno": 331
+                },
+                {
+                    "nodeid": "::test_fwd_enable",
+                    "type": "Function",
+                    "lineno": 279
+                },
+                {
+                    "nodeid": "::test_fwd_enable_all",
+                    "type": "Function",
+                    "lineno": 382
+                },
+                {
+                    "nodeid": "::test_fwd_freq_sweep",
+                    "type": "Function",
+                    "lineno": 224
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 558,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1_fwd.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4337578779959586,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 5.03702943699318,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "test_socan_normal_mode",
+                        "msg": "{'command_method': 'reset_eeprom', 'command_str': 'C12:*:1;', '**kwargs': {'reset_converter': 'C12'}, 'raw_response': 'O', 'parsed_response': {'converter_C12_eeprom_reset_step1': True}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 39,
+                        "funcName": "_update_generator",
+                        "created": 1758300941.526338,
+                        "msecs": 526.0,
+                        "relativeCreated": 2501.0986328125,
+                        "thread": 138559188140032,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 457701,
+                        "asctime": "17:55:41"
+                    },
+                    {
+                        "name": "test_socan_normal_mode",
+                        "msg": "{'command_method': 'reset_eeprom', 'command_str': 'C12:z:1;', '**kwargs': {'reset_converter': 'C12'}, 'raw_response': 'O', 'parsed_response': {'converter_C12_eeprom_reset_step2': True}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 39,
+                        "funcName": "_update_generator",
+                        "created": 1758300941.528157,
+                        "msecs": 528.0,
+                        "relativeCreated": 2502.917528152466,
+                        "thread": 138559188140032,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 457701,
+                        "asctime": "17:55:41"
+                    },
+                    {
+                        "name": "test_socan_normal_mode",
+                        "msg": "{'command_method': 'normal_mode', 'command_str': 'normalMode $13', '**kwargs': {'address': 19, 'direction': 'fwd'}, 'raw_response': '> $3E7 $01D $000 Hg $01D : OK\\n\\r>', 'parsed_response': 'normal_mode_ok'}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/socan_sdk/socan_commands.py",
+                        "filename": "socan_commands.py",
+                        "module": "socan_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 62,
+                        "funcName": "execute_command",
+                        "created": 1758300946.541592,
+                        "msecs": 541.0,
+                        "relativeCreated": 7516.352415084839,
+                        "thread": 138559188140032,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 457701,
+                        "asctime": "17:55:46"
+                    },
+                    {
+                        "name": "test_socan_normal_mode",
+                        "msg": "{'command_method': 'normal_mode', 'command_str': 'normalMode $03', '**kwargs': {'address': 3, 'direction': 'rtn'}, 'raw_response': '> $347 $01D $000 Hg $01D : OK\\n\\r>', 'parsed_response': 'normal_mode_ok'}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/socan_sdk/socan_commands.py",
+                        "filename": "socan_commands.py",
+                        "module": "socan_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 62,
+                        "funcName": "execute_command",
+                        "created": 1758300946.553474,
+                        "msecs": 553.0,
+                        "relativeCreated": 7528.234481811523,
+                        "thread": 138559188140032,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 457701,
+                        "asctime": "17:55:46"
+                    }
+                ]
+            },
+            "teardown": {
+                "duration": 0.04009483499976341,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_updown_fwd",
+            "lineno": 518,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_updown_fwd",
+                "test_v1_1_fwd.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00548705700202845,
+                "outcome": "passed"
+            }
+        }
+    ]
+}
