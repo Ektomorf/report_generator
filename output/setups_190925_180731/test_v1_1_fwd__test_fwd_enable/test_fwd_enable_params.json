@@ -1,0 +1,9 @@
+{
+	"params": {
+		"signal_gen_IF": 100,
+		"signal_gen_LO": 2800,
+		"dev_str": "",
+		"fwd_address": 13,
+		"rtn_address": 3
+	}
+}

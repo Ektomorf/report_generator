@@ -1,0 +1,1 @@
+MRAM MAC addr: 02:EE:DD:CC:BB:03

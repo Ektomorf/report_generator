@@ -1,0 +1,5 @@
+Version: 1.1.1.1
+Branch: dev/nick/SW-1441/1pps-int-ext-take2
+Commit: b05fa100b11918d93b094c5204a6cd09e863733a
+Platform: digichan-devel
+Build Time: 2025-09-22T13:35:23

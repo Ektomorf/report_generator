@@ -1,0 +1,76 @@
+{
+    "created": 1758301970.4942698,
+    "duration": 33.470377922058105,
+    "exitcode": 2,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 1,
+        "total": 1,
+        "collected": 7
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_socan_normal_mode",
+                    "type": "Function",
+                    "lineno": 561
+                },
+                {
+                    "nodeid": "::test_setup_updown_fwd",
+                    "type": "Function",
+                    "lineno": 521
+                },
+                {
+                    "nodeid": "::test_fwd_defaults",
+                    "type": "Function",
+                    "lineno": 444
+                },
+                {
+                    "nodeid": "::test_fwd_disable_all",
+                    "type": "Function",
+                    "lineno": 332
+                },
+                {
+                    "nodeid": "::test_fwd_enable",
+                    "type": "Function",
+                    "lineno": 279
+                },
+                {
+                    "nodeid": "::test_fwd_enable_all",
+                    "type": "Function",
+                    "lineno": 384
+                },
+                {
+                    "nodeid": "::test_fwd_freq_sweep",
+                    "type": "Function",
+                    "lineno": 224
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_socan_normal_mode",
+            "lineno": 561,
+            "outcome": "passed",
+            "keywords": [
+                "test_socan_normal_mode",
+                "test_v1_1_fwd.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 1.4334335970052052,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

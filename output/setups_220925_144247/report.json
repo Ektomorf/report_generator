@@ -1,0 +1,133 @@
+{
+    "created": 1758548589.7135942,
+    "duration": 21.839865922927856,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "failed": 1,
+        "total": 1,
+        "collected": 1
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_fetch_system_status_basic",
+                    "type": "Function",
+                    "lineno": 49
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_fetch_system_status_basic",
+            "lineno": 49,
+            "outcome": "failed",
+            "keywords": [
+                "test_fetch_system_status_basic",
+                "test_fetch_system_status.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.1902455179952085,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "paramiko.transport",
+                        "msg": "Connected (version 2.0, client OpenSSH_9.0)",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/home/george/.local/lib/python3.10/site-packages/paramiko/transport.py",
+                        "filename": "transport.py",
+                        "module": "transport",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 1938,
+                        "funcName": "_log",
+                        "created": 1758548568.664913,
+                        "msecs": 664.0,
+                        "relativeCreated": 950.040340423584,
+                        "thread": 133589526115904,
+                        "threadName": "Thread-6",
+                        "processName": "MainProcess",
+                        "process": 1100936,
+                        "_threadid": 1
+                    },
+                    {
+                        "name": "paramiko.transport",
+                        "msg": "Authentication (password) successful!",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/home/george/.local/lib/python3.10/site-packages/paramiko/transport.py",
+                        "filename": "transport.py",
+                        "module": "transport",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 1938,
+                        "funcName": "_log",
+                        "created": 1758548568.7674363,
+                        "msecs": 767.0,
+                        "relativeCreated": 1052.5636672973633,
+                        "thread": 133589526115904,
+                        "threadName": "Thread-6",
+                        "processName": "MainProcess",
+                        "process": 1100936,
+                        "_threadid": 1
+                    }
+                ]
+            },
+            "call": {
+                "duration": 0.0016458890167996287,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/versal_sdk/versal_commands.py",
+                    "lineno": 70,
+                    "message": "FileNotFoundError: get_system_status.sh not found in /mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/rs_ats_sw/tests_automation/sdk/versal_sdk"
+                },
+                "log": [
+                    {
+                        "name": "test_fetch_system_status_basic",
+                        "msg": "Starting basic fetch_system_status test",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_fetch_system_status.py",
+                        "filename": "test_fetch_system_status.py",
+                        "module": "test_fetch_system_status",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 55,
+                        "funcName": "test_fetch_system_status_basic",
+                        "created": 1758548568.7766817,
+                        "msecs": 776.0,
+                        "relativeCreated": 1061.8090629577637,
+                        "thread": 133590891675648,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1100936,
+                        "asctime": "14:42:48"
+                    }
+                ],
+                "longrepr": "E   FileNotFoundError: get_system_status.sh not found in /mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/rs_ats_sw/tests_automation/sdk/versal_sdk"
+            },
+            "teardown": {
+                "duration": 20.927349309960846,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

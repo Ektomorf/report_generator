@@ -1,0 +1,195 @@
+{
+    "created": 1758537049.13199,
+    "duration": 46.787198305130005,
+    "exitcode": 0,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "passed": 2,
+        "total": 2,
+        "collected": 2
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_setup_upconverted_input",
+                    "type": "Function",
+                    "lineno": 289
+                },
+                {
+                    "nodeid": "::test_setup_upconverted_input_frequency_sweep",
+                    "type": "Function",
+                    "lineno": 207
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_setup_upconverted_input",
+            "lineno": 289,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_upconverted_input",
+                "SW-1911.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.0051292909774929285,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.42846646602265537,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "test_setup_upconverted_input",
+                        "msg": "{'command_method': 'switch_connection', 'command_str': 'SB:S116:1;', '**kwargs': {'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 16}, 'raw_response': 'O', 'parsed_response': {'switch_connection_matrix': 'B', 'switch_connection_y': 1, 'switch_connection_port': 16}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 39,
+                        "funcName": "_update_generator",
+                        "created": 1758537003.2330432,
+                        "msecs": 233.0,
+                        "relativeCreated": 1071.1023807525635,
+                        "thread": 138052198436864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1059159,
+                        "asctime": "11:30:03"
+                    },
+                    {
+                        "name": "test_setup_upconverted_input",
+                        "msg": "{'command_method': 'enable_up_conversion', 'command_str': 'C12:U20:1;', '**kwargs': {'enable_up_conversion_converter': 'C12', 'enable_up_conversion_channel': 2, 'enable_up_conversion_rf_band': 0}, 'raw_response': 'O', 'parsed_response': {'enable_up_conversion_converter': 'C12', 'enable_up_conversion_channel': 2, 'enable_up_conversion_rf_band': 0}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 39,
+                        "funcName": "_update_generator",
+                        "created": 1758537003.235085,
+                        "msecs": 235.0,
+                        "relativeCreated": 1073.1441974639893,
+                        "thread": 138052198436864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1059159,
+                        "asctime": "11:30:03"
+                    },
+                    {
+                        "name": "test_setup_upconverted_input",
+                        "msg": "{'command_method': 'set_digital_attenuation', 'command_str': 'C12:A02:1;', '**kwargs': {'set_digital_attenuation_converter': 'C12', 'set_digital_attenuation_attenuation': 0, 'set_digital_attenuation_channel': 2}, 'raw_response': 'O', 'parsed_response': {'set_digital_attenuation_converter': 'C12', 'set_digital_attenuation_attenuation': 0, 'set_digital_attenuation_channel': 2}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 39,
+                        "funcName": "_update_generator",
+                        "created": 1758537003.241263,
+                        "msecs": 241.0,
+                        "relativeCreated": 1079.322099685669,
+                        "thread": 138052198436864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1059159,
+                        "asctime": "11:30:03"
+                    },
+                    {
+                        "name": "test_setup_upconverted_input",
+                        "msg": "{'command_method': 'set_reference_source', 'command_str': 'C12:R1:1;', '**kwargs': {'reference_source_converter': 'C12', 'reference_source_src': 1}, 'raw_response': 'O', 'parsed_response': {'converter_C12_reference_source': 1}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 39,
+                        "funcName": "_update_generator",
+                        "created": 1758537003.5905411,
+                        "msecs": 590.0,
+                        "relativeCreated": 1428.6003112792969,
+                        "thread": 138052198436864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1059159,
+                        "asctime": "11:30:03"
+                    },
+                    {
+                        "name": "test_setup_upconverted_input",
+                        "msg": "{'command_method': 'set_lo_frequency', 'command_str': 'C12:K24825:1;', '**kwargs': {'set_lo_frequency_converter': 'C12', 'set_lo_frequency_freq': 24825}, 'raw_response': 'O', 'parsed_response': {'set_lo_frequency_converter': 'C12', 'set_lo_frequency_freq': 24825}}",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/rf_matrix_sdk/rf_matrix_commands.py",
+                        "filename": "rf_matrix_commands.py",
+                        "module": "rf_matrix_commands",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 39,
+                        "funcName": "_update_generator",
+                        "created": 1758537003.6538198,
+                        "msecs": 653.0,
+                        "relativeCreated": 1491.8789863586426,
+                        "thread": 138052198436864,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1059159,
+                        "asctime": "11:30:03"
+                    }
+                ]
+            },
+            "teardown": {
+                "duration": 0.00498609704663977,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "::test_setup_upconverted_input_frequency_sweep",
+            "lineno": 207,
+            "outcome": "passed",
+            "keywords": [
+                "test_setup_upconverted_input_frequency_sweep",
+                "SW-1911.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 6.887813262990676,
+                "outcome": "passed"
+            }
+        }
+    ]
+}

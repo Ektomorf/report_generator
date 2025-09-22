@@ -1,0 +1,2 @@
+17:55:46 - INFO - {'command_method': 'reset_eeprom', 'command_str': 'C12:*:1;', '**kwargs': {'reset_converter': 'C12'}, 'raw_response': 'O', 'parsed_response': {'converter_C12_eeprom_reset_step1': True}}
+17:55:46 - INFO - {'command_method': 'reset_eeprom', 'command_str': 'C12:z:1;', '**kwargs': {'reset_converter': 'C12'}, 'raw_response': 'O', 'parsed_response': {'converter_C12_eeprom_reset_step2': True}}

@@ -1,0 +1,139 @@
+{
+    "created": 1758548415.416685,
+    "duration": 1.0263233184814453,
+    "exitcode": 1,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "error": 1,
+        "total": 1,
+        "collected": 1
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_fetch_system_status_basic",
+                    "type": "Function",
+                    "lineno": 49
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "::test_fetch_system_status_basic",
+            "lineno": 49,
+            "outcome": "error",
+            "keywords": [
+                "test_fetch_system_status_basic",
+                "test_fetch_system_status.py",
+                "tests",
+                "setups",
+                "general",
+                "nucom_gen1",
+                "rs_ats_tests",
+                ""
+            ],
+            "setup": {
+                "duration": 0.19563222001306713,
+                "outcome": "passed",
+                "log": [
+                    {
+                        "name": "paramiko.transport",
+                        "msg": "Connected (version 2.0, client OpenSSH_9.0)",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/home/george/.local/lib/python3.10/site-packages/paramiko/transport.py",
+                        "filename": "transport.py",
+                        "module": "transport",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 1938,
+                        "funcName": "_log",
+                        "created": 1758548415.2979012,
+                        "msecs": 297.0,
+                        "relativeCreated": 1087.5768661499023,
+                        "thread": 130072534054464,
+                        "threadName": "Thread-6",
+                        "processName": "MainProcess",
+                        "process": 1099821,
+                        "_threadid": 1
+                    },
+                    {
+                        "name": "paramiko.transport",
+                        "msg": "Authentication (password) successful!",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/home/george/.local/lib/python3.10/site-packages/paramiko/transport.py",
+                        "filename": "transport.py",
+                        "module": "transport",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 1938,
+                        "funcName": "_log",
+                        "created": 1758548415.4007409,
+                        "msecs": 400.0,
+                        "relativeCreated": 1190.4165744781494,
+                        "thread": 130072534054464,
+                        "threadName": "Thread-6",
+                        "processName": "MainProcess",
+                        "process": 1099821,
+                        "_threadid": 1
+                    }
+                ]
+            },
+            "call": {
+                "duration": 0.0005353069864213467,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation/sdk/versal_sdk/versal_commands.py",
+                    "lineno": 70,
+                    "message": "FileNotFoundError: get_system_status.sh not found in /mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/rs_ats_sw/tests_automation/sdk/versal_sdk"
+                },
+                "log": [
+                    {
+                        "name": "test_fetch_system_status_basic",
+                        "msg": "Starting basic fetch_system_status test",
+                        "args": null,
+                        "levelname": "INFO",
+                        "levelno": 20,
+                        "pathname": "/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_fetch_system_status.py",
+                        "filename": "test_fetch_system_status.py",
+                        "module": "test_fetch_system_status",
+                        "exc_info": null,
+                        "exc_text": null,
+                        "stack_info": null,
+                        "lineno": 55,
+                        "funcName": "test_fetch_system_status_basic",
+                        "created": 1758548415.4069316,
+                        "msecs": 406.0,
+                        "relativeCreated": 1196.6073513031006,
+                        "thread": 130073899945984,
+                        "threadName": "MainThread",
+                        "processName": "MainProcess",
+                        "process": 1099821,
+                        "asctime": "14:40:15"
+                    }
+                ],
+                "longrepr": "E   FileNotFoundError: get_system_status.sh not found in /mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/rs_ats_sw/tests_automation/sdk/versal_sdk"
+            },
+            "teardown": {
+                "duration": 0.0028869700036011636,
+                "outcome": "failed",
+                "crash": {
+                    "path": "/mnt/devel/george/work/rs_ats/rs_ats_tests/nucom_gen1/general/setups/tests/test_fetch_system_status.py",
+                    "lineno": 28,
+                    "message": "AttributeError: 'VersalCommandGenerator' object has no attribute 'connected'. Did you mean: 'connect'?"
+                },
+                "longrepr": "E   AttributeError: 'VersalCommandGenerator' object has no attribute 'connected'. Did you mean: 'connect'?"
+            }
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "created": 1758534521.4713883,
+    "duration": 0.7707974910736084,
+    "exitcode": 4,
+    "root": "/mnt/devel/george/work/rs_ats/rs_ats_sw/tests_automation",
+    "environment": {},
+    "summary": {
+        "total": 0,
+        "collected": 0
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "::test_setup_upconverted_input_frequency_sweep",
+                    "type": "Function",
+                    "lineno": 207
+                }
+            ]
+        }
+    ],
+    "tests": []
+}

@@ -1,0 +1,1 @@
+17:58:58 - INFO - {'command_method': 'switch_connection', 'command_str': 'SB:S501:1;', '**kwargs': {'switch_connection_matrix': 'B', 'switch_connection_y': 5, 'switch_connection_port': 1}, 'raw_response': 'O', 'parsed_response': {'switch_connection_matrix': 'B', 'switch_connection_y': 5, 'switch_connection_port': 1}}

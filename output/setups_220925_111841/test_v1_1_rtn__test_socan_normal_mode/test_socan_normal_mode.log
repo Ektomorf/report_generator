@@ -1,0 +1,3 @@
+11:18:43 - INFO - {'command_method': 'reset_eeprom', 'command_str': 'C12:*:1;', '**kwargs': {'reset_converter': 'C12'}, 'raw_response': 'O', 'parsed_response': {'converter_C12_eeprom_reset_step1': True}}
+11:18:43 - INFO - {'command_method': 'reset_eeprom', 'command_str': 'C12:z:1;', '**kwargs': {'reset_converter': 'C12'}, 'raw_response': 'O', 'parsed_response': {'converter_C12_eeprom_reset_step2': True}}
+11:18:48 - INFO - {'command_method': 'normal_mode', 'command_str': 'normalMode $13', '**kwargs': {'address': 19, 'direction': 'fwd'}, 'raw_response': '> $3E7 $01D $000 Hg : length error\n\r>', 'parsed_response': 'could_not_parse'}

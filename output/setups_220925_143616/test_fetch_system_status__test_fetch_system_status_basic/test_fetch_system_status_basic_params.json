@@ -1,0 +1,12 @@
+{
+	"params": {
+		"device": "Versal",
+		"target_scripts_dir": "rs_ats_sw/tests_automation/sdk/versal_sdk",
+		"connection_timeout": 10,
+		"command_timeout": 30,
+		"host": "192.168.1.100",
+		"port": 22,
+		"username": "root",
+		"password": "root"
+	}
+}
