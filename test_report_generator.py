@@ -214,7 +214,7 @@ class HTMLReportGenerator:
         status_info = self._generate_status_info(test_results['status'])
         
         # Generate test description info
-        description_info = self._generate_description_info(test_results['params'])
+        description_info = self._generate_description_info(test_results['params'], test_results['results_data'])
         
         # Generate params info
         params_info = self._generate_params_info(test_results['params'])
@@ -246,6 +246,10 @@ class HTMLReportGenerator:
         all_keys = set()
         for entry in results_data:
             all_keys.update(entry.keys())
+        
+        # Remove docstring-related fields as they should be in the description section, not table columns
+        docstring_fields = {'docstring', 'test_description', 'description', 'Docstring', 'Test_Description', 'Description'}
+        all_keys = all_keys - docstring_fields
         
         # Define a preferred order for common keys
         key_order = [
@@ -479,25 +483,40 @@ class HTMLReportGenerator:
         
         return html
     
-    def _generate_description_info(self, params: Dict) -> str:
-        """Generate test description HTML from docstring in params"""
-        if not params:
-            return ""
+    def _generate_description_info(self, params: Dict, results_data: List[Dict] = None) -> str:
+        """Generate test description HTML from docstring in params or results data"""
+        description = None
         
-        # Handle nested params structure
-        params_data = params.get('params', params)
+        # First, try to get description from params
+        if params:
+            # Handle nested params structure
+            params_data = params.get('params', params)
+            
+            # Look for description in various possible keys
+            description = (params_data.get('test_description') or 
+                          params_data.get('description') or 
+                          params.get('test_description') or 
+                          params.get('description'))
         
-        # Look for description in various possible keys
-        description = (params_data.get('test_description') or 
-                      params_data.get('description') or 
-                      params.get('test_description') or 
-                      params.get('description'))
+        # If not found in params, try to get from results data
+        if not description and results_data:
+            for entry in results_data:
+                # Look for docstring in results data (case-insensitive)
+                for key in ['docstring', 'test_description', 'description', 'Docstring', 'Test_Description', 'Description']:
+                    if key in entry and entry[key]:
+                        description = entry[key]
+                        break
+                if description:
+                    break
         
         if not description:
             return ""
         
+        # Convert newlines to HTML line breaks for proper formatting
+        formatted_description = description.replace('\n', '<br>')
+        
         html = "<div class='description-info'>\n<h3>Test Description</h3>\n"
-        html += f"<p class='test-description'>{description}</p>\n"
+        html += f"<p class='test-description'>{formatted_description}</p>\n"
         html += "</div>\n"
         
         return html
