@@ -3,7 +3,7 @@
 Index page generator for test reports.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Any
 
@@ -32,7 +32,7 @@ class IndexGenerator:
         html_content = self.template.format(
             test_session=test_session,
             content=content,
-            generation_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            generation_time=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
             summary_stats=summary_stats
         )
 
@@ -122,7 +122,7 @@ class IndexGenerator:
                     <tr>
                         <th>Setup</th>
                         <th>Test</th>
-                        <th>Time</th>
+                        <th>UTC Date/Time</th>
                         <th>Level</th>
                         <th>Message</th>
                     </tr>
@@ -132,11 +132,17 @@ class IndexGenerator:
 
         for log in all_logs:
             level_class = f"log-{log.get('level', 'info').lower()}"
+
+            # Format timestamp to show UTC
+            timestamp = log.get('timestamp', 'N/A')
+            if timestamp != 'N/A' and 'UTC' not in timestamp.upper() and '+' not in timestamp and 'Z' not in timestamp:
+                timestamp = f"{timestamp} UTC"
+
             content += f"""
                     <tr>
                         <td>{log.get('setup_name', 'Unknown')}</td>
                         <td>{log.get('test_name', 'Unknown')}</td>
-                        <td>{log.get('timestamp', 'N/A')}</td>
+                        <td>{timestamp}</td>
                         <td class="{level_class}">{log.get('level', 'INFO')}</td>
                         <td>{log.get('message', '')}</td>
                     </tr>
@@ -179,7 +185,7 @@ class IndexGenerator:
     def _generate_setup_section(self, setup: SetupReport, reports: List[Path]) -> str:
         """Generate a section for a setup with test results and optional reports"""
         setup_summary = setup.test_summary
-        created_date = datetime.fromtimestamp(setup_summary.get('created', 0)).strftime('%Y-%m-%d %H:%M:%S') if setup_summary.get('created') else 'Unknown'
+        created_date = datetime.fromtimestamp(setup_summary.get('created', 0), tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC') if setup_summary.get('created') else 'Unknown'
 
         content = f"""
             <div class="test-run">

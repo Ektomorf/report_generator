@@ -9,7 +9,7 @@ import os
 import argparse
 import shutil
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 import base64
 import re
@@ -228,7 +228,7 @@ class HTMLReportGenerator:
             table_headers=table_headers,
             table_rows=table_rows,
             screenshot_html=screenshot_html,
-            generation_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            generation_time=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         )
         
         # Write HTML file
@@ -1205,7 +1205,7 @@ def _generate_index_page(report_files: List[Path], index_file: Path, test_sessio
             
             # Get setup summary
             setup_summary = setup['test_summary']
-            created_date = datetime.fromtimestamp(setup_summary.get('created', 0)).strftime('%Y-%m-%d %H:%M:%S') if setup_summary.get('created') else 'Unknown'
+            created_date = datetime.fromtimestamp(setup_summary.get('created', 0), tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC') if setup_summary.get('created') else 'Unknown'
             
             index_html += f"""
             <div class="test-run">
@@ -1265,7 +1265,7 @@ def _generate_index_page(report_files: List[Path], index_file: Path, test_sessio
         setup_name = setup['setup_name']
         if setup_name not in processed_setups:
             setup_summary = setup['test_summary']
-            created_date = datetime.fromtimestamp(setup_summary.get('created', 0)).strftime('%Y-%m-%d %H:%M:%S') if setup_summary.get('created') else 'Unknown'
+            created_date = datetime.fromtimestamp(setup_summary.get('created', 0), tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC') if setup_summary.get('created') else 'Unknown'
             
             index_html += f"""
             <div class="test-run">
@@ -1345,7 +1345,7 @@ def _generate_index_page(report_files: List[Path], index_file: Path, test_sessio
     
     index_html += f"""        
         <div class="footer">
-            <p>Generated on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+            <p>Generated on {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")}</p>
             <p>{total_setups} setup runs • {total_tests} tests • {total_passed} passed • {total_failed} failed • {len(all_logs)} log entries • {total_reports} detailed reports</p>
         </div>
     </div>

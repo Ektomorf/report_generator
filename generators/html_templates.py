@@ -696,9 +696,9 @@ class HTMLTemplates:
 
             applyPreset(presetName) {{
                 const presets = {{
-                    minimal: ['timestamp', 'channel', 'frequency', 'enabled', 'screenshot_filepath'],
-                    frequency: ['timestamp', 'channel', 'frequency', 'peak_frequency', 'peak_amplitude', 'screenshot_filepath'],
-                    commands: ['timestamp', 'channel', 'socan_command', 'parsed_socan_response', 'rf_matrix_command', 'parsed_rf_matrix_response'],
+                    minimal: ['Timestamp', 'channel', 'frequency', 'enabled', 'screenshot_filepath'],
+                    frequency: ['Timestamp', 'channel', 'frequency', 'peak_frequency', 'peak_amplitude', 'screenshot_filepath'],
+                    commands: ['Timestamp', 'channel', 'socan_command', 'parsed_socan_response', 'rf_matrix_command', 'parsed_rf_matrix_response'],
                     all: this.columnOrder
                 }};
 

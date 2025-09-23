@@ -3,7 +3,7 @@
 PDF index page generator for test reports.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Any
 
@@ -116,7 +116,7 @@ class PDFIndexGenerator:
             story.append(Spacer(1, 12))
             story.append(Paragraph(summary_stats, styles['Normal']))
             story.append(Spacer(1, 6))
-            story.append(Paragraph(f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+            story.append(Paragraph(f"Generated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}", styles['Normal']))
 
             # Build PDF
             doc.build(story)
@@ -205,7 +205,7 @@ class PDFIndexGenerator:
     def _generate_setup_section(self, setup: SetupReport, reports: List[Path]) -> str:
         """Generate a section for a setup with test results and optional reports"""
         setup_summary = setup.test_summary
-        created_date = datetime.fromtimestamp(setup_summary.get('created', 0)).strftime('%Y-%m-%d %H:%M:%S') if setup_summary.get('created') else 'Unknown'
+        created_date = datetime.fromtimestamp(setup_summary.get('created', 0), tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC') if setup_summary.get('created') else 'Unknown'
 
         content = f"""
             <div class="test-run">

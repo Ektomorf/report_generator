@@ -4,7 +4,7 @@ HTML report generator for individual test results.
 """
 
 import base64
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Any
 
@@ -40,7 +40,7 @@ class HTMLReportGenerator:
             table_rows=table_rows,
             screenshot_html=screenshot_html,
             column_metadata=column_metadata,
-            generation_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            generation_time=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         )
 
         with open(output_file, 'w', encoding='utf-8') as f:
@@ -117,7 +117,13 @@ class HTMLReportGenerator:
         elif isinstance(value, str) and len(value) > 100:
             return f'<div class="cell-content">{value}</div>'
 
-        if 'peak_frequency' in key.lower() and isinstance(value, (int, float)):
+        # Handle timestamp formatting to show UTC
+        if 'timestamp' in key.lower() and isinstance(value, str):
+            # If the timestamp doesn't already have UTC indicator, add it
+            if 'UTC' not in value.upper() and '+' not in value and 'Z' not in value:
+                return f"{value} UTC"
+            return value
+        elif 'peak_frequency' in key.lower() and isinstance(value, (int, float)):
             if 'ghz' not in key.lower():
                 return f"{value / 1e9:.3f} GHz"
             else:

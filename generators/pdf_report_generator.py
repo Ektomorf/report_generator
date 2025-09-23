@@ -4,7 +4,7 @@ PDF report generator for individual test results.
 """
 
 import base64
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Any
 
@@ -160,7 +160,7 @@ class PDFReportGenerator:
 
             # Add generation timestamp
             story.append(Spacer(1, 24))
-            story.append(Paragraph(f"Report generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            story.append(Paragraph(f"Report generated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
                                   styles['Normal']))
 
             # Build PDF
@@ -188,7 +188,7 @@ class PDFReportGenerator:
                 table_headers=table_headers,
                 table_rows=table_rows,
                 screenshot_html=screenshot_html,
-                generation_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                generation_time=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
             )
 
             # Configure pdfkit options for landscape and large page
