@@ -87,7 +87,20 @@ class IndexGenerator:
                 all_logs.append(log)
 
         all_test_results.sort(key=lambda x: (x['created'], x['setup_name'], x['test_name']))
-        all_logs.sort(key=lambda x: (x.get('setup_name', ''), x.get('timestamp', '')))
+        # Sort logs by setup_name first, then by timestamp (HH:MM:SS format)
+        def parse_timestamp(log):
+            timestamp = log.get('timestamp', '00:00:00')
+            try:
+                # Convert HH:MM:SS to seconds for proper chronological ordering
+                parts = timestamp.split(':')
+                if len(parts) == 3:
+                    hours, minutes, seconds = map(int, parts)
+                    return hours * 3600 + minutes * 60 + seconds
+                return 0
+            except (ValueError, AttributeError):
+                return 0
+
+        all_logs.sort(key=lambda x: (x.get('setup_name', ''), parse_timestamp(x)))
 
         return all_test_results, all_logs
 

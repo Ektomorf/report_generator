@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python test_docstring_behavior.py:*)"
+      "Bash(python test_docstring_behavior.py:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

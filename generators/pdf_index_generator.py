@@ -111,6 +111,16 @@ class PDFIndexGenerator:
                         story.append(Paragraph(f"  - {report_name}.pdf", styles['Normal']))
                     story.append(Spacer(1, 6))
 
+            # Add Test Logs section
+            if all_logs:
+                story.append(Spacer(1, 12))
+                story.append(Paragraph("Test Logs", styles['Heading2']))
+                story.append(Spacer(1, 6))
+
+                logs_table = self._create_logs_table(all_logs)
+                if logs_table:
+                    story.append(logs_table)
+
             # Add summary statistics
             summary_stats = self._generate_summary_stats(all_test_results, all_logs, len(report_files))
             story.append(Spacer(1, 12))
@@ -171,7 +181,20 @@ class PDFIndexGenerator:
                 all_logs.append(log)
 
         all_test_results.sort(key=lambda x: (x['created'], x['setup_name'], x['test_name']))
-        all_logs.sort(key=lambda x: (x.get('setup_name', ''), x.get('timestamp', '')))
+        # Sort logs by setup_name first, then by timestamp (HH:MM:SS format)
+        def parse_timestamp(log):
+            timestamp = log.get('timestamp', '00:00:00')
+            try:
+                # Convert HH:MM:SS to seconds for proper chronological ordering
+                parts = timestamp.split(':')
+                if len(parts) == 3:
+                    hours, minutes, seconds = map(int, parts)
+                    return hours * 3600 + minutes * 60 + seconds
+                return 0
+            except (ValueError, AttributeError):
+                return 0
+
+        all_logs.sort(key=lambda x: (x.get('setup_name', ''), parse_timestamp(x)))
 
         return all_test_results, all_logs
 
@@ -299,3 +322,88 @@ class PDFIndexGenerator:
         total_failed = sum(result.get('failed_tests', 0) for result in all_test_results if result.get('failed_tests'))
 
         return f"{total_setups} setup runs • {total_tests} tests • {total_passed} passed • {total_failed} failed • {len(all_logs)} log entries • {total_reports} PDF reports"
+
+    def _create_logs_table(self, all_logs: List[Dict]) -> Table:
+        """Create a logs table for PDF display"""
+        if not all_logs:
+            return None
+
+        styles = getSampleStyleSheet()
+        cell_style = ParagraphStyle(
+            'LogCellStyle',
+            parent=styles['Normal'],
+            fontSize=7,
+            leading=9,
+            leftIndent=0,
+            rightIndent=0,
+            spaceAfter=0,
+            spaceBefore=0,
+            wordWrap='LTR',
+            splitLongWords=True,
+            allowOrphans=0,
+            allowWidows=0,
+        )
+
+        # Create header row
+        headers = ["Setup", "Test", "Time", "Level", "Message"]
+        table_data = [headers]
+
+        # Add log entries (limit to avoid extremely large PDFs)
+        max_logs = 100  # Limit to first 100 logs for PDF readability
+        for log in all_logs[:max_logs]:
+            setup_name = log.get('setup_name', 'Unknown')
+            test_name = log.get('test_name', 'Unknown')
+            timestamp = log.get('timestamp', 'N/A')
+            level = log.get('level', 'INFO')
+            message = log.get('message', '')
+
+            # Keep full message text - Paragraph will handle wrapping
+            row = [
+                Paragraph(setup_name, cell_style),
+                Paragraph(test_name, cell_style),
+                Paragraph(timestamp, cell_style),
+                Paragraph(level, cell_style),
+                Paragraph(message, cell_style)
+            ]
+            table_data.append(row)
+
+        # Add truncation notice if logs were limited
+        if len(all_logs) > max_logs:
+            truncation_msg = f"Showing first {max_logs} of {len(all_logs)} log entries"
+            table_data.append([
+                Paragraph(truncation_msg, cell_style),
+                "", "", "", ""
+            ])
+
+        # Calculate column widths
+        available_width = landscape(A4)[0] - 1*inch
+        col_widths = [
+            available_width * 0.15,  # Setup
+            available_width * 0.15,  # Test
+            available_width * 0.15,  # Time
+            available_width * 0.10,  # Level
+            available_width * 0.45   # Message
+        ]
+
+        table = Table(table_data, colWidths=col_widths, repeatRows=1)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.Color(52/255, 152/255, 219/255)),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('TOPPADDING', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(248/255, 249/255, 250/255)]),
+            ('WORDWRAP', (0, 0), (-1, -1), 'LTR'),
+            ('SHRINKTOFIT', (0, 0), (-1, -1), 0),  # Disable shrink to fit to allow full expansion
+        ]))
+
+        return table

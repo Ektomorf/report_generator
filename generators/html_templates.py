@@ -237,7 +237,178 @@ class HTMLTemplates:
             font-size: 12px;
             text-align: center;
         }}
+
+        .column-toggle-container {{
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }}
+
+        .column-toggle-header {{
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #495057;
+        }}
+
+        .column-toggles {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }}
+
+        .column-toggle {{
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            padding: 2px 0;
+        }}
+
+        .column-toggle input[type="checkbox"] {{
+            margin-right: 6px;
+            cursor: pointer;
+        }}
+
+        .column-toggle label {{
+            cursor: pointer;
+            user-select: none;
+            color: #495057;
+        }}
+
+        .toggle-controls {{
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }}
+
+        .toggle-btn {{
+            padding: 4px 8px;
+            font-size: 11px;
+            border: 1px solid #007bff;
+            background-color: #007bff;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+        }}
+
+        .toggle-btn:hover {{
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }}
+
+        .column-hidden {{
+            display: none !important;
+        }}
     </style>
+    <script>
+        let columnData = [];
+
+        function initializeColumnToggle() {{
+            const table = document.querySelector('table');
+            if (!table) return;
+
+            const headers = table.querySelectorAll('th');
+            columnData = Array.from(headers).map((header, index) => ({{
+                index: index,
+                text: header.textContent.trim(),
+                visible: true
+            }}));
+
+            createColumnToggles();
+        }}
+
+        function createColumnToggles() {{
+            const container = document.getElementById('column-toggles');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            columnData.forEach((column, index) => {{
+                const toggleDiv = document.createElement('div');
+                toggleDiv.className = 'column-toggle';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `col-${index}`;
+                checkbox.checked = column.visible;
+                checkbox.addEventListener('change', () => toggleColumn(index));
+
+                const label = document.createElement('label');
+                label.htmlFor = `col-${index}`;
+                label.textContent = column.text;
+
+                toggleDiv.appendChild(checkbox);
+                toggleDiv.appendChild(label);
+                container.appendChild(toggleDiv);
+            }});
+        }}
+
+        function toggleColumn(columnIndex) {{
+            const table = document.querySelector('table');
+            if (!table) return;
+
+            const checkbox = document.getElementById(`col-${columnIndex}`);
+            const isVisible = checkbox.checked;
+
+            columnData[columnIndex].visible = isVisible;
+
+            // Toggle header
+            const headers = table.querySelectorAll('th');
+            if (headers[columnIndex]) {{
+                headers[columnIndex].classList.toggle('column-hidden', !isVisible);
+            }}
+
+            // Toggle all cells in this column
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {{
+                const cells = row.querySelectorAll('td');
+                if (cells[columnIndex]) {{
+                    cells[columnIndex].classList.toggle('column-hidden', !isVisible);
+                }}
+            }});
+        }}
+
+        function showAllColumns() {{
+            columnData.forEach((column, index) => {{
+                const checkbox = document.getElementById(`col-${index}`);
+                if (checkbox && !checkbox.checked) {{
+                    checkbox.checked = true;
+                    toggleColumn(index);
+                }}
+            }});
+        }}
+
+        function hideAllColumns() {{
+            columnData.forEach((column, index) => {{
+                const checkbox = document.getElementById(`col-${index}`);
+                if (checkbox && checkbox.checked) {{
+                    checkbox.checked = false;
+                    toggleColumn(index);
+                }}
+            }});
+        }}
+
+        function showEssentialColumns() {{
+            const essentialColumns = ['#', 'Timestamp', 'Peak Frequency', 'Peak Amplitude'];
+
+            columnData.forEach((column, index) => {{
+                const checkbox = document.getElementById(`col-${index}`);
+                const shouldShow = essentialColumns.includes(column.text);
+
+                if (checkbox && checkbox.checked !== shouldShow) {{
+                    checkbox.checked = shouldShow;
+                    toggleColumn(index);
+                }}
+            }});
+        }}
+
+        // Initialize when page loads
+        window.addEventListener('load', initializeColumnToggle);
+    </script>
 </head>
 <body>
     <div class="container">
@@ -250,6 +421,19 @@ class HTMLTemplates:
         {params_info}
 
         <h2>Test Results</h2>
+
+        <div class="column-toggle-container">
+            <div class="column-toggle-header">Column Visibility Controls</div>
+            <div class="toggle-controls">
+                <button class="toggle-btn" onclick="showAllColumns()">Show All</button>
+                <button class="toggle-btn" onclick="hideAllColumns()">Hide All</button>
+                <button class="toggle-btn" onclick="showEssentialColumns()">Show Essential</button>
+            </div>
+            <div class="column-toggles" id="column-toggles">
+                <!-- Column checkboxes will be generated by JavaScript -->
+            </div>
+        </div>
+
         <div class="table-container">
             <table>
                 <thead>

@@ -524,12 +524,12 @@ class HTMLReportGenerator:
     def _create_html_template(self) -> str:
         """Create the HTML template"""
         return """<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Report: {test_name}</title>
-    <style>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Test Report: {test_name}</title>
+        <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -754,10 +754,346 @@ class HTMLReportGenerator:
             font-size: 12px;
             text-align: center;
         }}
-    </style>
-</head>
-<body>
-    <div class="container">
+
+        .column-toggle-container {{
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }}
+
+        .column-toggle-header {{
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #495057;
+        }}
+
+        .column-toggles {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }}
+
+        .column-toggle {{
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            padding: 2px 0;
+        }}
+
+        .column-toggle input[type="checkbox"] {{
+            margin-right: 6px;
+            cursor: pointer;
+        }}
+
+        .column-toggle label {{
+            cursor: pointer;
+            user-select: none;
+            color: #495057;
+        }}
+
+        .toggle-controls {{
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }}
+
+        .toggle-btn {{
+            padding: 4px 8px;
+            font-size: 11px;
+            border: 1px solid #007bff;
+            background-color: #007bff;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+        }}
+
+        .toggle-btn:hover {{
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }}
+
+        .column-hidden {{
+            display: none !important;
+        }}
+
+        .column-toggle.dragging {{
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }}
+
+        .column-toggle.drag-over {{
+            background-color: #e3f2fd;
+            border: 2px dashed #2196f3;
+            border-radius: 4px;
+        }}
+
+        .column-toggle {{
+            cursor: move;
+            transition: all 0.2s ease;
+        }}
+
+        .column-toggle:hover {{
+            background-color: #f0f0f0;
+        }}
+
+        .reorder-hint {{
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+            text-align: center;
+        }}
+        </style>
+        <script>
+        let columnData = [];
+
+        function initializeColumnToggle() {{
+            const table = document.querySelector('table');
+            if (!table) return;
+
+            const headers = table.querySelectorAll('th');
+            columnData = Array.from(headers).map((header, index) => ({{
+            index: index,
+            text: header.textContent.trim(),
+            visible: true
+            }}));
+
+            createColumnToggles();
+        }}
+
+        function createColumnToggles() {{
+            const container = document.getElementById('column-toggles');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            columnData.forEach((column, index) => {{
+            const toggleDiv = document.createElement('div');
+            toggleDiv.className = 'column-toggle';
+            toggleDiv.draggable = true;
+            toggleDiv.dataset.columnIndex = index;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `col-${{index}}`;
+            checkbox.checked = column.visible;
+            checkbox.addEventListener('change', () => toggleColumn(index));
+
+            const label = document.createElement('label');
+            label.htmlFor = `col-${{index}}`;
+            label.textContent = column.text;
+
+            toggleDiv.appendChild(checkbox);
+            toggleDiv.appendChild(label);
+
+            // Add drag and drop event listeners
+            toggleDiv.addEventListener('dragstart', handleDragStart);
+            toggleDiv.addEventListener('dragenter', handleDragEnter);
+            toggleDiv.addEventListener('dragover', handleDragOver);
+            toggleDiv.addEventListener('dragleave', handleDragLeave);
+            toggleDiv.addEventListener('drop', handleDrop);
+            toggleDiv.addEventListener('dragend', handleDragEnd);
+
+            container.appendChild(toggleDiv);
+            }});
+
+            // Add reorder hint
+            const hint = document.createElement('div');
+            hint.className = 'reorder-hint';
+            hint.textContent = 'Drag and drop checkboxes to reorder columns';
+            container.appendChild(hint);
+        }}
+
+        function toggleColumn(columnIndex) {{
+            const table = document.querySelector('table');
+            if (!table) return;
+
+            const checkbox = document.getElementById(`col-${{columnIndex}}`);
+            const isVisible = checkbox.checked;
+
+            columnData[columnIndex].visible = isVisible;
+
+            // Toggle header
+            const headers = table.querySelectorAll('th');
+            if (headers[columnIndex]) {{
+            headers[columnIndex].classList.toggle('column-hidden', !isVisible);
+            }}
+
+            // Toggle all cells in this column
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {{
+            const cells = row.querySelectorAll('td');
+            if (cells[columnIndex]) {{
+                cells[columnIndex].classList.toggle('column-hidden', !isVisible);
+            }}
+            }});
+        }}
+
+        function showAllColumns() {{
+            columnData.forEach((column, index) => {{
+            const checkbox = document.getElementById(`col-${{index}}`);
+            if (checkbox && !checkbox.checked) {{
+                checkbox.checked = true;
+                toggleColumn(index);
+            }}
+            }});
+        }}
+
+        function hideAllColumns() {{
+            columnData.forEach((column, index) => {{
+            const checkbox = document.getElementById(`col-${{index}}`);
+            if (checkbox && checkbox.checked) {{
+                checkbox.checked = false;
+                toggleColumn(index);
+            }}
+            }});
+        }}
+
+        function showEssentialColumns() {{
+            const essentialColumns = ['#', 'Timestamp', 'Peak Frequency', 'Peak Amplitude', 'SOCAN Command Method', 'SOCAN Command', 'Raw SOCAN Response'];
+
+            columnData.forEach((column, index) => {{
+            const checkbox = document.getElementById(`col-${{index}}`);
+            const shouldShow = essentialColumns.includes(column.text);
+
+            if (checkbox && checkbox.checked !== shouldShow) {{
+                checkbox.checked = shouldShow;
+                toggleColumn(index);
+            }}
+            }});
+        }}
+
+        function resetColumnOrder() {{
+            // Store the current visibility states
+            const visibilityStates = columnData.map(col => col.visible);
+
+            // Reset to original order by reinitializing
+            const table = document.querySelector('table');
+            if (!table) return;
+
+            // Get original header order from DOM
+            const headers = table.querySelectorAll('th');
+            const originalColumnData = Array.from(headers).map((header, index) => ({{
+                index: index,
+                text: header.textContent.trim(),
+                visible: visibilityStates[index] || true
+            }}));
+
+            // Update columnData
+            columnData = originalColumnData;
+
+            // Recreate toggles
+            createColumnToggles();
+
+            // Reload the page to restore original column order
+            location.reload();
+        }}
+
+        // Drag and drop functionality
+        let draggedElement = null;
+
+        function handleDragStart(e) {{
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }}
+
+        function handleDragEnter(e) {{
+            this.classList.add('drag-over');
+        }}
+
+        function handleDragOver(e) {{
+            if (e.preventDefault) {{
+                e.preventDefault();
+            }}
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }}
+
+        function handleDragLeave(e) {{
+            this.classList.remove('drag-over');
+        }}
+
+        function handleDrop(e) {{
+            if (e.stopPropagation) {{
+                e.stopPropagation();
+            }}
+
+            if (draggedElement !== this) {{
+                const draggedIndex = parseInt(draggedElement.dataset.columnIndex);
+                const targetIndex = parseInt(this.dataset.columnIndex);
+
+                // Reorder columnData array
+                const draggedColumn = columnData[draggedIndex];
+                columnData.splice(draggedIndex, 1);
+                columnData.splice(targetIndex, 0, draggedColumn);
+
+                // Update indices
+                columnData.forEach((col, index) => {{
+                    col.index = index;
+                }});
+
+                // Reorder actual table columns
+                reorderTableColumns(draggedIndex, targetIndex);
+
+                // Recreate the toggle controls
+                createColumnToggles();
+            }}
+
+            this.classList.remove('drag-over');
+            return false;
+        }}
+
+        function handleDragEnd(e) {{
+            this.classList.remove('dragging');
+
+            // Clean up
+            const toggles = document.querySelectorAll('.column-toggle');
+            toggles.forEach(toggle => {{
+                toggle.classList.remove('drag-over');
+            }});
+        }}
+
+        function reorderTableColumns(fromIndex, toIndex) {{
+            const table = document.querySelector('table');
+            if (!table) return;
+
+            // Reorder headers
+            const headerRow = table.querySelector('thead tr');
+            const headers = Array.from(headerRow.children);
+            const draggedHeader = headers[fromIndex];
+            headerRow.removeChild(draggedHeader);
+            if (toIndex >= headers.length) {{
+                headerRow.appendChild(draggedHeader);
+            }} else {{
+                headerRow.insertBefore(draggedHeader, headers[toIndex]);
+            }}
+
+            // Reorder cells in each data row
+            const dataRows = table.querySelectorAll('tbody tr');
+            dataRows.forEach(row => {{
+                const cells = Array.from(row.children);
+                const draggedCell = cells[fromIndex];
+                row.removeChild(draggedCell);
+                if (toIndex >= cells.length) {{
+                    row.appendChild(draggedCell);
+                }} else {{
+                    row.insertBefore(draggedCell, cells[toIndex]);
+                }}
+            }});
+        }}
+
+        // Initialize when page loads
+        window.addEventListener('load', initializeColumnToggle);
+        </script>
+    </head>
+    <body>
+        <div class="container">
         <h1>Test Report: {test_name}</h1>
         
         {status_info}
@@ -767,14 +1103,28 @@ class HTMLReportGenerator:
         {params_info}
         
         <h2>Test Results</h2>
+
+        <div class="column-toggle-container">
+            <div class="column-toggle-header">Column Visibility Controls</div>
+            <div class="toggle-controls">
+            <button class="toggle-btn" onclick="showAllColumns()">Show All</button>
+            <button class="toggle-btn" onclick="hideAllColumns()">Hide All</button>
+            <button class="toggle-btn" onclick="showEssentialColumns()">Show Essential</button>
+            <button class="toggle-btn" onclick="resetColumnOrder()">Reset Order</button>
+            </div>
+            <div class="column-toggles" id="column-toggles">
+            <!-- Column checkboxes will be generated by JavaScript -->
+            </div>
+        </div>
+
         <div class="table-container">
             <table>
-                <thead>
-                    {table_headers}
-                </thead>
-                <tbody>
-                    {table_rows}
-                </tbody>
+            <thead>
+                {table_headers}
+            </thead>
+            <tbody>
+                {table_rows}
+            </tbody>
             </table>
         </div>
         
@@ -784,9 +1134,9 @@ class HTMLReportGenerator:
         <div class="footer">
             <p>Report generated on {generation_time}</p>
         </div>
-    </div>
-</body>
-</html>"""
+        </div>
+    </body>
+    </html>"""
 
 
 def main():
