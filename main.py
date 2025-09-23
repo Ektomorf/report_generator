@@ -21,6 +21,18 @@ Examples:
 
   # Generate reports with custom output directory
   python main.py /path/to/output/setups_180925_091733 --output-dir ./reports
+
+  # Generate reports with minimal columns only
+  python main.py /path/to/output --column-config minimal
+
+  # Generate reports showing only specific columns
+  python main.py /path/to/output --visible-columns Timestamp channel frequency peak_frequency peak_amplitude
+
+  # Generate reports hiding certain columns
+  python main.py /path/to/output --hide-columns raw_socan_response raw_rf_matrix_response spectrum_frequencies
+
+  # Use frequency analysis preset
+  python main.py /path/to/output --column-config frequency_analysis
         """
     )
 
@@ -46,7 +58,77 @@ Examples:
         help='Skip PDF generation (generate HTML only)'
     )
 
+    parser.add_argument(
+        '--column-config',
+        choices=['minimal', 'frequency_analysis', 'command_debugging', 'full_overview'],
+        default='full_overview',
+        help='Predefined column configuration (default: full_overview)'
+    )
+
+    parser.add_argument(
+        '--visible-columns',
+        nargs='*',
+        help='Specify which columns to show (space-separated list)'
+    )
+
+    parser.add_argument(
+        '--hide-columns',
+        nargs='*',
+        help='Specify which columns to hide (space-separated list)'
+    )
+
     return parser
+
+
+def apply_column_configuration(report_service, args):
+    """Apply column configuration based on command line arguments"""
+
+    # Predefined configurations
+    configurations = {
+        'minimal': {
+            'visible_columns': [
+                'Timestamp', 'channel', 'frequency', 'enabled', 'screenshot_filepath'
+            ]
+        },
+        'frequency_analysis': {
+            'visible_columns': [
+                'Timestamp', 'channel', 'frequency', 'peak_frequency',
+                'peak_amplitude', 'screenshot_filepath'
+            ]
+        },
+        'command_debugging': {
+            'visible_columns': [
+                'Timestamp', 'channel', 'socan_command_method', 'socan_command_args',
+                'socan_command', 'parsed_socan_response', 'raw_socan_response',
+                'rf_matrix_command_method', 'rf_matrix_command_args', 'rf_matrix_command',
+                'parsed_rf_matrix_response', 'raw_rf_matrix_response'
+            ]
+        },
+        'full_overview': {
+            'visible_columns': [
+                'Timestamp', 'channel', 'frequency', 'enabled', 'gain',
+                'peak_frequency', 'peak_amplitude', 'socan_command',
+                'parsed_socan_response', 'rf_matrix_command', 'parsed_rf_matrix_response',
+                'screenshot_filepath'
+            ]
+        }
+    }
+
+    # Apply predefined configuration
+    if args.column_config in configurations:
+        config = configurations[args.column_config]
+        report_service.configure_columns(visible_columns=config['visible_columns'])
+        print(f"Applied '{args.column_config}' column configuration")
+
+    # Apply custom visible columns if specified
+    if args.visible_columns:
+        report_service.configure_columns(visible_columns=args.visible_columns)
+        print(f"Set visible columns: {args.visible_columns}")
+
+    # Hide specific columns if specified
+    if args.hide_columns:
+        report_service.hide_columns(args.hide_columns)
+        print(f"Hidden columns: {args.hide_columns}")
 
 
 def main() -> int:
@@ -59,6 +141,10 @@ def main() -> int:
 
     try:
         report_service = ReportService()
+
+        # Apply column configuration
+        apply_column_configuration(report_service, args)
+
         generate_pdf = not args.no_pdf
         report_service.generate_reports(input_dir, output_dir, generate_pdf)
         return 0

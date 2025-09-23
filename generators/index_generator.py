@@ -36,7 +36,7 @@ class IndexGenerator:
             summary_stats=summary_stats
         )
 
-        with open(index_file, 'w') as f:
+        with open(index_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
 
         print(f"Generated index: {index_file}")

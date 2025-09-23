@@ -10,13 +10,15 @@ from typing import Dict, List, Any
 
 from models import TestResult
 from generators.html_templates import HTMLTemplates
+from config import ColumnConfigManager
 
 
 class HTMLReportGenerator:
     """Generator for HTML test reports"""
 
-    def __init__(self):
+    def __init__(self, column_config: ColumnConfigManager = None):
         self.template = HTMLTemplates.get_main_template()
+        self.column_config = column_config or ColumnConfigManager()
 
     def generate_report(self, test_result: TestResult, output_file: Path) -> None:
         """Generate HTML report for a single test"""
@@ -27,6 +29,8 @@ class HTMLReportGenerator:
         description_info = self._generate_description_info(test_result.params, test_result.results_data)
         params_info = self._generate_params_info(test_result.params)
 
+        column_metadata = self._generate_column_metadata(test_result.results_data)
+
         html_content = self.template.format(
             test_name=test_result.test_name,
             status_info=status_info,
@@ -35,57 +39,34 @@ class HTMLReportGenerator:
             table_headers=table_headers,
             table_rows=table_rows,
             screenshot_html=screenshot_html,
+            column_metadata=column_metadata,
             generation_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
 
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
 
         print(f"Generated report: {output_file}")
 
     def _get_all_unique_keys(self, results_data: List[Dict]) -> List[str]:
-        """Get all unique keys from the results data in a consistent order"""
+        """Get all unique keys from the results data using column configuration"""
         if not results_data:
             return []
 
+        # Get all available keys from the data
         all_keys = set()
         for entry in results_data:
             all_keys.update(entry.keys())
 
+        # Remove docstring fields as they're handled separately
         docstring_fields = {'docstring', 'test_description', 'description', 'Docstring', 'Test_Description', 'Description'}
         all_keys = all_keys - docstring_fields
 
-        key_order = [
-            'Timestamp',
-            'channel', 'frequency', 'enabled', 'gain',
-            'spectrum_frequencies', 'spectrum_amplitudes',
-            'peak_frequency', 'peak_amplitude', 'screenshot_filepath',
-            'socan_command_method', 'socan_command_args', 'socan_command',
-            'parsed_socan_response', 'raw_socan_response',
-            'rf_matrix_command_method', 'rf_matrix_command_args', 'rf_matrix_command',
-            'parsed_rf_matrix_response', 'raw_rf_matrix_response',
-            'keysight_xsan_command_method', 'keysight_xsan_command_args', 'keysight_xsan_command',
-            'frequencies', 'amplitudes',
-        ]
-
-        ordered_keys = []
-        remaining_keys = set(all_keys)
-
-        for key in key_order:
-            if key in remaining_keys:
-                ordered_keys.append(key)
-                remaining_keys.remove(key)
-
-        channel_keys = [k for k in remaining_keys if any(k.startswith(base) for base in ['enabled_', 'frequency_', 'gain_'])]
-        for key in sorted(channel_keys):
-            ordered_keys.append(key)
-            remaining_keys.remove(key)
-
-        ordered_keys.extend(sorted(remaining_keys))
-        return ordered_keys
+        # Use column configuration to get ordered, visible keys
+        return self.column_config.get_ordered_visible_keys(all_keys)
 
     def _generate_table_headers(self, results_data: List[Dict]) -> str:
-        """Generate HTML table headers based on available data"""
+        """Generate HTML table headers based on available data and column configuration"""
         if not results_data:
             return "<tr><th>No Data</th></tr>"
 
@@ -93,17 +74,22 @@ class HTMLReportGenerator:
         headers = ["#"]
 
         for key in all_keys:
-            display_name = key.replace('_', ' ').title()
-            if 'socan' in key.lower():
-                display_name = display_name.replace('Socan', 'SOCAN')
-            elif 'rf' in key.lower() and 'matrix' in key.lower():
-                display_name = display_name.replace('Rf Matrix', 'RF Matrix')
-            elif 'xsan' in key.lower():
-                display_name = display_name.replace('Xsan', 'XSAN')
-            elif 'ghz' in key.lower():
-                display_name = display_name.replace('Ghz', 'GHz')
-            elif 'dbm' in key.lower():
-                display_name = display_name.replace('Dbm', 'dBm')
+            column_def = self.column_config.get_column_definition(key)
+            if column_def and column_def.display_name:
+                display_name = column_def.display_name
+            else:
+                # Fallback to the old logic for unknown columns
+                display_name = key.replace('_', ' ').title()
+                if 'socan' in key.lower():
+                    display_name = display_name.replace('Socan', 'SOCAN')
+                elif 'rf' in key.lower() and 'matrix' in key.lower():
+                    display_name = display_name.replace('Rf Matrix', 'RF Matrix')
+                elif 'xsan' in key.lower():
+                    display_name = display_name.replace('Xsan', 'XSAN')
+                elif 'ghz' in key.lower():
+                    display_name = display_name.replace('Ghz', 'GHz')
+                elif 'dbm' in key.lower():
+                    display_name = display_name.replace('Dbm', 'dBm')
 
             headers.append(display_name)
 
@@ -167,15 +153,7 @@ class HTMLReportGenerator:
                 value = entry.get(key, 'N/A')
                 formatted_value = self._format_cell_value(key, value)
 
-                css_class = ''
-                if 'command' in key.lower():
-                    css_class = 'command'
-                elif 'parsed' in key.lower() and 'response' in key.lower():
-                    css_class = 'parsed-response'
-                elif 'response' in key.lower():
-                    css_class = 'response'
-                elif any(word in key.lower() for word in ['frequency', 'amplitude', 'peak']):
-                    css_class = 'numeric'
+                css_class = self.column_config.get_column_css_class(key)
 
                 if css_class:
                     row += f"<td class='{css_class}'>{formatted_value}</td>"
@@ -276,3 +254,50 @@ class HTMLReportGenerator:
         html += "</div>\n"
 
         return html
+
+    def _generate_column_metadata(self, results_data: List[Dict]) -> str:
+        """Generate JavaScript column metadata for the interactive controls"""
+        if not results_data:
+            return "<script>window.columnMetadata = [];</script>"
+
+        all_keys = self._get_all_unique_keys(results_data)
+        metadata = []
+
+        for i, key in enumerate(all_keys):
+            column_def = self.column_config.get_column_definition(key)
+            if column_def and column_def.display_name:
+                display_name = column_def.display_name
+                description = column_def.description or ""
+                column_type = column_def.column_type.value if column_def.column_type else "text"
+            else:
+                # Fallback to the old logic for unknown columns
+                display_name = key.replace('_', ' ').title()
+                if 'socan' in key.lower():
+                    display_name = display_name.replace('Socan', 'SOCAN')
+                elif 'rf' in key.lower() and 'matrix' in key.lower():
+                    display_name = display_name.replace('Rf Matrix', 'RF Matrix')
+                elif 'xsan' in key.lower():
+                    display_name = display_name.replace('Xsan', 'XSAN')
+                elif 'ghz' in key.lower():
+                    display_name = display_name.replace('Ghz', 'GHz')
+                elif 'dbm' in key.lower():
+                    display_name = display_name.replace('Dbm', 'dBm')
+                description = ""
+                column_type = "text"
+
+            metadata.append({
+                'key': key,
+                'displayName': display_name,
+                'index': i + 1,  # +1 for row number column
+                'description': description,
+                'type': column_type,
+                'visible': self.column_config.is_column_visible(key)
+            })
+
+        metadata_json = str(metadata).replace("'", '"').replace('True', 'true').replace('False', 'false')
+
+        return f"""
+        <script>
+            window.columnMetadata = {metadata_json};
+        </script>
+        """

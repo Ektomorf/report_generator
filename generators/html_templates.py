@@ -237,11 +237,505 @@ class HTMLTemplates:
             font-size: 12px;
             text-align: center;
         }}
+
+        /* Column Control Panel Styles */
+        .column-controls {{
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            position: relative;
+        }}
+
+        .column-controls h3 {{
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 16px;
+        }}
+
+        .column-controls-toggle {{
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }}
+
+        .column-controls-toggle:hover {{
+            background: #2980b9;
+        }}
+
+        .column-controls-content {{
+            display: none;
+        }}
+
+        .column-controls-content.active {{
+            display: block;
+        }}
+
+        .column-list {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }}
+
+        .column-item {{
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            cursor: move;
+            transition: all 0.2s;
+        }}
+
+        .column-item:hover {{
+            background: #f0f7ff;
+            border-color: #3498db;
+        }}
+
+        .column-item.dragging {{
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }}
+
+        .column-checkbox {{
+            margin-right: 10px;
+        }}
+
+        .column-type-icon {{
+            margin-right: 8px;
+            font-size: 12px;
+        }}
+
+        .column-label {{
+            flex: 1;
+            font-size: 13px;
+            color: #333;
+        }}
+
+        .column-drag-handle {{
+            color: #999;
+            font-size: 14px;
+            margin-left: 5px;
+        }}
+
+        .column-presets {{
+            margin: 15px 0;
+        }}
+
+        .preset-button {{
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            color: #2c3e50;
+            padding: 6px 12px;
+            margin: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }}
+
+        .preset-button:hover {{
+            background: #d5dbdb;
+        }}
+
+        .preset-button.active {{
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }}
+
+        /* Hidden column styling */
+        .column-hidden {{
+            display: none !important;
+        }}
+
+        /* Drag and drop indicators */
+        .drop-indicator {{
+            height: 2px;
+            background: #3498db;
+            margin: 2px 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }}
+
+        .drop-indicator.active {{
+            opacity: 1;
+        }}
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {{
+            .column-list {{
+                grid-template-columns: 1fr;
+            }}
+        }}
     </style>
+    <script>
+        // Column management functionality
+        class ColumnManager {{
+            constructor() {{
+                this.columns = [];
+                this.visibleColumns = new Set();
+                this.columnOrder = [];
+                this.draggedElement = null;
+                this.init();
+            }}
+
+            init() {{
+                this.loadColumnMetadata();
+                this.loadSettings();
+                this.setupEventListeners();
+                this.createColumnControls();
+                this.applyColumnVisibility();
+            }}
+
+            loadColumnMetadata() {{
+                // Use provided metadata if available, otherwise extract from table
+                if (window.columnMetadata && window.columnMetadata.length > 0) {{
+                    this.columns = window.columnMetadata.map(col => ({{
+                        key: col.key,
+                        displayName: col.displayName,
+                        index: col.index,
+                        description: col.description || '',
+                        type: col.type || 'text',
+                        visible: col.visible !== false
+                    }}));
+                }} else {{
+                    // Fallback: extract from table headers
+                    const headerRow = document.querySelector('table thead tr');
+                    if (!headerRow) return;
+
+                    const headers = headerRow.querySelectorAll('th');
+                    this.columns = Array.from(headers).slice(1).map((th, index) => ({{
+                        key: this.generateColumnKey(th.textContent.trim()),
+                        displayName: th.textContent.trim(),
+                        index: index + 1, // +1 to account for row number column
+                        description: '',
+                        type: 'text',
+                        visible: true
+                    }}));
+                }}
+
+                this.columnOrder = this.columns.map(col => col.key);
+                this.visibleColumns = new Set(this.columns.filter(col => col.visible).map(col => col.key));
+            }}
+
+            generateColumnKey(displayName) {{
+                // Convert display name back to key format
+                return displayName.toLowerCase()
+                    .replace(/[^a-z0-9]/g, '_')
+                    .replace(/_+/g, '_')
+                    .replace(/^_|_$/g, '');
+            }}
+
+            loadSettings() {{
+                try {{
+                    const saved = localStorage.getItem('reportColumnSettings');
+                    if (saved) {{
+                        const settings = JSON.parse(saved);
+                        this.visibleColumns = new Set(settings.visibleColumns || this.columnOrder);
+                        this.columnOrder = settings.columnOrder || this.columnOrder;
+                    }}
+                }} catch (e) {{
+                    console.log('Could not load column settings:', e);
+                }}
+            }}
+
+            saveSettings() {{
+                try {{
+                    const settings = {{
+                        visibleColumns: Array.from(this.visibleColumns),
+                        columnOrder: this.columnOrder
+                    }};
+                    localStorage.setItem('reportColumnSettings', JSON.stringify(settings));
+                }} catch (e) {{
+                    console.log('Could not save column settings:', e);
+                }}
+            }}
+
+            setupEventListeners() {{
+                document.addEventListener('DOMContentLoaded', () => {{
+                    this.applyColumnVisibility();
+                }});
+            }}
+
+            createColumnControls() {{
+                const container = document.querySelector('.container');
+                const statusInfo = document.querySelector('.status-info');
+
+                const controlsHtml = `
+                    <div class="column-controls">
+                        <button class="column-controls-toggle" onclick="columnManager.toggleControls()">
+                            📊 Configure Columns
+                        </button>
+                        <div class="column-controls-content" id="column-controls-content">
+                            <h3>Column Visibility & Order</h3>
+
+                            <div class="column-presets">
+                                <strong>Quick Presets:</strong><br>
+                                <button class="preset-button" onclick="columnManager.applyPreset('minimal')">Minimal</button>
+                                <button class="preset-button" onclick="columnManager.applyPreset('frequency')">Frequency Analysis</button>
+                                <button class="preset-button" onclick="columnManager.applyPreset('commands')">Commands</button>
+                                <button class="preset-button" onclick="columnManager.applyPreset('all')">Show All</button>
+                                <button class="preset-button" onclick="columnManager.resetToDefault()">Reset</button>
+                            </div>
+
+                            <div class="column-list" id="column-list">
+                                ${{this.generateColumnList()}}
+                            </div>
+
+                            <p style="font-size: 12px; color: #666; margin: 10px 0 0 0;">
+                                💡 Drag items to reorder columns, use checkboxes to show/hide. Settings are saved automatically.
+                            </p>
+                        </div>
+                    </div>
+                `;
+
+                if (statusInfo) {{
+                    statusInfo.insertAdjacentHTML('afterend', controlsHtml);
+                }} else {{
+                    const h1 = container.querySelector('h1');
+                    h1.insertAdjacentHTML('afterend', controlsHtml);
+                }}
+
+                this.setupDragAndDrop();
+            }}
+
+            generateColumnList() {{
+                return this.columnOrder.map(key => {{
+                    const column = this.columns.find(col => col.key === key);
+                    if (!column) return '';
+
+                    const checked = this.visibleColumns.has(key) ? 'checked' : '';
+                    const title = column.description ? `title="${{column.description}}"` : '';
+                    const typeIcon = this.getTypeIcon(column.type);
+
+                    return `
+                        <div class="column-item" draggable="true" data-column="${{key}}" ${{title}}>
+                            <input type="checkbox" class="column-checkbox" ${{checked}}
+                                   onchange="columnManager.toggleColumn('${{key}}', this.checked)">
+                            <span class="column-type-icon">${{typeIcon}}</span>
+                            <span class="column-label">${{column.displayName}}</span>
+                            <span class="column-drag-handle">⋮⋮</span>
+                        </div>
+                    `;
+                }}).join('');
+            }}
+
+            getTypeIcon(type) {{
+                const icons = {{
+                    'text': '📝',
+                    'numeric': '🔢',
+                    'frequency': '📊',
+                    'amplitude': '📈',
+                    'command': '⌨️',
+                    'response': '💬',
+                    'parsed_response': '🔍',
+                    'screenshot': '📷'
+                }};
+                return icons[type] || '📝';
+            }}
+
+            toggleControls() {{
+                const content = document.getElementById('column-controls-content');
+                content.classList.toggle('active');
+
+                if (content.classList.contains('active')) {{
+                    this.refreshColumnList();
+                }}
+            }}
+
+            refreshColumnList() {{
+                const columnList = document.getElementById('column-list');
+                if (columnList) {{
+                    columnList.innerHTML = this.generateColumnList();
+                    this.setupDragAndDrop();
+                }}
+            }}
+
+            toggleColumn(key, visible) {{
+                if (visible) {{
+                    this.visibleColumns.add(key);
+                }} else {{
+                    this.visibleColumns.delete(key);
+                }}
+                this.applyColumnVisibility();
+                this.saveSettings();
+            }}
+
+            applyColumnVisibility() {{
+                const table = document.querySelector('table');
+                if (!table) return;
+
+                this.columns.forEach(column => {{
+                    const isVisible = this.visibleColumns.has(column.key);
+                    const columnIndex = column.index;
+
+                    // Hide/show header
+                    const headerCell = table.querySelector(`thead tr th:nth-child(${{columnIndex + 1}})`);
+                    if (headerCell) {{
+                        headerCell.classList.toggle('column-hidden', !isVisible);
+                    }}
+
+                    // Hide/show data cells
+                    const dataCells = table.querySelectorAll(`tbody tr td:nth-child(${{columnIndex + 1}})`);
+                    dataCells.forEach(cell => {{
+                        cell.classList.toggle('column-hidden', !isVisible);
+                    }});
+                }});
+            }}
+
+            setupDragAndDrop() {{
+                const items = document.querySelectorAll('.column-item');
+
+                items.forEach(item => {{
+                    item.addEventListener('dragstart', (e) => {{
+                        this.draggedElement = item;
+                        item.classList.add('dragging');
+                        e.dataTransfer.effectAllowed = 'move';
+                    }});
+
+                    item.addEventListener('dragend', () => {{
+                        item.classList.remove('dragging');
+                        this.draggedElement = null;
+                    }});
+
+                    item.addEventListener('dragover', (e) => {{
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                    }});
+
+                    item.addEventListener('drop', (e) => {{
+                        e.preventDefault();
+                        if (this.draggedElement && this.draggedElement !== item) {{
+                            this.reorderColumns(this.draggedElement, item);
+                        }}
+                    }});
+                }});
+            }}
+
+            reorderColumns(draggedItem, targetItem) {{
+                const draggedKey = draggedItem.dataset.column;
+                const targetKey = targetItem.dataset.column;
+
+                const draggedIndex = this.columnOrder.indexOf(draggedKey);
+                const targetIndex = this.columnOrder.indexOf(targetKey);
+
+                if (draggedIndex !== -1 && targetIndex !== -1) {{
+                    // Remove dragged item and insert at target position
+                    this.columnOrder.splice(draggedIndex, 1);
+                    const newTargetIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+                    this.columnOrder.splice(newTargetIndex, 0, draggedKey);
+
+                    this.refreshColumnList();
+                    this.reorderTableColumns();
+                    this.saveSettings();
+                }}
+            }}
+
+            reorderTableColumns() {{
+                const table = document.querySelector('table');
+                if (!table) return;
+
+                // Get current column order based on this.columnOrder
+                const headerRow = table.querySelector('thead tr');
+                const bodyRows = table.querySelectorAll('tbody tr');
+
+                if (!headerRow) return;
+
+                // Create mapping of current positions
+                const currentHeaders = Array.from(headerRow.children);
+                const rowNumberHeader = currentHeaders[0]; // Keep row number column first
+
+                // Reorder headers (excluding row number column)
+                const newHeaderOrder = [rowNumberHeader];
+                this.columnOrder.forEach(key => {{
+                    const column = this.columns.find(col => col.key === key);
+                    if (column && column.index < currentHeaders.length) {{
+                        newHeaderOrder.push(currentHeaders[column.index]);
+                    }}
+                }});
+
+                // Clear and rebuild header row
+                headerRow.innerHTML = '';
+                newHeaderOrder.forEach(header => headerRow.appendChild(header));
+
+                // Reorder each data row
+                bodyRows.forEach(row => {{
+                    const cells = Array.from(row.children);
+                    const rowNumberCell = cells[0]; // Keep row number cell first
+
+                    const newCellOrder = [rowNumberCell];
+                    this.columnOrder.forEach(key => {{
+                        const column = this.columns.find(col => col.key === key);
+                        if (column && column.index < cells.length) {{
+                            newCellOrder.push(cells[column.index]);
+                        }}
+                    }});
+
+                    // Clear and rebuild row
+                    row.innerHTML = '';
+                    newCellOrder.forEach(cell => row.appendChild(cell));
+                }});
+
+                // Update column indices to match new positions
+                this.columns.forEach((column, index) => {{
+                    column.index = index + 1; // +1 for row number column
+                }});
+
+                // Reapply visibility after reordering
+                this.applyColumnVisibility();
+            }}
+
+            applyPreset(presetName) {{
+                const presets = {{
+                    minimal: ['timestamp', 'channel', 'frequency', 'enabled', 'screenshot_filepath'],
+                    frequency: ['timestamp', 'channel', 'frequency', 'peak_frequency', 'peak_amplitude', 'screenshot_filepath'],
+                    commands: ['timestamp', 'channel', 'socan_command', 'parsed_socan_response', 'rf_matrix_command', 'parsed_rf_matrix_response'],
+                    all: this.columnOrder
+                }};
+
+                if (presets[presetName]) {{
+                    this.visibleColumns = new Set(presets[presetName]);
+                    this.applyColumnVisibility();
+                    this.refreshColumnList();
+                    this.saveSettings();
+
+                    // Update preset button styling
+                    document.querySelectorAll('.preset-button').forEach(btn => btn.classList.remove('active'));
+                    event.target.classList.add('active');
+                }}
+            }}
+
+            resetToDefault() {{
+                this.visibleColumns = new Set(this.columnOrder);
+                this.applyColumnVisibility();
+                this.refreshColumnList();
+                this.saveSettings();
+
+                document.querySelectorAll('.preset-button').forEach(btn => btn.classList.remove('active'));
+            }}
+        }}
+
+        // Initialize column manager when page loads
+        let columnManager;
+        document.addEventListener('DOMContentLoaded', () => {{
+            columnManager = new ColumnManager();
+        }});
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>Test Report: {test_name}</h1>
+
+        {column_metadata}
 
         {status_info}
 

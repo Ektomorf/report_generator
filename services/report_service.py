@@ -10,16 +10,43 @@ from typing import List
 from models import TestResult, SetupReport
 from parsers import TestResultParser, SetupReportParser
 from generators import HTMLReportGenerator, IndexGenerator, PDFReportGenerator, PDFIndexGenerator
+from config import ColumnConfigManager
 
 
 class ReportService:
     """Main service for generating test reports"""
 
-    def __init__(self):
-        self.html_generator = HTMLReportGenerator()
+    def __init__(self, column_config: ColumnConfigManager = None):
+        self.column_config = column_config or ColumnConfigManager()
+        self.html_generator = HTMLReportGenerator(self.column_config)
         self.index_generator = IndexGenerator()
         self.pdf_generator = PDFReportGenerator()
         self.pdf_index_generator = PDFIndexGenerator()
+
+    def configure_columns(self, visible_columns: List[str] = None, column_order: List[str] = None) -> None:
+        """Configure which columns to display and in what order"""
+        if visible_columns is not None:
+            self.column_config.set_visible_columns(visible_columns)
+        if column_order is not None:
+            self.column_config.set_column_order(column_order)
+
+    def hide_columns(self, column_keys: List[str]) -> None:
+        """Hide specific columns"""
+        for key in column_keys:
+            self.column_config.hide_column(key)
+
+    def show_columns(self, column_keys: List[str]) -> None:
+        """Show specific columns"""
+        for key in column_keys:
+            self.column_config.show_column(key)
+
+    def get_available_columns(self) -> List[str]:
+        """Get list of all available column definitions"""
+        return [col.key for col in self.column_config.get_all_available_columns()]
+
+    def get_visible_columns(self) -> List[str]:
+        """Get list of currently visible columns"""
+        return self.column_config.get_visible_columns()
 
     def generate_reports(self, input_dir: Path, output_dir: Path, generate_pdf: bool = True) -> None:
         """Generate all reports for the given input directory"""
