@@ -1,0 +1,1 @@
+09:18:14 - INFO - {'command_method': 'configure_if_filter_band', 'command_str': 'C12:J0:1;', '**kwargs': {'if_filter_band_converter': 'C12', 'if_filter_band_band': 0}, 'raw_response': '', 'parsed_response': 'could_not_parse'}

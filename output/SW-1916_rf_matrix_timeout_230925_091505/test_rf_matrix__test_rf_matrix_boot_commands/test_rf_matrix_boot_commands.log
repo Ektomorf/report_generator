@@ -1,0 +1,1 @@
+09:16:40 - INFO - {'command_method': 'bootenter', 'command_str': 'BOOTENTER SA;', '**kwargs': {'bootenter_device': 'SA'}, 'raw_response': '', 'parsed_response': 'could_not_parse'}

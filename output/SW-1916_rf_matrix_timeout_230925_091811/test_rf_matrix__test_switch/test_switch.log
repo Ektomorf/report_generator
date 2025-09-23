@@ -1,0 +1,1 @@
+09:18:13 - INFO - {'command_method': 'set_lo_frequency', 'command_str': 'C12:K25000:1;', '**kwargs': {'set_lo_frequency_converter': 'C12', 'set_lo_frequency_freq': 25000}, 'raw_response': 'Timeout.', 'parsed_response': 'could_not_parse'}

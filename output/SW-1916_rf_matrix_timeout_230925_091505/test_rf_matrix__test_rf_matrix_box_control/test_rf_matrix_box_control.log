@@ -1,0 +1,6 @@
+09:16:27 - INFO - {'command_method': 'ping', 'command_str': 'PING;', '**kwargs': {}, 'raw_response': 'PONG', 'parsed_response': 'ping_acknowledged'}
+09:16:28 - INFO - {'command_method': 'read_temp', 'command_str': 'TEMP;', '**kwargs': {}, 'raw_response': 'TEMP: 32', 'parsed_response': {'box_temp_C': 32}}
+09:16:29 - INFO - {'command_method': 'set_fanspeed', 'command_str': 'FANSPEED:25;', '**kwargs': {'fanspeed_speed': 25}, 'raw_response': 'FANSPEED: 025%', 'parsed_response': {'box_fanspeed_pct': 25}}
+09:16:30 - INFO - {'command_method': 'set_fanspeed', 'command_str': 'FANSPEED:50;', '**kwargs': {'fanspeed_speed': 50}, 'raw_response': 'FANSPEED: 050%', 'parsed_response': {'box_fanspeed_pct': 50}}
+09:16:31 - INFO - {'command_method': 'set_fanspeed', 'command_str': 'FANSPEED:75;', '**kwargs': {'fanspeed_speed': 75}, 'raw_response': 'FANSPEED: 075%', 'parsed_response': {'box_fanspeed_pct': 75}}
+09:16:32 - INFO - {'command_method': 'read_buffer', 'command_str': 'BUFFER:SA;', '**kwargs': {'buffer_device': 'SA'}, 'raw_response': '000:', 'parsed_response': 'could_not_parse'}

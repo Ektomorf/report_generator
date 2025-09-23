@@ -1,0 +1,2 @@
+10:52:45 - INFO - {'command_method': 'bootenter', 'command_str': 'BOOTENTER SA;', '**kwargs': {'bootenter_device': 'SA'}, 'raw_response': 'OK', 'parsed_response': {'bootenter_device': 'SA'}}
+10:52:45 - INFO - {'command_method': 'bootsend', 'command_str': 'BOOTSEND SA :DEADBEEF;', '**kwargs': {'bootsend_device': 'SA', 'bootsend_hex_line': 'DEADBEEF'}, 'raw_response': 'Internal error has occurred.', 'parsed_response': 'could_not_parse'}

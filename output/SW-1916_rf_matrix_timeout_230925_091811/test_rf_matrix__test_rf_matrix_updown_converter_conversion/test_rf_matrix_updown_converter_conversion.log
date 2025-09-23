@@ -1,0 +1,1 @@
+09:18:14 - INFO - {'command_method': 'enable_up_conversion', 'command_str': 'C12:U10:1;', '**kwargs': {'enable_up_conversion_converter': 'C12', 'enable_up_conversion_channel': 1, 'enable_up_conversion_rf_band': 0}, 'raw_response': '', 'parsed_response': 'could_not_parse'}

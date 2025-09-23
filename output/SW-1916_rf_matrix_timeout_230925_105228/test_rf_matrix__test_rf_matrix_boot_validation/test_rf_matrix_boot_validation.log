@@ -1,0 +1,1 @@
+10:52:45 - INFO - {'command_method': 'bootsend', 'command_str': 'BOOTSEND SA :12345;', '**kwargs': {'bootsend_device': 'SA', 'bootsend_hex_line': '12345'}, 'raw_response': 'Internal error has occurred.', 'parsed_response': 'could_not_parse'}

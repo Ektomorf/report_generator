@@ -1,0 +1,1 @@
+10:52:41 - INFO - {'command_method': 'set_digital_attenuation', 'command_str': 'C12:A01:1;', '**kwargs': {'set_digital_attenuation_converter': 'C12', 'set_digital_attenuation_attenuation': 0, 'set_digital_attenuation_channel': '1'}, 'raw_response': 'Timeout.\nInternal error has occurred.', 'parsed_response': 'could_not_parse'}

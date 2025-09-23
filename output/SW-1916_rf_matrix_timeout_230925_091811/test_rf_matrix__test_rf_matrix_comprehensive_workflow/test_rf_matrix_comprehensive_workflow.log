@@ -1,0 +1,1 @@
+09:18:14 - INFO - {'command_method': 'ping', 'command_str': 'PING;', '**kwargs': {}, 'raw_response': '', 'parsed_response': 'could_not_parse'}

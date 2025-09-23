@@ -1,0 +1,1 @@
+09:18:13 - INFO - {'command_method': 'read_status', 'command_str': 'SA:I:10;', '**kwargs': {'read_status_matrix': 'A'}, 'raw_response': '\x01\x05\x00\x10\x19\x00\n\x00\x00\x00', 'parsed_response': 'could_not_parse'}

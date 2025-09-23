@@ -1,0 +1,4 @@
+10:52:45 - INFO - {'command_method': 'ping', 'command_str': 'PING;', '**kwargs': {}, 'raw_response': 'PONG', 'parsed_response': 'ping_acknowledged'}
+10:52:45 - INFO - {'command_method': 'read_temp', 'command_str': 'TEMP;', '**kwargs': {}, 'raw_response': 'TEMP: 36', 'parsed_response': {'box_temp_C': 36}}
+10:52:45 - INFO - {'command_method': 'switch_connection', 'command_str': 'SA:S105:1;', '**kwargs': {'switch_connection_matrix': 'A', 'switch_connection_y': 1, 'switch_connection_port': 5}, 'raw_response': 'O', 'parsed_response': {'switch_connection_matrix': 'A', 'switch_connection_y': 1, 'switch_connection_port': 5}}
+10:52:45 - INFO - {'command_method': 'read_status', 'command_str': 'SA:I:10;', '**kwargs': {'read_status_matrix': 'A'}, 'raw_response': '\x01\x05\x05\x10\x19\x00\n\x00\x00\x00', 'parsed_response': 'could_not_parse'}

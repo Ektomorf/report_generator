@@ -1,0 +1,1 @@
+09:16:37 - INFO - {'command_method': 'read_internal_temperature', 'command_str': 'C12:t:5;', '**kwargs': {'internal_temperature_converter': 'C12'}, 'raw_response': '', 'parsed_response': 'could_not_parse'}
