@@ -133,10 +133,16 @@ class IndexGenerator:
         for log in all_logs:
             level_class = f"log-{log.get('level', 'info').lower()}"
 
-            # Format timestamp to show UTC
+            # Format timestamp to show full UTC date/time
             timestamp = log.get('timestamp', 'N/A')
-            if timestamp != 'N/A' and 'UTC' not in timestamp.upper() and '+' not in timestamp and 'Z' not in timestamp:
-                timestamp = f"{timestamp} UTC"
+            if timestamp != 'N/A':
+                # If it's already a full date/time format from enhanced parsing
+                if len(timestamp) > 8:  # More than just HH:MM:SS
+                    if 'UTC' not in timestamp.upper() and '+' not in timestamp and 'Z' not in timestamp:
+                        timestamp = f"{timestamp} UTC"
+                else:
+                    # Legacy format - just time, so indicate this is time-only
+                    timestamp = f"{timestamp} (time only) UTC"
 
             content += f"""
                     <tr>

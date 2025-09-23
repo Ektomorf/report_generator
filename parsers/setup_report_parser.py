@@ -6,6 +6,7 @@ Parser for setup report.json files.
 import re
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+from datetime import datetime, timezone
 from parsers.base_parser import BaseParser
 from models import SetupReport, TestSummary, TestInfo, LogEntry
 
@@ -79,13 +80,21 @@ class SetupReportParser(BaseParser):
         """Collect logs from all test subdirectories"""
         logs = []
 
+        # Get the setup creation date to combine with log times
+        report_file = self.folder_path / 'report.json'
+        report_data = self._load_json_file(report_file) if report_file.exists() else {}
+        setup_created = report_data.get('created', 0)
+        setup_date = None
+        if setup_created:
+            setup_date = datetime.fromtimestamp(setup_created, tz=timezone.utc).date()
+
         for test_dir in self.folder_path.iterdir():
             if test_dir.is_dir() and test_dir.name.startswith('test_'):
-                logs.extend(self._parse_test_logs(test_dir))
+                logs.extend(self._parse_test_logs(test_dir, setup_date))
 
         return sorted(logs, key=lambda x: x.get('timestamp', ''))
 
-    def _parse_test_logs(self, test_dir: Path) -> List[Dict[str, Any]]:
+    def _parse_test_logs(self, test_dir: Path, setup_date=None) -> List[Dict[str, Any]]:
         """Parse logs from a single test directory"""
         logs = []
         log_file = self._find_log_file(test_dir)
@@ -98,7 +107,7 @@ class SetupReportParser(BaseParser):
                 content = f.read().strip()
                 if content:
                     for line in content.split('\n'):
-                        log_entry = self._parse_log_line(line.strip())
+                        log_entry = self._parse_log_line(line.strip(), setup_date)
                         if log_entry:
                             log_entry['test_name'] = test_dir.name
                             logs.append(log_entry)
@@ -113,7 +122,7 @@ class SetupReportParser(BaseParser):
             return file
         return None
 
-    def _parse_log_line(self, line: str) -> Optional[Dict[str, Any]]:
+    def _parse_log_line(self, line: str, setup_date=None) -> Optional[Dict[str, Any]]:
         """Parse a single log line to extract timestamp, level, and message"""
         if not line:
             return None
@@ -122,9 +131,17 @@ class SetupReportParser(BaseParser):
         match = re.match(log_pattern, line)
 
         if match:
-            timestamp, level, message = match.groups()
+            time_str, level, message = match.groups()
+
+            # Combine setup date with log time to create full timestamp
+            if setup_date:
+                full_timestamp = f"{setup_date.strftime('%Y-%m-%d')} {time_str}"
+            else:
+                # Fallback to just the time if no date available
+                full_timestamp = time_str
+
             return {
-                'timestamp': timestamp,
+                'timestamp': full_timestamp,
                 'level': level.upper(),
                 'message': message.strip()
             }
