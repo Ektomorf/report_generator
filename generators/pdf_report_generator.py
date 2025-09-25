@@ -4,6 +4,7 @@ PDF report generator for individual test results.
 """
 
 import base64
+import html
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Any
@@ -178,7 +179,7 @@ class PDFReportGenerator:
             screenshot_html = self._generate_screenshot_html(test_result.screenshots)
             status_info = self._generate_status_info(test_result.status)
             description_info = self._generate_description_info(test_result.params, test_result.results_data)
-            params_info = self._generate_params_info(test_result.params)
+            params_info = self._generate_params_info(test_result.params, test_result.longrepr)
 
             html_content = self.template.format(
                 test_name=test_result.test_name,
@@ -285,7 +286,7 @@ class PDFReportGenerator:
 
             headers.append(display_name)
 
-        header_row = "<tr>" + "".join(f"<th>{header}</th>" for header in headers) + "</tr>"
+        header_row = "<tr>" + "".join(f"<th>{html.escape(header)}</th>" for header in headers) + "</tr>"
         return header_row
 
     def _format_cell_value_for_pdf(self, key: str, value: Any) -> str:
@@ -295,7 +296,7 @@ class PDFReportGenerator:
 
         # Handle different value types with PDF-specific limits
         if isinstance(value, dict):
-            content = str(value)
+            content = html.escape(str(value))
             # Truncate very long dict content for PDF
             if len(content) > 200:
                 return f'<div class="cell-content">{content[:197]}...</div>'
@@ -304,15 +305,16 @@ class PDFReportGenerator:
             if len(value) > 10:
                 content = f"[{len(value)} items]"
             else:
-                content = str(value)
+                content = html.escape(str(value))
                 if len(content) > 150:
                     content = f'<div class="cell-content">{content[:147]}...</div>'
             return content
         elif isinstance(value, str):
             # Truncate very long strings for PDF readability
-            if len(value) > 200:
-                return f'<div class="cell-content">{value[:197]}...</div>'
-            return value
+            escaped_value = html.escape(value)
+            if len(escaped_value) > 200:
+                return f'<div class="cell-content">{escaped_value[:197]}...</div>'
+            return escaped_value
 
         # Special formatting for specific keys
         if 'peak_frequency' in key.lower() and isinstance(value, (int, float)):
@@ -330,10 +332,10 @@ class PDFReportGenerator:
                 return f"{value / 1e9:.3f} GHz"
             return str(value)
         elif 'screenshot_filepath' in key.lower() and value:
-            screenshot_filename = Path(str(value)).name
+            screenshot_filename = html.escape(Path(str(value)).name)
             return f"📷 {screenshot_filename}"  # Use emoji for PDF since links don't work
 
-        return str(value)
+        return html.escape(str(value))
 
     def _generate_table_rows(self, results_data: List[Dict]) -> str:
         """Generate HTML table rows optimized for PDF"""
@@ -388,29 +390,48 @@ class PDFReportGenerator:
                     abs_screenshot_path = Path.cwd() / screenshot_path
 
                 if abs_screenshot_path.exists():
-                    # Embed images as base64 for PDF
-                    with open(abs_screenshot_path, 'rb') as f:
-                        img_data = base64.b64encode(f.read()).decode('utf-8')
+                    try:
+                        # Embed images as base64 for PDF
+                        with open(abs_screenshot_path, 'rb') as f:
+                            img_bytes = f.read()
 
-                    # Determine image format from file extension
-                    ext = abs_screenshot_path.suffix.lower()
-                    if ext in ['.jpg', '.jpeg']:
-                        img_format = 'jpeg'
-                    elif ext == '.png':
-                        img_format = 'png'
-                    elif ext == '.gif':
-                        img_format = 'gif'
-                    elif ext in ['.bmp', '.bitmap']:
-                        img_format = 'bmp'
-                    else:
-                        img_format = 'png'  # Default to png
+                        # Validate that we have image data
+                        if not img_bytes:
+                            raise ValueError("Empty image file")
 
-                    html += f"""
-                <div class='screenshot'>
-                    <h4>{screenshot_name}</h4>
-                    <img src='data:image/{img_format};base64,{img_data}' alt='{screenshot_name}' style='max-width: 100%; height: auto;' />
-                </div>
-                """
+                        img_data = base64.b64encode(img_bytes).decode('utf-8')
+
+                        # Validate the base64 encoding
+                        if not img_data or len(img_data) < 10:
+                            raise ValueError("Invalid base64 encoding")
+
+                        # Determine image format from file extension
+                        ext = abs_screenshot_path.suffix.lower()
+                        if ext in ['.jpg', '.jpeg']:
+                            img_format = 'jpeg'
+                        elif ext == '.png':
+                            img_format = 'png'
+                        elif ext == '.gif':
+                            img_format = 'gif'
+                        elif ext in ['.bmp', '.bitmap']:
+                            img_format = 'bmp'
+                        else:
+                            img_format = 'png'  # Default to png
+
+                        html += f"""
+                    <div class='screenshot'>
+                        <h4>{screenshot_name}</h4>
+                        <img src='data:image/{img_format};base64,{img_data}' alt='{screenshot_name}' style='max-width: 100%; height: auto;' />
+                    </div>
+                    """
+                    except Exception as img_error:
+                        print(f"Warning: Failed to encode image {screenshot_name}: {str(img_error)}")
+                        html += f"""
+                    <div class='screenshot'>
+                        <h4>{screenshot_name}</h4>
+                        <p>Error encoding image for PDF: {str(img_error)}</p>
+                    </div>
+                    """
                 else:
                     html += f"""
                 <div class='screenshot'>
@@ -531,7 +552,7 @@ class PDFReportGenerator:
 
         # Handle different value types
         if isinstance(value, dict):
-            content = str(value)
+            content = html.escape(str(value))
             if len(content) > max_length:
                 return content[:max_length-3] + "..."
             return content
@@ -539,14 +560,15 @@ class PDFReportGenerator:
             if len(value) > 10:
                 return f"[{len(value)} items]"
             else:
-                content = str(value)
+                content = html.escape(str(value))
                 if len(content) > max_length:
                     return content[:max_length-3] + "..."
                 return content
         elif isinstance(value, str):
-            if len(value) > max_length:
-                return value[:max_length-3] + "..."
-            return value
+            escaped_value = html.escape(value)
+            if len(escaped_value) > max_length:
+                return escaped_value[:max_length-3] + "..."
+            return escaped_value
 
         # Special formatting for specific keys
         if 'peak_frequency' in key.lower() and isinstance(value, (int, float)):
@@ -564,10 +586,10 @@ class PDFReportGenerator:
                 return f"{value / 1e9:.3f} GHz"
             return str(value)
         elif 'screenshot_filepath' in key.lower() and value:
-            screenshot_filename = Path(str(value)).name
+            screenshot_filename = html.escape(Path(str(value)).name)
             return f"📷 {screenshot_filename}"
 
-        return str(value)
+        return html.escape(str(value))
 
     def _generate_status_info(self, status: Dict) -> str:
         """Generate status information HTML"""
@@ -578,28 +600,51 @@ class PDFReportGenerator:
 
         return f"""
         <div class='status-info {status_class}'>
-            <h3>Test Status: {status.get('status', 'UNKNOWN')}</h3>
-            <p><strong>Duration:</strong> {status.get('duration', 'N/A')}</p>
-            <p><strong>Start Time:</strong> {status.get('start_time', 'N/A')}</p>
-            <p><strong>End Time:</strong> {status.get('end_time', 'N/A')}</p>
+            <h3>Test Status: {html.escape(str(status.get('status', 'UNKNOWN')))}</h3>
+            <p><strong>Duration:</strong> {html.escape(str(status.get('duration', 'N/A')))}</p>
+            <p><strong>Start Time:</strong> {html.escape(str(status.get('start_time', 'N/A')))}</p>
+            <p><strong>End Time:</strong> {html.escape(str(status.get('end_time', 'N/A')))}</p>
         </div>
         """
 
-    def _generate_params_info(self, params: Dict) -> str:
+    def _generate_params_info(self, params: Dict, longrepr: str = "") -> str:
         """Generate parameters information HTML"""
-        if not params:
-            return "<p>No parameter information available</p>"
+        html_content = "<div class='params-info'>\n<h3>Test Parameters</h3>\n"
 
-        html = "<div class='params-info'>\n<h3>Test Parameters</h3>\n<ul>\n"
-        params_data = params.get('params', params)
+        if not params and not longrepr:
+            html_content += "<p>No parameter information available</p>"
+        else:
+            html_content += "<ul>\n"
+            if params:
+                params_data = params.get('params', params)
+                for key, value in params_data.items():
+                    if key in ['test_description', 'description']:
+                        continue
+                    escaped_key = html.escape(str(key))
+                    escaped_value = html.escape(str(value))
+                    html_content += f"<li><strong>{escaped_key}:</strong> {escaped_value}</li>\n"
+            html_content += "</ul>\n"
 
-        for key, value in params_data.items():
-            if key in ['test_description', 'description']:
-                continue
-            html += f"<li><strong>{key}:</strong> {value}</li>\n"
-        html += "</ul>\n</div>\n"
+        # Add longrepr section if available
+        if longrepr:
+            # First escape HTML, then replace newlines with <br> tags
+            escaped_longrepr = html.escape(longrepr)
+            formatted_longrepr = escaped_longrepr.replace('\n', '<br>')
 
-        return html
+            # Apply scrollable class if longrepr is longer than 300 characters (shorter for PDF)
+            error_class = "error-message"
+            if len(longrepr) > 300:
+                error_class += " scrollable"
+
+            html_content += f"""
+            <div class="longrepr-section">
+                <h4>Error Details</h4>
+                <div class="{error_class}">{formatted_longrepr}</div>
+            </div>
+            """
+
+        html_content += "</div>\n"
+        return html_content
 
     def _generate_description_info(self, params: Dict, results_data: List[Dict] = None) -> str:
         """Generate test description HTML"""
@@ -624,10 +669,12 @@ class PDFReportGenerator:
         if not description:
             return ""
 
-        formatted_description = description.replace('\n', '<br>')
+        # First escape HTML, then replace newlines with <br> tags
+        escaped_description = html.escape(description)
+        formatted_description = escaped_description.replace('\n', '<br>')
 
-        html = "<div class='description-info'>\n<h3>Test Description</h3>\n"
-        html += f"<p class='test-description'>{formatted_description}</p>\n"
-        html += "</div>\n"
+        html_content = "<div class='description-info'>\n<h3>Test Description</h3>\n"
+        html_content += f"<p class='test-description'>{formatted_description}</p>\n"
+        html_content += "</div>\n"
 
-        return html
+        return html_content
