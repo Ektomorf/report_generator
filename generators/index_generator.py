@@ -112,51 +112,170 @@ class IndexGenerator:
         """
 
     def _generate_logs_content(self, all_logs: List[Dict]) -> str:
-        """Generate content for the logs tab"""
+        """Generate content for the logs tab with navigation"""
         if not all_logs:
             return "<p>No logs available.</p>"
 
+        # Group logs by setup and test for navigation
+        logs_by_setup = {}
+        for log in all_logs:
+            setup_name = log.get('setup_name', 'Unknown')
+            test_name = log.get('test_name', 'Unknown')
+
+            if setup_name not in logs_by_setup:
+                logs_by_setup[setup_name] = {}
+            if test_name not in logs_by_setup[setup_name]:
+                logs_by_setup[setup_name][test_name] = []
+
+            logs_by_setup[setup_name][test_name].append(log)
+
+        # Generate navigation sidebar and content
         content = """
-            <table class="logs-table">
-                <thead>
-                    <tr>
-                        <th>Setup</th>
-                        <th>Test</th>
-                        <th>UTC Date/Time</th>
-                        <th>Level</th>
-                        <th>Message</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 0 0 300px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; max-height: 600px; overflow-y: auto;">
+                    <h4 style="margin-top: 0; color: #2c3e50;">Log Navigation</h4>
+                    <div class="log-navigation">
         """
 
-        for log in all_logs:
-            level_class = f"log-{log.get('level', 'info').lower()}"
-
-            # Format timestamp to show full UTC date/time
-            timestamp = log.get('timestamp', 'N/A')
-            if timestamp != 'N/A':
-                # If it's already a full date/time format from enhanced parsing
-                if len(timestamp) > 8:  # More than just HH:MM:SS
-                    if 'UTC' not in timestamp.upper() and '+' not in timestamp and 'Z' not in timestamp:
-                        timestamp = f"{timestamp} UTC"
-                else:
-                    # Legacy format - just time, so indicate this is time-only
-                    timestamp = f"{timestamp} (time only) UTC"
-
+        # Build navigation tree
+        for setup_name in sorted(logs_by_setup.keys()):
+            setup_id = setup_name.replace(' ', '_').replace('/', '_')
             content += f"""
-                    <tr>
-                        <td>{log.get('setup_name', 'Unknown')}</td>
-                        <td>{log.get('test_name', 'Unknown')}</td>
-                        <td>{timestamp}</td>
-                        <td class="{level_class}">{log.get('level', 'INFO')}</td>
-                        <td>{log.get('message', '')}</td>
-                    </tr>
+                        <div class="nav-setup">
+                            <div class="nav-setup-header" onclick="toggleNavSection('{setup_id}')" style="cursor: pointer; padding: 8px; background: #e9ecef; border-radius: 4px; margin: 5px 0; font-weight: bold; border: 1px solid #ced4da;">
+                                📁 {setup_name} ({sum(len(tests) for tests in logs_by_setup[setup_name].values())} logs)
+                                <span id="arrow_{setup_id}" style="float: right;">▼</span>
+                            </div>
+                            <div id="nav_{setup_id}" class="nav-tests" style="margin-left: 15px; display: block;">
+            """
+
+            for test_name in sorted(logs_by_setup[setup_name].keys()):
+                test_id = f"{setup_id}_{test_name.replace(' ', '_').replace('/', '_')}"
+                log_count = len(logs_by_setup[setup_name][test_name])
+                content += f"""
+                                <div class="nav-test" onclick="jumpToLogs('{test_id}')" style="cursor: pointer; padding: 6px; margin: 2px 0; background: white; border-radius: 3px; border: 1px solid #e0e0e0; font-size: 12px;">
+                                    📄 {test_name} ({log_count} logs)
+                                </div>
+                """
+
+            content += """
+                            </div>
+                        </div>
             """
 
         content += """
-                </tbody>
-            </table>
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    <div style="margin-bottom: 15px;">
+                        <input type="text" id="logFilter" placeholder="Filter logs by message..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" onkeyup="filterLogs()">
+                    </div>
+        """
+
+        # Generate main log content organized by setup and test
+        for setup_name in sorted(logs_by_setup.keys()):
+            setup_id = setup_name.replace(' ', '_').replace('/', '_')
+            content += f"""
+                    <div class="log-setup-section" id="logs_{setup_id}" style="margin-bottom: 30px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                        <div style="background: #3498db; color: white; padding: 10px; font-weight: bold;">
+                            {setup_name}
+                        </div>
+            """
+
+            for test_name in sorted(logs_by_setup[setup_name].keys()):
+                test_id = f"{setup_id}_{test_name.replace(' ', '_').replace('/', '_')}"
+                test_logs = logs_by_setup[setup_name][test_name]
+
+                content += f"""
+                        <div class="log-test-section" id="logs_{test_id}" style="margin: 15px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                            <div style="background: #f8f9fa; padding: 8px; font-weight: bold; border-bottom: 1px solid #e0e0e0;">
+                                📄 {test_name} ({len(test_logs)} log entries)
+                            </div>
+                            <table class="logs-table" style="width: 100%; border-collapse: collapse; margin: 0;">
+                                <thead>
+                                    <tr>
+                                        <th style="background: #34495e; color: white; padding: 6px; border: 1px solid #ddd;">Time</th>
+                                        <th style="background: #34495e; color: white; padding: 6px; border: 1px solid #ddd;">Level</th>
+                                        <th style="background: #34495e; color: white; padding: 6px; border: 1px solid #ddd;">Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                """
+
+                for log in test_logs:
+                    level_class = f"log-{log.get('level', 'info').lower()}"
+
+                    # Format timestamp to show full UTC date/time
+                    timestamp = log.get('timestamp', 'N/A')
+                    if timestamp != 'N/A':
+                        # If it's already a full date/time format from enhanced parsing
+                        if len(timestamp) > 8:  # More than just HH:MM:SS
+                            if 'UTC' not in timestamp.upper() and '+' not in timestamp and 'Z' not in timestamp:
+                                timestamp = f"{timestamp} UTC"
+                        else:
+                            # Legacy format - just time, so indicate this is time-only
+                            timestamp = f"{timestamp} (time only) UTC"
+
+                    content += f"""
+                                    <tr class="log-row" data-message="{log.get('message', '').lower()}">
+                                        <td style="padding: 4px 6px; border: 1px solid #ddd; font-family: monospace; font-size: 11px; white-space: nowrap;">{timestamp}</td>
+                                        <td class="{level_class}" style="padding: 4px 6px; border: 1px solid #ddd; font-weight: bold; text-align: center; width: 80px;">{log.get('level', 'INFO')}</td>
+                                        <td style="padding: 4px 6px; border: 1px solid #ddd; font-family: monospace; font-size: 11px; word-break: break-word;">{log.get('message', '')}</td>
+                                    </tr>
+                    """
+
+                content += """
+                                </tbody>
+                            </table>
+                        </div>
+                """
+
+            content += """
+                    </div>
+            """
+
+        content += """
+                </div>
+            </div>
+
+            <script>
+                function toggleNavSection(setupId) {
+                    const section = document.getElementById('nav_' + setupId);
+                    const arrow = document.getElementById('arrow_' + setupId);
+                    if (section.style.display === 'none') {
+                        section.style.display = 'block';
+                        arrow.textContent = '▼';
+                    } else {
+                        section.style.display = 'none';
+                        arrow.textContent = '▶';
+                    }
+                }
+
+                function jumpToLogs(testId) {
+                    const element = document.getElementById('logs_' + testId);
+                    if (element) {
+                        element.scrollIntoView({behavior: 'smooth', block: 'start'});
+                        element.style.boxShadow = '0 0 10px #3498db';
+                        setTimeout(() => {
+                            element.style.boxShadow = '';
+                        }, 2000);
+                    }
+                }
+
+                function filterLogs() {
+                    const filter = document.getElementById('logFilter').value.toLowerCase();
+                    const rows = document.querySelectorAll('.log-row');
+
+                    rows.forEach(row => {
+                        const message = row.getAttribute('data-message');
+                        if (message.includes(filter)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                }
+            </script>
         """
         return content
 
