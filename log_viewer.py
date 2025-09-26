@@ -104,6 +104,13 @@ def convert_log_to_csv(log_file: Path, csv_file: Path) -> List[str]:
 def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) -> None:
     """Generate interactive HTML viewer for the CSV data."""
 
+    # Read CSV data to embed directly in HTML
+    with open(csv_file, 'r', encoding='utf-8') as f:
+        csv_data = f.read()
+
+    # Escape the CSV data for embedding in JavaScript template literal
+    csv_data_escaped = csv_data.replace('\\', '\\\\').replace('`', '\\`').replace('${', '\\${')
+
     # Define column presets
     presets = {
         'basic': ['timestamp', 'level', 'command_method', 'command_str'],
@@ -362,18 +369,19 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
 
         const presets = {json.dumps(presets)};
 
+        // Embedded CSV data
+        const csvData = `{csv_data_escaped}`;
+
         // Load CSV data
-        async function loadData() {{
+        function loadData() {{
             try {{
-                const response = await fetch('{csv_file.name}');
-                const csvText = await response.text();
-                tableData = parseCSV(csvText);
+                tableData = parseCSV(csvData);
                 filteredData = [...tableData];
                 renderTable();
                 updateStats();
             }} catch (error) {{
-                console.error('Error loading data:', error);
-                document.getElementById('stats').textContent = 'Error loading data';
+                console.error('Error parsing data:', error);
+                document.getElementById('stats').textContent = 'Error parsing data';
             }}
         }}
 
