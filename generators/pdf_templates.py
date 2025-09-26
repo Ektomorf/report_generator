@@ -264,29 +264,6 @@ class PDFTemplates:
             max-width: 30mm;
             word-break: break-all;
         }}
-
-        .error-message.scrollable {{
-            max-height: 15mm;
-            overflow: hidden;
-            border: 0.5pt solid #d6d8db;
-            padding: 2pt;
-            background-color: #f8f8f8;
-            font-size: 5pt;
-        }}
-
-        .longrepr-section {{
-            margin-top: 8pt;
-            padding: 6pt;
-            background-color: #fff3cd;
-            border: 0.5pt solid #ffeaa7;
-            border-radius: 2pt;
-        }}
-
-        .longrepr-section h4 {{
-            margin-top: 0;
-            color: #856404;
-            font-size: 8pt;
-        }}
     </style>
 </head>
 <body>
@@ -476,29 +453,6 @@ class PDFTemplates:
             max-width: 40mm;
             word-wrap: break-word;
             color: #721c24;
-        }}
-
-        .error-message.scrollable {{
-            max-height: 20mm;
-            overflow: hidden;
-            border: 0.5pt solid #d6d8db;
-            padding: 2pt;
-            background-color: #f8f8f8;
-            font-size: 6pt;
-        }}
-
-        .longrepr-section {{
-            margin-top: 10pt;
-            padding: 8pt;
-            background-color: #fff3cd;
-            border: 0.5pt solid #ffeaa7;
-            border-radius: 3pt;
-        }}
-
-        .longrepr-section h4 {{
-            margin-top: 0;
-            color: #856404;
-            font-size: 9pt;
         }}
 
         .footer {{

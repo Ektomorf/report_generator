@@ -441,24 +441,7 @@ class HTMLTemplates:
                     if (saved) {{
                         const settings = JSON.parse(saved);
                         this.visibleColumns = new Set(settings.visibleColumns || this.columnOrder);
-
-                        // Only use saved columnOrder if it contains all current columns
-                        if (settings.columnOrder &&
-                            settings.columnOrder.length >= this.columnOrder.length &&
-                            this.columnOrder.every(col => settings.columnOrder.includes(col))) {{
-                            this.columnOrder = settings.columnOrder;
-                        }}
-                        // If saved order is incomplete, keep current order but merge any new columns
-                        else if (settings.columnOrder) {{
-                            const mergedOrder = [...settings.columnOrder];
-                            // Add any missing columns to the end
-                            this.columnOrder.forEach(col => {{
-                                if (!mergedOrder.includes(col)) {{
-                                    mergedOrder.push(col);
-                                }}
-                            }});
-                            this.columnOrder = mergedOrder;
-                        }}
+                        this.columnOrder = settings.columnOrder || this.columnOrder;
                     }}
                 }} catch (e) {{
                     console.log('Could not load column settings:', e);
@@ -861,7 +844,6 @@ class HTMLTemplates:
             padding: 8px;
             text-align: left;
             border: 1px solid #ddd;
-            vertical-align: top;
         }}
         .results-table th, .logs-table th {{
             background-color: #3498db;
@@ -899,70 +881,7 @@ class HTMLTemplates:
             font-size: 10px;
             max-width: 300px;
             word-wrap: break-word;
-            word-break: break-word;
-            white-space: normal;
-            overflow-wrap: break-word;
             color: #721c24;
-            line-height: 1.4;
-        }}
-
-        .error-message.scrollable {{
-            max-height: 100px;
-            overflow-y: auto;
-            border: 1px solid #d6d8db;
-            padding: 4px;
-            background-color: #f8f8f8;
-            border-radius: 3px;
-        }}
-
-        .error-message.scrollable::-webkit-scrollbar {{
-            width: 6px;
-        }}
-
-        .error-message.scrollable::-webkit-scrollbar-track {{
-            background: #f1f1f1;
-            border-radius: 3px;
-        }}
-
-        .error-message.scrollable::-webkit-scrollbar-thumb {{
-            background: #c1c1c1;
-            border-radius: 3px;
-        }}
-
-        .error-message.scrollable::-webkit-scrollbar-thumb:hover {{
-            background: #a8a8a8;
-        }}
-
-        .longrepr-section {{
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 5px;
-        }}
-
-        .longrepr-section h4 {{
-            margin-top: 0;
-            color: #856404;
-            font-size: 14px;
-        }}
-
-        /* Error messages in table cells */
-        td .error-message {{
-            display: block;
-            width: 100%;
-            min-height: 20px;
-        }}
-
-        td .error-message.scrollable {{
-            max-height: 80px;  /* Slightly smaller in table cells */
-            min-width: 200px;  /* Ensure minimum width for readability */
-        }}
-
-        /* Error message column in results table */
-        .results-table td:last-child {{
-            max-width: 300px;  /* Limit error message column width */
-            width: 300px;
         }}
         .footer {{
             margin-top: 30px;

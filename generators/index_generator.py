@@ -336,30 +336,16 @@ class IndexGenerator:
                         <tbody>
         """
 
-        # Sort tests to show failures first
-        sorted_tests = sorted(setup.tests, key=lambda x: (x['outcome'] == 'passed', x['name']))
-
-        for test in sorted_tests:
+        for test in setup.tests:
             outcome_class = test['outcome'] if test['outcome'] in ['passed', 'failed', 'error'] else ''
-            error_msg = test.get('error_message', '')
-
-            # Apply scrollable class if error message is longer than 300 characters
-            error_class = "error-message"
-            if len(error_msg) > 300:
-                error_class += " scrollable"
-
-            # HTML escape the error message and process newlines to prevent HTML injection
-            import html
-            escaped_error_msg = html.escape(error_msg)
-            # Convert newlines to <br> tags for proper display
-            formatted_error_msg = escaped_error_msg.replace('\n', '<br>')
+            error_msg = test.get('error_message', '')[:80] + ('...' if len(test.get('error_message', '')) > 80 else '')
 
             content += f"""
                             <tr class="{outcome_class}">
-                                <td>{html.escape(test['name'])}</td>
-                                <td>{html.escape(test['outcome'].upper())}</td>
+                                <td>{test['name']}</td>
+                                <td>{test['outcome'].upper()}</td>
                                 <td>{test['duration']:.2f}s</td>
-                                <td><div class="{error_class}">{formatted_error_msg}</div></td>
+                                <td class="error-message">{error_msg}</td>
                             </tr>
             """
 

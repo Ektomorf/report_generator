@@ -71,13 +71,8 @@ class SetupReportParser(BaseParser):
 
         for phase in ['setup', 'call']:
             if phase in test and test[phase].get('outcome') == 'failed':
-                # Use longrepr as the primary source for error messages
-                longrepr = test[phase].get('longrepr', '')
-                if longrepr:
-                    return longrepr
-                # Fallback to crash message if longrepr is empty
                 crash = test[phase].get('crash', {})
-                return crash.get('message', '')
+                return crash.get('message', test[phase].get('longrepr', ''))
 
         return ''
 

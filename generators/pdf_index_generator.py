@@ -233,28 +233,14 @@ class PDFIndexGenerator:
 
         for test in setup.tests:
             outcome_class = test['outcome'] if test['outcome'] in ['passed', 'failed', 'error'] else ''
-            full_error_msg = test.get('error_message', '')
-
-            # For PDF, we show full message if it's scrollable, otherwise truncate
-            error_class = "error-message"
-            if len(full_error_msg) > 200:
-                error_class += " scrollable"
-                error_msg = full_error_msg  # Show full message in scrollable container
-            else:
-                error_msg = full_error_msg[:60] + ('...' if len(full_error_msg) > 60 else '')
-
-            # HTML escape the error message and process newlines to prevent HTML injection
-            import html
-            escaped_error_msg = html.escape(error_msg)
-            # Convert newlines to <br> tags for proper display
-            formatted_error_msg = escaped_error_msg.replace('\n', '<br>')
+            error_msg = test.get('error_message', '')[:60] + ('...' if len(test.get('error_message', '')) > 60 else '')
 
             content += f"""
                             <tr class="{outcome_class}">
-                                <td>{html.escape(test['name'])}</td>
-                                <td>{html.escape(test['outcome'].upper())}</td>
+                                <td>{test['name']}</td>
+                                <td>{test['outcome'].upper()}</td>
                                 <td>{test['duration']:.2f}s</td>
-                                <td class="{error_class}">{formatted_error_msg}</td>
+                                <td class="error-message">{error_msg}</td>
                             </tr>
             """
 

@@ -17,7 +17,6 @@ class TestResult:
     params: Dict[str, Any]
     status: Dict[str, Any]
     screenshots: List[str]
-    longrepr: str = ""
 
 
 @dataclass
