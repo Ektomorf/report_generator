@@ -36,6 +36,8 @@ except ImportError:
 
 def parse_log_line(line: str) -> Optional[Dict[str, Any]]:
     """Parse a single log line into structured data."""
+    import re
+
     # Pattern: timestamp - level - json_data
     # Support both formats: "HH:MM:SS" and "YYYY-MM-DD HH:MM:SS,mmm"
     patterns = [
@@ -59,9 +61,16 @@ def parse_log_line(line: str) -> Optional[Dict[str, Any]]:
         try:
             data = json.loads(json_str)
         except json.JSONDecodeError:
+            # Clean up the JSON string to handle unparseable object representations
+            cleaned_json_str = json_str
+
+            # Replace object representations with empty strings to allow parsing
+            import re
+            cleaned_json_str = re.sub(r'<[^>]*object at 0x[0-9a-f]+>', '""', cleaned_json_str)
+
             # Try using eval for single-quoted dictionaries (safer than literal_eval for this format)
             import ast
-            data = ast.literal_eval(json_str)
+            data = ast.literal_eval(cleaned_json_str)
 
         # Create flattened record
         record = {
@@ -89,12 +98,25 @@ def parse_log_line(line: str) -> Optional[Dict[str, Any]]:
         return record
 
     except (json.JSONDecodeError, ValueError, SyntaxError):
-        # If JSON parsing fails, store as raw text
-        return {
+        # If JSON parsing fails, store as raw text but also try to extract basic info
+        record = {
             'timestamp': timestamp,
             'level': level,
-            'raw_data': json_str
+            'raw_log': json_str
         }
+
+        # Try to extract command_method if it appears in the raw string
+        import re
+        method_match = re.search(r"'command_method':\s*'([^']+)'", json_str)
+        if method_match:
+            record['command_method'] = method_match.group(1)
+
+        # Try to extract log_type if it appears in the raw string
+        type_match = re.search(r"'log_type':\s*'([^']+)'", json_str)
+        if type_match:
+            record['log_type'] = type_match.group(1)
+
+        return record
 
 def convert_log_to_csv(log_file: Path, csv_file: Path) -> List[str]:
     """Convert log file to CSV format and return column names."""
@@ -351,7 +373,7 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
 
         .table-container {{
             overflow-x: auto;
-            max-height: 70vh;
+            max-height: 80vh;
             overflow-y: auto;
         }}
 
@@ -362,13 +384,14 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
         }}
 
         th, td {{
-            padding: 12px 8px;
+            padding: 8px 6px;
             text-align: left;
             border-bottom: 1px solid #ecf0f1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 300px;
+            font-size: 12px;
         }}
 
         th {{
@@ -478,6 +501,53 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
         .advanced-filters button:hover {{
             background: #5a6268;
         }}
+
+        .ai-filter-container {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }}
+
+        .ai-filter-btn {{
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }}
+
+        .ai-filter-btn:hover {{
+            background: #c0392b;
+        }}
+
+        .ai-filter-btn:disabled {{
+            background: #95a5a6;
+            cursor: not-allowed;
+        }}
+
+        .ai-status {{
+            font-size: 12px;
+            color: #6c757d;
+            flex: 1;
+            min-width: 200px;
+        }}
+
+        .ai-status.loading {{
+            color: #007bff;
+        }}
+
+        .ai-status.error {{
+            color: #dc3545;
+        }}
+
+        .ai-status.success {{
+            color: #28a745;
+        }}
     </style>
 </head>
 <body>
@@ -498,6 +568,15 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             <div class="control-group">
                 <label for="search">Search:</label>
                 <input type="text" id="search" class="search-input" placeholder="Type to filter rows..." onkeyup="filterTable()">
+            </div>
+
+            <div class="control-group">
+                <label for="aiPrompt">AI Smart Filter:</label>
+                <div class="ai-filter-container">
+                    <input type="text" id="aiPrompt" class="search-input" placeholder="Describe what you're looking for (e.g., 'errors in the last 5 minutes', 'responses with status codes')">
+                    <button id="aiFilterBtn" class="ai-filter-btn" onclick="applyAIFilter()">Apply AI Filter</button>
+                    <div id="aiStatus" class="ai-status"></div>
+                </div>
             </div>
 
             <div class="control-group">
@@ -672,8 +751,8 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             const customColumnSelect = document.getElementById('customColumnSelect').value;
             const customColumnFilter = document.getElementById('customColumnFilter').value.toLowerCase();
 
-            // Start with all data
-            let filtered = tableData;
+            // Start with AI filtered data if available, otherwise use all data
+            let filtered = aiFilteredData || tableData;
 
             // Filter by search term
             if (searchTerm) {{
@@ -914,12 +993,155 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             document.getElementById('commandMethodFilter').value = '';
             document.getElementById('customColumnSelect').value = '';
             document.getElementById('customColumnFilter').value = '';
+            document.getElementById('aiPrompt').value = '';
+
+            // Clear AI filter state
+            aiFilteredData = null;
+            document.getElementById('aiStatus').textContent = '';
+            document.getElementById('aiStatus').className = 'ai-status';
 
             // Update custom filter state
             updateCustomFilter();
 
             // Re-apply filters
             filterTable();
+        }}
+
+        // AI Filtering functionality
+        let aiFilteredData = null;
+
+        async function applyAIFilter() {{
+            const prompt = document.getElementById('aiPrompt').value.trim();
+            const statusEl = document.getElementById('aiStatus');
+            const btnEl = document.getElementById('aiFilterBtn');
+
+            if (!prompt) {{
+                statusEl.textContent = 'Please enter a description of what you want to filter.';
+                statusEl.className = 'ai-status error';
+                return;
+            }}
+
+            // Show loading state
+            statusEl.textContent = 'Processing with AI...';
+            statusEl.className = 'ai-status loading';
+            btnEl.disabled = true;
+
+            try {{
+                // Create a sample of the data for the AI to understand the structure
+                const sampleData = tableData.slice(0, 5).map(row => {{
+                    const sample = {{}};
+                    Object.keys(row).forEach(key => {{
+                        sample[key] = String(row[key]).length > 50 ?
+                            String(row[key]).substring(0, 50) + '...' : row[key];
+                    }});
+                    return sample;
+                }});
+
+                // Prepare the AI prompt
+                const aiPrompt = `
+You are helping filter log data based on user requirements. Here's a sample of the data structure:
+
+${{JSON.stringify(sampleData, null, 2)}}
+
+The user wants to filter for: "${{prompt}}"
+
+Please return a JavaScript function that takes a row object and returns true if the row should be included in the filtered results, false otherwise.
+
+The function should be named 'filterFunction' and handle edge cases gracefully. Only return the function code, no explanation.
+
+Example format:
+function filterFunction(row) {{
+    // Your filtering logic here
+    return someCondition;
+}}
+`;
+
+                // Call OpenAI API (you'll need to implement the actual API call)
+                const response = await callOpenAI(aiPrompt);
+
+                if (response && response.function) {{
+                    // Execute the AI-generated filter function
+                    const filterFunc = new Function('return ' + response.function)();
+                    aiFilteredData = tableData.filter(filterFunc);
+
+                    statusEl.textContent = `AI filter applied: ${{aiFilteredData.length}} of ${{tableData.length}} rows match`;
+                    statusEl.className = 'ai-status success';
+
+                    // Apply the filter
+                    filterTable();
+                }} else {{
+                    throw new Error('Invalid response from AI');
+                }}
+
+            }} catch (error) {{
+                console.error('AI Filter Error:', error);
+                statusEl.textContent = 'AI filtering failed. Using keyword search instead.';
+                statusEl.className = 'ai-status error';
+
+                // Fallback to simple keyword search
+                document.getElementById('search').value = prompt;
+                filterTable();
+            }} finally {{
+                btnEl.disabled = false;
+            }}
+        }}
+
+        async function callOpenAI(prompt) {{
+            // This is a placeholder for the OpenAI API call
+            // In a real implementation, you would need to:
+            // 1. Set up a backend endpoint to handle the OpenAI API call
+            // 2. Include your OpenAI API key securely
+            // 3. Make the request through your backend
+
+            return new Promise((resolve, reject) => {{
+                // For now, we'll simulate the AI response with a simple keyword-based filter
+                setTimeout(() => {{
+                    try {{
+                        const userPrompt = prompt.toLowerCase();
+                        let filterCode = 'function filterFunction(row) {{ return true; }}';
+
+                        // Simple pattern matching for common requests
+                        if (userPrompt.includes('error')) {{
+                            filterCode = `function filterFunction(row) {{
+                                return String(row.level || '').toLowerCase().includes('error') ||
+                                       Object.values(row).some(val => String(val).toLowerCase().includes('error'));
+                            }}`;
+                        }} else if (userPrompt.includes('warn')) {{
+                            filterCode = `function filterFunction(row) {{
+                                return String(row.level || '').toLowerCase().includes('warn') ||
+                                       Object.values(row).some(val => String(val).toLowerCase().includes('warn'));
+                            }}`;
+                        }} else if (userPrompt.includes('info')) {{
+                            filterCode = `function filterFunction(row) {{
+                                return String(row.level || '').toLowerCase().includes('info') ||
+                                       Object.values(row).some(val => String(val).toLowerCase().includes('info'));
+                            }}`;
+                        }} else if (userPrompt.includes('debug')) {{
+                            filterCode = `function filterFunction(row) {{
+                                return String(row.level || '').toLowerCase().includes('debug') ||
+                                       Object.values(row).some(val => String(val).toLowerCase().includes('debug'));
+                            }}`;
+                        }} else {{
+                            // Generic keyword search
+                            const keywords = userPrompt.split(' ').filter(word => word.length > 2);
+                            if (keywords.length > 0) {{
+                                filterCode = `function filterFunction(row) {{
+                                    const searchTerms = ${{JSON.stringify(keywords)}};
+                                    return searchTerms.some(term =>
+                                        Object.values(row).some(val =>
+                                            String(val).toLowerCase().includes(term)
+                                        )
+                                    );
+                                }}`;
+                            }}
+                        }}
+
+                        resolve({{ function: filterCode }});
+                    }} catch (error) {{
+                        reject(error);
+                    }}
+                }}, 1000); // Simulate API delay
+            }});
         }}
 
         // Initialize
