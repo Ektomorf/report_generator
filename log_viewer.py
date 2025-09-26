@@ -13,6 +13,27 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
+# Import presets configuration
+try:
+    from log_viewer_presets import get_presets_for_test_type, get_default_column_order
+except ImportError:
+    # Fallback if presets file doesn't exist
+    def get_presets_for_test_type(test_name=None):
+        return {
+            'basic': ['timestamp', 'level', 'command_method', 'command_str'],
+            'detailed': ['timestamp', 'level', 'command_method', 'command_str', 'raw_response', 'parsed_response'],
+            'network': ['timestamp', 'level', 'command_method', 'raw_response'],
+            'all': []
+        }
+
+    def get_default_column_order(available_columns):
+        # Put timestamp first, then sort the rest
+        if 'timestamp' in available_columns:
+            ordered = ['timestamp'] + [col for col in sorted(available_columns) if col != 'timestamp']
+        else:
+            ordered = sorted(available_columns)
+        return ordered
+
 def parse_log_line(line: str) -> Optional[Dict[str, Any]]:
     """Parse a single log line into structured data."""
     # Pattern: timestamp - level - json_data
@@ -87,8 +108,8 @@ def convert_log_to_csv(log_file: Path, csv_file: Path) -> List[str]:
                 records.append(record)
                 all_columns.update(record.keys())
 
-    # Sort columns for consistent ordering
-    columns = sorted(all_columns)
+    # Use intelligent column ordering (timestamp first, then logical order)
+    columns = get_default_column_order(list(all_columns))
 
     # Write CSV
     with open(csv_file, 'w', newline='', encoding='utf-8') as f:
@@ -111,13 +132,10 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
     # Escape the CSV data for embedding in JavaScript template literal
     csv_data_escaped = csv_data.replace('\\', '\\\\').replace('`', '\\`').replace('${', '\\${')
 
-    # Define column presets
-    presets = {
-        'basic': ['timestamp', 'level', 'command_method', 'command_str'],
-        'detailed': ['timestamp', 'level', 'command_method', 'command_str', 'raw_response', 'parsed_response'],
-        'network': ['timestamp', 'level', 'command_method', 'raw_response'],
-        'all': columns
-    }
+    # Get presets from configuration, with fallback to 'all' preset
+    test_name = csv_file.stem  # Extract test name from filename
+    presets = get_presets_for_test_type(test_name)
+    presets['all'] = columns  # Always include 'all' preset with current columns
 
     html_content = f'''<!DOCTYPE html>
 <html lang="en">
@@ -213,7 +231,7 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
         }}
 
         .column-controls {{
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             border: 1px solid #bdc3c7;
             border-radius: 4px;
@@ -224,12 +242,31 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
         .column-item {{
             display: flex;
             align-items: center;
-            padding: 5px 0;
+            padding: 8px 5px;
             border-bottom: 1px solid #ecf0f1;
+            cursor: move;
+            background: white;
+            margin-bottom: 2px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
         }}
 
         .column-item:last-child {{
-            border-bottom: none;
+            border-bottom: 1px solid #ecf0f1;
+        }}
+
+        .column-item:hover {{
+            background: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+
+        .column-item.dragging {{
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }}
+
+        .column-item.drag-over {{
+            border-top: 3px solid #3498db;
         }}
 
         .column-item input[type="checkbox"] {{
@@ -241,6 +278,26 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             margin: 0;
             cursor: pointer;
             font-weight: normal;
+        }}
+
+        .drag-handle {{
+            margin-right: 8px;
+            color: #95a5a6;
+            cursor: move;
+            font-size: 14px;
+        }}
+
+        .drag-handle:hover {{
+            color: #3498db;
+        }}
+
+        .column-order-info {{
+            background: #e8f5e8;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #2d5a2d;
         }}
 
         .table-container {{
@@ -337,9 +394,12 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             </div>
 
             <div class="control-group">
-                <label>Visible Columns:</label>
+                <label>Column Order & Visibility:</label>
+                <div class="column-order-info">
+                    💡 Drag columns to reorder • Check/uncheck to show/hide
+                </div>
                 <div class="column-controls" id="columnControls">
-                    {''.join([f'<div class="column-item"><input type="checkbox" id="col_{i}" value="{col}" checked onchange="toggleColumn(\'{col}\')"><label for="col_{i}">{col}</label></div>' for i, col in enumerate(columns)])}
+                    {''.join([f'<div class="column-item" draggable="true" data-column="{col}"><span class="drag-handle">⋮⋮</span><input type="checkbox" id="col_{i}" value="{col}" checked onchange="toggleColumn(\'{col}\')"><label for="col_{i}">{col}</label></div>' for i, col in enumerate(columns)])}
                 </div>
             </div>
         </div>
@@ -366,6 +426,7 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
         let tableData = [];
         let filteredData = [];
         let visibleColumns = new Set({json.dumps(columns)});
+        let columnOrder = {json.dumps(columns)};
 
         const presets = {json.dumps(presets)};
 
@@ -428,18 +489,36 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
+            // Clear existing table headers and rebuild based on current order
+            const thead = document.querySelector('#dataTable thead tr');
+            thead.innerHTML = '';
+
+            // Add headers in current order
+            columnOrder.forEach(col => {{
+                const th = document.createElement('th');
+                th.className = `col-${{col}}`;
+                th.dataset.column = col;
+                th.textContent = col;
+                thead.appendChild(th);
+            }});
+
+            // Add data rows in current column order
             filteredData.forEach(row => {{
                 const tr = document.createElement('tr');
 
-                {''.join([f'''const td{i} = document.createElement('td');
-                td{i}.className = 'col-{col}' + (row.level ? ' level-' + row.level : '');
-                td{i}.textContent = row['{col}'] || '';
-                td{i}.title = row['{col}'] || '';
-                tr.appendChild(td{i});
-                ''' for i, col in enumerate(columns)])}
+                columnOrder.forEach(col => {{
+                    const td = document.createElement('td');
+                    td.className = `col-${{col}}` + (row.level ? ` level-${{row.level}}` : '');
+                    td.textContent = row[col] || '';
+                    td.title = row[col] || '';
+                    tr.appendChild(td);
+                }});
 
                 tbody.appendChild(tr);
             }});
+
+            // Update column visibility
+            updateColumnVisibility();
         }}
 
         function filterTable() {{
@@ -459,17 +538,27 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             updateStats();
         }}
 
+        function updateColumnVisibility() {{
+            columnOrder.forEach(columnName => {{
+                const elements = document.querySelectorAll(`.col-${{columnName}}`);
+                if (visibleColumns.has(columnName)) {{
+                    elements.forEach(el => el.classList.remove('hidden'));
+                }} else {{
+                    elements.forEach(el => el.classList.add('hidden'));
+                }}
+            }});
+        }}
+
         function toggleColumn(columnName) {{
-            const elements = document.querySelectorAll(`.col-${{columnName}}`);
             const checkbox = document.querySelector(`input[value="${{columnName}}"]`);
 
             if (checkbox.checked) {{
                 visibleColumns.add(columnName);
-                elements.forEach(el => el.classList.remove('hidden'));
             }} else {{
                 visibleColumns.delete(columnName);
-                elements.forEach(el => el.classList.add('hidden'));
             }}
+
+            updateColumnVisibility();
         }}
 
         function applyPreset(presetName) {{
@@ -479,22 +568,110 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
-            // Update checkboxes and visibility
+            // Update column order and visibility based on preset
+            if (preset && preset.length > 0) {{
+                // Reorder columns according to preset, then add remaining columns
+                const availablePresetCols = preset.filter(col => columnOrder.includes(col));
+                const remainingCols = columnOrder.filter(col => !preset.includes(col));
+                columnOrder = [...availablePresetCols, ...remainingCols];
+
+                // Update visibility
+                visibleColumns.clear();
+                availablePresetCols.forEach(col => visibleColumns.add(col));
+            }} else {{
+                // 'all' preset - show all columns in current order
+                columnOrder.forEach(col => visibleColumns.add(col));
+            }}
+
+            // Update checkboxes
             document.querySelectorAll('#columnControls input[type="checkbox"]').forEach(checkbox => {{
-                const columnName = checkbox.value;
-                const shouldShow = preset.includes(columnName);
+                checkbox.checked = visibleColumns.has(checkbox.value);
+            }});
 
-                checkbox.checked = shouldShow;
+            // Update column order in UI
+            updateColumnOrderUI();
 
-                const elements = document.querySelectorAll(`.col-${{columnName}}`);
-                if (shouldShow) {{
-                    visibleColumns.add(columnName);
-                    elements.forEach(el => el.classList.remove('hidden'));
+            // Re-render table
+            renderTable();
+        }}
+
+        // Drag and Drop functionality
+        let draggedElement = null;
+
+        function setupDragAndDrop() {{
+            const columnControls = document.getElementById('columnControls');
+
+            columnControls.addEventListener('dragstart', (e) => {{
+                draggedElement = e.target.closest('.column-item');
+                draggedElement.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', draggedElement.outerHTML);
+            }});
+
+            columnControls.addEventListener('dragend', (e) => {{
+                if (draggedElement) {{
+                    draggedElement.classList.remove('dragging');
+                    draggedElement = null;
+                }}
+                document.querySelectorAll('.column-item').forEach(item => {{
+                    item.classList.remove('drag-over');
+                }});
+            }});
+
+            columnControls.addEventListener('dragover', (e) => {{
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+
+                const afterElement = getDragAfterElement(columnControls, e.clientY);
+                const dragging = document.querySelector('.dragging');
+
+                if (afterElement == null) {{
+                    columnControls.appendChild(dragging);
                 }} else {{
-                    visibleColumns.delete(columnName);
-                    elements.forEach(el => el.classList.add('hidden'));
+                    columnControls.insertBefore(dragging, afterElement);
                 }}
             }});
+
+            columnControls.addEventListener('drop', (e) => {{
+                e.preventDefault();
+                updateColumnOrderFromUI();
+                renderTable();
+            }});
+        }}
+
+        function getDragAfterElement(container, y) {{
+            const draggableElements = [...container.querySelectorAll('.column-item:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {{
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {{
+                    return {{ offset: offset, element: child }};
+                }} else {{
+                    return closest;
+                }}
+            }}, {{ offset: Number.NEGATIVE_INFINITY }}).element;
+        }}
+
+        function updateColumnOrderFromUI() {{
+            const columnItems = document.querySelectorAll('.column-item');
+            columnOrder = Array.from(columnItems).map(item => item.dataset.column);
+        }}
+
+        function updateColumnOrderUI() {{
+            const columnControls = document.getElementById('columnControls');
+            const items = Array.from(columnControls.querySelectorAll('.column-item'));
+
+            // Sort items according to current columnOrder
+            items.sort((a, b) => {{
+                const aIndex = columnOrder.indexOf(a.dataset.column);
+                const bIndex = columnOrder.indexOf(b.dataset.column);
+                return aIndex - bIndex;
+            }});
+
+            // Re-append items in correct order
+            items.forEach(item => columnControls.appendChild(item));
         }}
 
         function updateStats() {{
@@ -509,6 +686,7 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {{
             loadData();
+            setupDragAndDrop();
             // Apply basic preset by default
             setTimeout(() => applyPreset('basic'), 100);
         }});
