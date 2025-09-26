@@ -27,7 +27,7 @@ class HTMLReportGenerator:
         screenshot_html = self._generate_screenshot_html(test_result.screenshots)
         status_info = self._generate_status_info(test_result.status)
         description_info = self._generate_description_info(test_result.params, test_result.results_data)
-        params_info = self._generate_params_info(test_result.params)
+        params_info = self._generate_params_info(test_result.params, test_result.longrepr)
 
         column_metadata = self._generate_column_metadata(test_result.results_data)
 
@@ -55,12 +55,20 @@ class HTMLReportGenerator:
 
         # Get all available keys from the data
         all_keys = set()
+        data_samples = {}
         for entry in results_data:
-            all_keys.update(entry.keys())
+            for key, value in entry.items():
+                all_keys.add(key)
+                # Keep a sample of data for better type inference (use the first non-None, non-empty value)
+                if key not in data_samples and value is not None and value != '':
+                    data_samples[key] = value
 
         # Remove docstring fields as they're handled separately
         docstring_fields = {'docstring', 'test_description', 'description', 'Docstring', 'Test_Description', 'Description'}
         all_keys = all_keys - docstring_fields
+
+        # Update column configuration with any new dynamic columns
+        self.column_config.update_from_data_keys(all_keys, data_samples)
 
         # Use column configuration to get ordered, visible keys
         return self.column_config.get_ordered_visible_keys(all_keys)
@@ -214,20 +222,45 @@ class HTMLReportGenerator:
         </div>
         """
 
-    def _generate_params_info(self, params: Dict) -> str:
+    def _generate_params_info(self, params: Dict, longrepr: str = "") -> str:
         """Generate parameters information HTML"""
-        if not params:
-            return "<p>No parameter information available</p>"
+        html = "<div class='params-info'>\n<h3>Test Parameters</h3>\n"
 
-        html = "<div class='params-info'>\n<h3>Test Parameters</h3>\n<ul>\n"
-        params_data = params.get('params', params)
+        if not params and not longrepr:
+            html += "<p>No parameter information available</p>"
+        else:
+            html += "<ul>\n"
+            if params:
+                params_data = params.get('params', params)
+                for key, value in params_data.items():
+                    if key in ['test_description', 'description']:
+                        continue
+                    import html as html_escape
+                    escaped_key = html_escape.escape(str(key))
+                    escaped_value = html_escape.escape(str(value))
+                    html += f"<li><strong>{escaped_key}:</strong> {escaped_value}</li>\n"
+            html += "</ul>\n"
 
-        for key, value in params_data.items():
-            if key in ['test_description', 'description']:
-                continue
-            html += f"<li><strong>{key}:</strong> {value}</li>\n"
-        html += "</ul>\n</div>\n"
+        # Add longrepr section if available
+        if longrepr:
+            import html as html_escape
+            # First escape HTML, then replace newlines with <br> tags
+            escaped_longrepr = html_escape.escape(longrepr)
+            formatted_longrepr = escaped_longrepr.replace('\n', '<br>')
 
+            # Apply scrollable class if longrepr is longer than 500 characters
+            error_class = "error-message"
+            if len(longrepr) > 500:
+                error_class += " scrollable"
+
+            html += f"""
+            <div class="longrepr-section">
+                <h4>Error Details</h4>
+                <div class="{error_class}">{formatted_longrepr}</div>
+            </div>
+            """
+
+        html += "</div>\n"
         return html
 
     def _generate_description_info(self, params: Dict, results_data: List[Dict] = None) -> str:

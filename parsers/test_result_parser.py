@@ -18,6 +18,7 @@ class TestResultParser(BaseParser):
         params = self._parse_params_json()
         status = self._parse_status_json()
         screenshots = self._find_screenshots()
+        longrepr = self._extract_longrepr()
 
         return TestResult(
             test_name=self.folder_name,
@@ -25,7 +26,8 @@ class TestResultParser(BaseParser):
             results_data=results_data,
             params=params,
             status=status,
-            screenshots=screenshots
+            screenshots=screenshots,
+            longrepr=longrepr
         )
 
     def _parse_results_json(self) -> list:
@@ -56,3 +58,42 @@ class TestResultParser(BaseParser):
         for file in self.folder_path.glob('*.png'):
             screenshots.append(str(file))
         return screenshots
+
+    def _extract_longrepr(self) -> str:
+        """Extract longrepr from parent setup report.json"""
+        try:
+            # Look for report.json in the parent directory
+            parent_dir = self.folder_path.parent
+            report_file = parent_dir / 'report.json'
+
+            if not report_file.exists():
+                return ''
+
+            report_data = self._load_json_file(report_file)
+            if not report_data or 'tests' not in report_data:
+                return ''
+
+            # Find the test by matching the folder name to the test nodeid
+            test_name_parts = self.folder_name.split('__')
+            if len(test_name_parts) < 2:
+                return ''
+
+            # The actual test function name is usually the last part
+            test_func_name = test_name_parts[-1]
+
+            # Look for the test in the report data
+            for test in report_data['tests']:
+                nodeid = test.get('nodeid', '')
+                if test_func_name in nodeid or nodeid.endswith(f'::{test_func_name}'):
+                    # Check both setup and call phases for longrepr
+                    for phase in ['setup', 'call']:
+                        if phase in test and test[phase].get('outcome') == 'failed':
+                            longrepr = test[phase].get('longrepr', '')
+                            if longrepr:
+                                return longrepr
+                    break
+
+            return ''
+        except Exception:
+            # If there's any error reading the report, just return empty string
+            return ''
