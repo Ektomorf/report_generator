@@ -230,6 +230,55 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             font-size: 14px;
         }}
 
+        .filter-options {{
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }}
+
+        .filter-row {{
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }}
+
+        .filter-row:last-child {{
+            margin-bottom: 0;
+        }}
+
+        .filter-input {{
+            padding: 5px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            font-size: 12px;
+            width: 120px;
+        }}
+
+        .filter-select {{
+            padding: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            font-size: 12px;
+        }}
+
+        .filter-label {{
+            font-size: 12px;
+            font-weight: 600;
+            color: #495057;
+            min-width: 80px;
+        }}
+
+        .filter-toggle {{
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }}
+
         .column-controls {{
             max-height: 300px;
             overflow-y: auto;
@@ -371,6 +420,64 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
         .hidden {{
             display: none;
         }}
+
+        .filter-toggle {{
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }}
+
+        .filter-toggle:hover {{
+            background: #0056b3;
+        }}
+
+        .advanced-filters {{
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }}
+
+        .filter-row {{
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }}
+
+        .filter-row label {{
+            min-width: 120px;
+            font-weight: 500;
+        }}
+
+        .filter-row input, .filter-row select {{
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 14px;
+        }}
+
+        .advanced-filters button {{
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+        }}
+
+        .advanced-filters button:hover {{
+            background: #5a6268;
+        }}
     </style>
 </head>
 <body>
@@ -391,6 +498,42 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             <div class="control-group">
                 <label for="search">Search:</label>
                 <input type="text" id="search" class="search-input" placeholder="Type to filter rows..." onkeyup="filterTable()">
+            </div>
+
+            <div class="control-group">
+                <label>Row Filtering:</label>
+                <div class="filter-options">
+                    <label class="filter-label">
+                        <input type="checkbox" id="hideEmptyRows" onchange="filterTable()" checked>
+                        Hide rows with only timestamp data
+                    </label>
+                    <button class="filter-toggle" onclick="toggleAdvancedFilters()">Advanced Filters</button>
+                </div>
+                <div class="advanced-filters" id="advancedFilters" style="display: none;">
+                    <div class="filter-row">
+                        <label>Level:</label>
+                        <select id="levelFilter" onchange="filterTable()">
+                            <option value="">All</option>
+                            <option value="DEBUG">DEBUG</option>
+                            <option value="INFO">INFO</option>
+                            <option value="WARN">WARN</option>
+                            <option value="ERROR">ERROR</option>
+                        </select>
+                    </div>
+                    <div class="filter-row">
+                        <label>Command Method:</label>
+                        <input type="text" id="commandMethodFilter" placeholder="Filter by command method..." onkeyup="filterTable()">
+                    </div>
+                    <div class="filter-row">
+                        <label>Custom Column Filter:</label>
+                        <select id="customColumnSelect" onchange="updateCustomFilter()">
+                            <option value="">Choose column...</option>
+                            {''.join([f'<option value="{col}">{col}</option>' for col in columns if col not in ['timestamp', 'send_timestamp', 'receive_timestamp']])}
+                        </select>
+                        <input type="text" id="customColumnFilter" placeholder="Filter value..." onkeyup="filterTable()" disabled>
+                    </div>
+                    <button onclick="clearAllFilters()">Clear All Filters</button>
+                </div>
             </div>
 
             <div class="control-group">
@@ -523,17 +666,67 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
 
         function filterTable() {{
             const searchTerm = document.getElementById('search').value.toLowerCase();
+            const hideEmptyRows = document.getElementById('hideEmptyRows').checked;
+            const levelFilter = document.getElementById('levelFilter').value;
+            const commandMethodFilter = document.getElementById('commandMethodFilter').value.toLowerCase();
+            const customColumnSelect = document.getElementById('customColumnSelect').value;
+            const customColumnFilter = document.getElementById('customColumnFilter').value.toLowerCase();
 
-            if (!searchTerm) {{
-                filteredData = [...tableData];
-            }} else {{
-                filteredData = tableData.filter(row => {{
+            // Start with all data
+            let filtered = tableData;
+
+            // Filter by search term
+            if (searchTerm) {{
+                filtered = filtered.filter(row => {{
                     return Object.values(row).some(value =>
                         String(value).toLowerCase().includes(searchTerm)
                     );
                 }});
             }}
 
+            // Filter by level
+            if (levelFilter) {{
+                filtered = filtered.filter(row => row.level === levelFilter);
+            }}
+
+            // Filter by command method
+            if (commandMethodFilter) {{
+                filtered = filtered.filter(row => {{
+                    const commandMethod = String(row.command_method || '').toLowerCase();
+                    return commandMethod.includes(commandMethodFilter);
+                }});
+            }}
+
+            // Filter by custom column
+            if (customColumnSelect && customColumnFilter) {{
+                filtered = filtered.filter(row => {{
+                    const columnValue = String(row[customColumnSelect] || '').toLowerCase();
+                    return columnValue.includes(customColumnFilter);
+                }});
+            }}
+
+            // Filter empty rows if option is checked
+            if (hideEmptyRows) {{
+                filtered = filtered.filter(row => {{
+                    // Check if row has meaningful data in visible columns (excluding timestamp columns)
+                    const visibleNonTimestampCols = Array.from(visibleColumns).filter(col =>
+                        !col.toLowerCase().includes('timestamp')
+                    );
+
+                    // If only timestamp columns are visible, don't filter any rows
+                    if (visibleNonTimestampCols.length === 0) {{
+                        return true;
+                    }}
+
+                    // Check if any visible non-timestamp column has non-empty data
+                    return visibleNonTimestampCols.some(col => {{
+                        const value = row[col];
+                        return value && String(value).trim() !== '';
+                    }});
+                }});
+            }}
+
+            filteredData = filtered;
             renderTable();
             updateStats();
         }}
@@ -559,6 +752,8 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             }}
 
             updateColumnVisibility();
+            // Re-apply filters when column visibility changes
+            filterTable();
         }}
 
         function applyPreset(presetName) {{
@@ -591,8 +786,8 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             // Update column order in UI
             updateColumnOrderUI();
 
-            // Re-render table
-            renderTable();
+            // Re-render table and apply filters
+            filterTable();
         }}
 
         // Drag and Drop functionality
@@ -681,6 +876,50 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
 
             document.getElementById('stats').textContent =
                 `Showing ${{filtered}} of ${{total}} rows | ${{visible}} of {len(columns)} columns visible`;
+        }}
+
+        function toggleAdvancedFilters() {{
+            const advancedFilters = document.getElementById('advancedFilters');
+            const button = event.target;
+
+            if (advancedFilters.style.display === 'none') {{
+                advancedFilters.style.display = 'block';
+                button.textContent = 'Hide Advanced Filters';
+            }} else {{
+                advancedFilters.style.display = 'none';
+                button.textContent = 'Advanced Filters';
+            }}
+        }}
+
+        function updateCustomFilter() {{
+            const select = document.getElementById('customColumnSelect');
+            const input = document.getElementById('customColumnFilter');
+
+            if (select.value) {{
+                input.disabled = false;
+                input.placeholder = `Filter by ${{select.value}}...`;
+            }} else {{
+                input.disabled = true;
+                input.value = '';
+                input.placeholder = 'Filter value...';
+                filterTable(); // Re-filter when custom filter is cleared
+            }}
+        }}
+
+        function clearAllFilters() {{
+            // Clear all filter inputs
+            document.getElementById('search').value = '';
+            document.getElementById('hideEmptyRows').checked = true;
+            document.getElementById('levelFilter').value = '';
+            document.getElementById('commandMethodFilter').value = '';
+            document.getElementById('customColumnSelect').value = '';
+            document.getElementById('customColumnFilter').value = '';
+
+            // Update custom filter state
+            updateCustomFilter();
+
+            // Re-apply filters
+            filterTable();
         }}
 
         // Initialize
