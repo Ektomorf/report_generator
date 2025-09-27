@@ -1,0 +1,1 @@
+- instead of loading the csvs, I want a .bat script to run through all tests one at a time and combine the results/logs data into a table where I can diagnose issues
