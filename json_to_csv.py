@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Convert JSON results files to CSV format with flattened nested objects.
-Similar to process_all_logs.bat but for CSV export.
+Similar to create_html_viewers.bat but for CSV export.
 """
 
 import json

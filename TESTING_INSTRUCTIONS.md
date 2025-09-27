@@ -50,7 +50,7 @@ To regenerate all HTML files with embedded data:
 python batch_log_viewer.py output/ --force
 
 # Option 2: Use the simple batch file
-process_all_logs_force.bat
+create_html_viewers_force.bat
 ```
 
 ## Expected Results
