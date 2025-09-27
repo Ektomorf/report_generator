@@ -20,9 +20,9 @@ except ImportError:
     # Fallback if presets file doesn't exist
     def get_presets_for_test_type(test_name=None):
         return {
-            'basic': ['timestamp', 'level', 'command_method', 'command_str'],
-            'detailed': ['timestamp', 'level', 'command_method', 'command_str', 'raw_response', 'parsed_response'],
-            'network': ['timestamp', 'level', 'command_method', 'raw_response'],
+            'basic': ['timestamp', 'command_method', 'command_str'],
+            'detailed': ['timestamp', 'command_method', 'command_str', 'raw_response', 'parsed_response'],
+            'network': ['timestamp', 'command_method', 'raw_response'],
             'all': []
         }
 
@@ -371,6 +371,15 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             color: #2d5a2d;
         }}
 
+        .table-info {{
+            background: #e3f2fd;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #1565c0;
+        }}
+
         .table-container {{
             overflow-x: auto;
             max-height: 80vh;
@@ -387,11 +396,52 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             padding: 8px 6px;
             text-align: left;
             border-bottom: 1px solid #ecf0f1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 300px;
             font-size: 12px;
+            position: relative;
+        }}
+
+        td {{
+            max-width: 500px;
+            overflow: hidden;
+            cursor: pointer;
+        }}
+
+        td.collapsed {{
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }}
+
+        td.expanded {{
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-width: none;
+            background-color: #f8f9fa;
+            border: 2px solid #007bff;
+            z-index: 5;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }}
+
+        td:hover {{
+            background-color: #f1f3f4;
+        }}
+
+        td.collapsed::after {{
+            content: " 📄";
+            color: #6c757d;
+            font-size: 10px;
+            opacity: 0.7;
+        }}
+
+        td.expanded::after {{
+            content: " 📖";
+            color: #007bff;
+            font-size: 10px;
+        }}
+
+        /* Hide expand indicators for empty cells */
+        td.collapsed:empty::after,
+        td.expanded:empty::after {{
+            display: none;
         }}
 
         th {{
@@ -626,6 +676,10 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
             </div>
         </div>
 
+        <div class="table-info">
+            💡 Click any cell to expand and see full content • Click again to collapse • Expanded cells show with blue border
+        </div>
+
         <div class="table-container">
             <table id="dataTable">
                 <thead>
@@ -730,9 +784,12 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
 
                 columnOrder.forEach(col => {{
                     const td = document.createElement('td');
-                    td.className = `col-${{col}}` + (row.level ? ` level-${{row.level}}` : '');
+                    td.className = `col-${{col}} collapsed` + (row.level ? ` level-${{row.level}}` : '');
                     td.textContent = row[col] || '';
-                    td.title = row[col] || '';
+                    td.title = 'Click to expand/collapse';
+                    td.addEventListener('click', function() {{
+                        toggleCellExpansion(this);
+                    }});
                     tr.appendChild(td);
                 }});
 
@@ -819,6 +876,31 @@ def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) ->
                     elements.forEach(el => el.classList.add('hidden'));
                 }}
             }});
+        }}
+
+        function toggleCellExpansion(cell) {{
+            if (cell.classList.contains('collapsed')) {{
+                // Expand the cell
+                cell.classList.remove('collapsed');
+                cell.classList.add('expanded');
+                cell.title = 'Click to collapse';
+
+                // Close any other expanded cells in the same row
+                const row = cell.parentElement;
+                const otherCells = row.querySelectorAll('td.expanded');
+                otherCells.forEach(otherCell => {{
+                    if (otherCell !== cell) {{
+                        otherCell.classList.remove('expanded');
+                        otherCell.classList.add('collapsed');
+                        otherCell.title = 'Click to expand/collapse';
+                    }}
+                }});
+            }} else {{
+                // Collapse the cell
+                cell.classList.remove('expanded');
+                cell.classList.add('collapsed');
+                cell.title = 'Click to expand/collapse';
+            }}
         }}
 
         function toggleColumn(columnName) {{

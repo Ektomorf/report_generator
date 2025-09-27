@@ -16,14 +16,15 @@ Preset Format:
 DEFAULT_PRESETS = {
     'basic': [
         'timestamp',
-        'level',
         'command_method',
-        'command_str'
+        'command_str',
+        'raw_response',
+        'parsed_response',
+        'channel_differences'
     ],
 
     'detailed': [
         'timestamp',
-        'level',
         'command_method',
         'command_str',
         'raw_response',
@@ -32,7 +33,6 @@ DEFAULT_PRESETS = {
 
     'network': [
         'timestamp',
-        'level',
         'command_method',
         'raw_response'
     ],
@@ -41,14 +41,12 @@ DEFAULT_PRESETS = {
         'timestamp',
         'send_timestamp',
         'receive_timestamp',
-        'level',
         'command_method',
         'command_str'
     ],
 
     'frequency_analysis': [
         'timestamp',
-        'level',
         'command_method',
         'set_lo_frequency_freq',
         'parsed_response_set_lo_frequency_freq',
@@ -59,7 +57,6 @@ DEFAULT_PRESETS = {
 
     'channel_config': [
         'timestamp',
-        'level',
         'command_method',
         'address',
         'parsed_response_channels',
@@ -69,7 +66,6 @@ DEFAULT_PRESETS = {
 
     'peak_detection': [
         'timestamp',
-        'level',
         'command_method',
         'peak_data',
         'frequency_range_ghz',
@@ -79,7 +75,6 @@ DEFAULT_PRESETS = {
 
     'debug': [
         'timestamp',
-        'level',
         'command_method',
         'command_str',
         'raw_response',
@@ -93,7 +88,6 @@ TEST_SPECIFIC_PRESETS = {
     'fwd_tests': {
         'fwd_basic': [
             'timestamp',
-            'level',
             'command_method',
             'command_str',
             'switch_connection_matrix',
@@ -104,7 +98,6 @@ TEST_SPECIFIC_PRESETS = {
 
         'fwd_detailed': [
             'timestamp',
-            'level',
             'command_method',
             'command_str',
             'raw_response',
@@ -120,7 +113,6 @@ TEST_SPECIFIC_PRESETS = {
     'rtn_tests': {
         'rtn_basic': [
             'timestamp',
-            'level',
             'command_method',
             'command_str',
             '**kwargs_address',
@@ -131,7 +123,6 @@ TEST_SPECIFIC_PRESETS = {
 
         'rtn_detailed': [
             'timestamp',
-            'level',
             'command_method',
             'command_str',
             'raw_response',
@@ -147,7 +138,6 @@ TEST_SPECIFIC_PRESETS = {
     'setup_tests': {
         'setup_basic': [
             'timestamp',
-            'level',
             'command_method',
             'raw_data'
         ]
