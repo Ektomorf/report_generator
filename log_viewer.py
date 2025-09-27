@@ -57,20 +57,58 @@ def parse_log_line(line: str) -> Optional[Dict[str, Any]]:
     timestamp, level, json_str = match.groups()
 
     try:
-        # Parse the JSON data - handle single quotes by using eval (safe for log parsing)
+        # Parse the JSON data - handle multiple formats
+        data = None
+
+        # Method 1: Try standard JSON parsing
         try:
             data = json.loads(json_str)
         except json.JSONDecodeError:
-            # Clean up the JSON string to handle unparseable object representations
-            cleaned_json_str = json_str
+            pass
 
-            # Replace object representations with empty strings to allow parsing
-            import re
-            cleaned_json_str = re.sub(r'<[^>]*object at 0x[0-9a-f]+>', '""', cleaned_json_str)
+        # Method 2: Try with single quotes converted to double quotes
+        if data is None:
+            try:
+                # Convert single quotes to double quotes for JSON compatibility
+                json_fixed = json_str.replace("'", '"')
+                data = json.loads(json_fixed)
+            except json.JSONDecodeError:
+                pass
 
-            # Try using eval for single-quoted dictionaries (safer than literal_eval for this format)
-            import ast
-            data = ast.literal_eval(cleaned_json_str)
+        # Method 3: Try ast.literal_eval for Python dict format
+        if data is None:
+            try:
+                # Clean up the JSON string to handle unparseable object representations
+                cleaned_json_str = json_str
+
+                # Replace object representations with empty strings to allow parsing
+                import re
+                cleaned_json_str = re.sub(r'<[^>]*object at 0x[0-9a-f]+>', '""', cleaned_json_str)
+
+                # Try using literal_eval for single-quoted dictionaries
+                import ast
+                data = ast.literal_eval(cleaned_json_str)
+            except (ValueError, SyntaxError):
+                pass
+
+        # Method 4: Last resort - try to extract key-value pairs manually
+        if data is None:
+            try:
+                # Simple regex-based extraction for basic dict patterns
+                import re
+                # Look for key: value patterns
+                pairs = re.findall(r"'([^']+)':\s*'([^']*)'", json_str)
+                if pairs:
+                    data = dict(pairs)
+                else:
+                    # If all parsing fails, create a minimal record
+                    data = {'raw_log_data': json_str}
+            except Exception:
+                # Final fallback
+                data = {'raw_log_data': json_str}
+
+        if data is None:
+            return None
 
         # Create flattened record
         record = {
@@ -144,9 +182,658 @@ def convert_log_to_csv(log_file: Path, csv_file: Path) -> List[str]:
 
     return columns
 
+def generate_enhanced_html_viewer(log_csv_file: Path, results_csv_file: Path, html_file: Path, log_columns: List[str], results_columns: List[str]) -> None:
+    """Generate interactive HTML viewer that includes both log and results CSV data."""
+
+    # Read log CSV data
+    log_csv_data = ""
+    if log_csv_file and log_csv_file.exists():
+        with open(log_csv_file, 'r', encoding='utf-8') as f:
+            log_csv_data = f.read()
+
+    # Read results CSV data
+    results_csv_data = ""
+    if results_csv_file and results_csv_file.exists():
+        with open(results_csv_file, 'r', encoding='utf-8') as f:
+            results_csv_data = f.read()
+
+    # Escape CSV data for JavaScript
+    log_csv_escaped = log_csv_data.replace('\\', '\\\\').replace('`', '\\`').replace('${', '\\${')
+    results_csv_escaped = results_csv_data.replace('\\', '\\\\').replace('`', '\\`').replace('${', '\\${')
+
+    # Get test name for presets
+    test_name = log_csv_file.stem if log_csv_file else "unknown"
+    presets = get_presets_for_test_type(test_name)
+    presets['all_logs'] = log_columns
+    presets['all_results'] = results_columns
+
+    html_content = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Log Viewer - {test_name}</title>
+    <style>
+        * {{
+            box-sizing: border-box;
+        }}
+
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }}
+
+        .container {{
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+
+        .header {{
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+        }}
+
+        .header h1 {{
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }}
+
+        .tab-container {{
+            background: #ecf0f1;
+            display: flex;
+            border-bottom: 1px solid #bdc3c7;
+        }}
+
+        .tab {{
+            padding: 15px 20px;
+            background: #ecf0f1;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            transition: background-color 0.2s;
+        }}
+
+        .tab:hover {{
+            background: #d5dbdb;
+        }}
+
+        .tab.active {{
+            background: #3498db;
+            color: white;
+        }}
+
+        .tab-content {{
+            display: none;
+            padding: 20px;
+        }}
+
+        .tab-content.active {{
+            display: block;
+        }}
+
+        .controls {{
+            background: #ecf0f1;
+            padding: 20px;
+            border-bottom: 1px solid #bdc3c7;
+        }}
+
+        .control-group {{
+            margin-bottom: 15px;
+        }}
+
+        .control-group:last-child {{
+            margin-bottom: 0;
+        }}
+
+        .control-group label {{
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }}
+
+        .preset-buttons {{
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }}
+
+        .preset-btn {{
+            padding: 8px 16px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }}
+
+        .preset-btn:hover {{
+            background: #2980b9;
+        }}
+
+        .preset-btn.active {{
+            background: #27ae60;
+        }}
+
+        input[type="text"], input[type="number"], select {{
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+        }}
+
+        .checkbox-group {{
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            background: white;
+        }}
+
+        .checkbox-item {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+
+        .checkbox-item input[type="checkbox"] {{
+            width: auto;
+        }}
+
+        .table-container {{
+            overflow: auto;
+            max-height: 80vh;
+        }}
+
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }}
+
+        th, td {{
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            white-space: nowrap;
+        }}
+
+        th {{
+            background-color: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }}
+
+        tr:nth-child(even) {{
+            background-color: #f8f9fa;
+        }}
+
+        tr:hover {{
+            background-color: #e3f2fd;
+        }}
+
+        .expandable-cell {{
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            position: relative;
+        }}
+
+        .expandable-cell.expanded {{
+            white-space: normal;
+            word-wrap: break-word;
+            max-width: none;
+        }}
+
+        .expand-indicator {{
+            color: #3498db;
+            font-weight: bold;
+            margin-left: 5px;
+        }}
+
+        .stats {{
+            background: #e8f5e8;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border-left: 4px solid #27ae60;
+        }}
+
+        .summary-stats {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }}
+
+        .stat-card {{
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }}
+
+        .stat-number {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }}
+
+        .stat-label {{
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Enhanced Log Viewer</h1>
+            <p>Test: {test_name}</p>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('logs')">Log Data</button>
+            <button class="tab" onclick="switchTab('results')">Results Data</button>
+        </div>
+
+        <div id="logs-tab" class="tab-content active">
+            <div class="controls">
+                <div class="control-group">
+                    <label>Quick Presets:</label>
+                    <div class="preset-buttons" id="log-presets">
+                        <!-- Preset buttons will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="log-search">Search:</label>
+                    <input type="text" id="log-search" placeholder="Search in any column...">
+                </div>
+
+                <div class="control-group">
+                    <label for="log-column-filter">Show/Hide Columns:</label>
+                    <div class="checkbox-group" id="log-column-checkboxes">
+                        <!-- Column checkboxes will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats" id="log-stats">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+
+            <div class="table-container">
+                <table id="log-table">
+                    <thead id="log-table-head"></thead>
+                    <tbody id="log-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="results-tab" class="tab-content">
+            <div class="controls">
+                <div class="control-group">
+                    <label>Quick Presets:</label>
+                    <div class="preset-buttons" id="results-presets">
+                        <!-- Preset buttons will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="results-search">Search:</label>
+                    <input type="text" id="results-search" placeholder="Search in any column...">
+                </div>
+
+                <div class="control-group">
+                    <label for="results-column-filter">Show/Hide Columns:</label>
+                    <div class="checkbox-group" id="results-column-checkboxes">
+                        <!-- Column checkboxes will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats" id="results-stats">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+
+            <div class="table-container">
+                <table id="results-table">
+                    <thead id="results-table-head"></thead>
+                    <tbody id="results-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Embedded CSV data
+        const logCsvData = `{log_csv_escaped}`;
+        const resultsCsvData = `{results_csv_escaped}`;
+
+        // Presets configuration
+        const presets = {json.dumps(presets, indent=8)};
+
+        let logData = [];
+        let resultsData = [];
+        let logColumns = [];
+        let resultsColumns = [];
+        let logVisibleColumns = [];
+        let resultsVisibleColumns = [];
+
+        // Parse CSV data
+        function parseCSV(csvText) {{
+            if (!csvText.trim()) return [[], []];
+
+            const lines = csvText.trim().split('\\n');
+            if (lines.length === 0) return [[], []];
+
+            const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, ''));
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {{
+                const line = lines[i];
+                if (line.trim()) {{
+                    const values = parseCSVLine(line);
+                    if (values.length === headers.length) {{
+                        const row = {{}};
+                        headers.forEach((header, index) => {{
+                            row[header] = values[index] || '';
+                        }});
+                        data.push(row);
+                    }}
+                }}
+            }}
+
+            return [headers, data];
+        }}
+
+        function parseCSVLine(line) {{
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {{
+                const char = line[i];
+
+                if (char === '"') {{
+                    if (inQuotes && line[i + 1] === '"') {{
+                        current += '"';
+                        i++; // Skip next quote
+                    }} else {{
+                        inQuotes = !inQuotes;
+                    }}
+                }} else if (char === ',' && !inQuotes) {{
+                    result.push(current);
+                    current = '';
+                }} else {{
+                    current += char;
+                }}
+            }}
+
+            result.push(current);
+            return result;
+        }}
+
+        // Initialize data
+        [logColumns, logData] = parseCSV(logCsvData);
+        [resultsColumns, resultsData] = parseCSV(resultsCsvData);
+        logVisibleColumns = [...logColumns];
+        resultsVisibleColumns = [...resultsColumns];
+
+        // Tab switching
+        function switchTab(tabName) {{
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            document.querySelector(`[onclick="switchTab('${{tabName}}')"]`).classList.add('active');
+            document.getElementById(`${{tabName}}-tab`).classList.add('active');
+
+            if (tabName === 'logs') {{
+                updateLogTable();
+            }} else if (tabName === 'results') {{
+                updateResultsTable();
+            }}
+        }}
+
+        // Update tables
+        function updateLogTable() {{
+            updateTable('log', logData, logColumns, logVisibleColumns);
+            updateStats('log', logData);
+        }}
+
+        function updateResultsTable() {{
+            updateTable('results', resultsData, resultsColumns, resultsVisibleColumns);
+            updateStats('results', resultsData);
+        }}
+
+        function updateTable(type, data, allColumns, visibleColumns) {{
+            const searchTerm = document.getElementById(`${{type}}-search`).value.toLowerCase();
+            const tableHead = document.getElementById(`${{type}}-table-head`);
+            const tableBody = document.getElementById(`${{type}}-table-body`);
+
+            // Filter data based on search
+            const filteredData = data.filter(row => {{
+                return Object.values(row).some(value =>
+                    String(value).toLowerCase().includes(searchTerm)
+                );
+            }});
+
+            // Create header
+            tableHead.innerHTML = '';
+            const headerRow = document.createElement('tr');
+            visibleColumns.forEach(column => {{
+                const th = document.createElement('th');
+                th.textContent = column;
+                headerRow.appendChild(th);
+            }});
+            tableHead.appendChild(headerRow);
+
+            // Create body
+            tableBody.innerHTML = '';
+            filteredData.forEach(row => {{
+                const tr = document.createElement('tr');
+                visibleColumns.forEach(column => {{
+                    const td = document.createElement('td');
+                    const value = String(row[column] || '');
+
+                    if (value.length > 100) {{
+                        td.className = 'expandable-cell';
+                        td.innerHTML = value.substring(0, 100) + '<span class="expand-indicator">...</span>';
+                        td.onclick = () => toggleCellExpansion(td, value);
+                    }} else {{
+                        td.textContent = value;
+                    }}
+
+                    tr.appendChild(td);
+                }});
+                tableBody.appendChild(tr);
+            }});
+        }}
+
+        function updateStats(type, data) {{
+            const statsDiv = document.getElementById(`${{type}}-stats`);
+            const searchTerm = document.getElementById(`${{type}}-search`).value.toLowerCase();
+
+            const filteredData = data.filter(row => {{
+                return Object.values(row).some(value =>
+                    String(value).toLowerCase().includes(searchTerm)
+                );
+            }});
+
+            statsDiv.innerHTML = `
+                <div class="summary-stats">
+                    <div class="stat-card">
+                        <div class="stat-number">${{filteredData.length}}</div>
+                        <div class="stat-label">Visible Rows</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${{data.length}}</div>
+                        <div class="stat-label">Total Rows</div>
+                    </div>
+                </div>
+            `;
+        }}
+
+        function toggleCellExpansion(cell, fullValue) {{
+            if (cell.classList.contains('expanded')) {{
+                cell.innerHTML = fullValue.substring(0, 100) + '<span class="expand-indicator">...</span>';
+                cell.classList.remove('expanded');
+            }} else {{
+                cell.textContent = fullValue;
+                cell.classList.add('expanded');
+            }}
+        }}
+
+        // Initialize page
+        function init() {{
+            // Setup log controls
+            setupControls('log', logColumns, logVisibleColumns, presets);
+            setupControls('results', resultsColumns, resultsVisibleColumns, presets);
+
+            // Initial table render
+            updateLogTable();
+            updateResultsTable();
+
+            // Setup search listeners
+            document.getElementById('log-search').addEventListener('input', updateLogTable);
+            document.getElementById('results-search').addEventListener('input', updateResultsTable);
+        }}
+
+        function setupControls(type, allColumns, visibleColumns, presets) {{
+            // Setup presets
+            const presetsDiv = document.getElementById(`${{type}}-presets`);
+            Object.keys(presets).forEach(presetName => {{
+                const button = document.createElement('button');
+                button.className = 'preset-btn';
+                button.textContent = presetName.charAt(0).toUpperCase() + presetName.slice(1);
+                button.onclick = () => applyPreset(type, presetName, allColumns, visibleColumns);
+                presetsDiv.appendChild(button);
+            }});
+
+            // Setup column checkboxes
+            const checkboxDiv = document.getElementById(`${{type}}-column-checkboxes`);
+            allColumns.forEach(column => {{
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `${{type}}-col-${{column}}`;
+                checkbox.checked = visibleColumns.includes(column);
+                checkbox.onchange = () => toggleColumn(type, column);
+
+                const label = document.createElement('label');
+                label.htmlFor = `${{type}}-col-${{column}}`;
+                label.textContent = column;
+
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                checkboxDiv.appendChild(div);
+            }});
+        }}
+
+        function applyPreset(type, presetName, allColumns, visibleColumns) {{
+            const presetColumns = presets[presetName] || allColumns;
+
+            if (type === 'log') {{
+                logVisibleColumns = presetColumns.length > 0 ? presetColumns : allColumns;
+                updateColumnCheckboxes('log', logColumns, logVisibleColumns);
+                updateLogTable();
+            }} else if (type === 'results') {{
+                resultsVisibleColumns = presetColumns.length > 0 ? presetColumns : allColumns;
+                updateColumnCheckboxes('results', resultsColumns, resultsVisibleColumns);
+                updateResultsTable();
+            }}
+
+            // Update active preset button
+            document.querySelectorAll(`#${{type}}-presets .preset-btn`).forEach(btn => {{
+                btn.classList.remove('active');
+            }});
+            event.target.classList.add('active');
+        }}
+
+        function toggleColumn(type, column) {{
+            if (type === 'log') {{
+                const index = logVisibleColumns.indexOf(column);
+                if (index > -1) {{
+                    logVisibleColumns.splice(index, 1);
+                }} else {{
+                    logVisibleColumns.push(column);
+                }}
+                updateLogTable();
+            }} else if (type === 'results') {{
+                const index = resultsVisibleColumns.indexOf(column);
+                if (index > -1) {{
+                    resultsVisibleColumns.splice(index, 1);
+                }} else {{
+                    resultsVisibleColumns.push(column);
+                }}
+                updateResultsTable();
+            }}
+        }}
+
+        function updateColumnCheckboxes(type, allColumns, visibleColumns) {{
+            allColumns.forEach(column => {{
+                const checkbox = document.getElementById(`${{type}}-col-${{column}}`);
+                if (checkbox) {{
+                    checkbox.checked = visibleColumns.includes(column);
+                }}
+            }});
+        }}
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>'''
+
+    # Write the HTML file
+    with open(html_file, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+
 def generate_html_viewer(csv_file: Path, html_file: Path, columns: List[str]) -> None:
     """Generate interactive HTML viewer for the CSV data."""
 
+    # Check if there's a corresponding results file
+    results_csv_file = csv_file.parent / f"{csv_file.stem}_results.csv"
+
+    if results_csv_file.exists():
+        # Use enhanced viewer with both log and results data
+        try:
+            import csv as csv_module
+            with open(results_csv_file, 'r', encoding='utf-8') as f:
+                reader = csv_module.reader(f)
+                results_columns = next(reader, [])
+            generate_enhanced_html_viewer(csv_file, results_csv_file, html_file, columns, results_columns)
+            return
+        except Exception as e:
+            print(f"Warning: Could not read results file {results_csv_file}: {e}")
+            # Fall back to standard viewer
+
+    # Standard single-file viewer (existing code)
     # Read CSV data to embed directly in HTML
     with open(csv_file, 'r', encoding='utf-8') as f:
         csv_data = f.read()
