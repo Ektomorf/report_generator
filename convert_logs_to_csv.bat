@@ -1,10 +1,13 @@
 @echo off
-echo Converting all log files to CSV format...
+echo Processing log files and creating *_logs.csv copies...
 echo.
 
-python json_to_csv.py output/ --pattern "**/*.log" --verbose
+for /r "output" %%f in (*.log) do (
+    echo Processing: %%f
+    copy "%%f" "%%~dpnf_logs.csv"
+)
 
 echo.
-echo Done! CSV files have been created alongside each log file.
+echo Done! Log files have been copied with _logs.csv suffix.
 echo You can now open the CSV files in Excel or other spreadsheet applications.
 pause

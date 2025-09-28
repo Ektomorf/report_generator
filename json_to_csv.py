@@ -74,16 +74,20 @@ def process_json_file(json_file_path):
         logging.error(f"Error processing {json_file_path}: {e}")
         return []
 
-def json_to_csv(json_file_path, csv_file_path=None):
+def json_to_csv(json_file_path, csv_file_path=None, suffix=''):
     """
     Convert a JSON file to CSV format.
 
     Args:
         json_file_path: Path to input JSON file
         csv_file_path: Path to output CSV file (optional)
+        suffix: Optional suffix to add before .csv extension
     """
     if csv_file_path is None:
-        csv_file_path = json_file_path.replace('.json', '.csv')
+        if suffix:
+            csv_file_path = json_file_path.replace('.json', f'{suffix}.csv')
+        else:
+            csv_file_path = json_file_path.replace('.json', '.csv')
 
     flattened_data = process_json_file(json_file_path)
 
@@ -114,13 +118,14 @@ def json_to_csv(json_file_path, csv_file_path=None):
     except Exception as e:
         logging.error(f"Error writing CSV file {csv_file_path}: {e}")
 
-def process_directory(directory_path, pattern="**/*_results.json"):
+def process_directory(directory_path, pattern="**/*_results.json", suffix=''):
     """
     Process all JSON result files in a directory.
 
     Args:
         directory_path: Path to directory containing JSON files
         pattern: Glob pattern to match JSON files
+        suffix: Optional suffix to add before .csv extension
     """
     json_files = glob.glob(os.path.join(directory_path, pattern), recursive=True)
 
@@ -131,7 +136,7 @@ def process_directory(directory_path, pattern="**/*_results.json"):
     print(f"Found {len(json_files)} JSON files to process...")
 
     for json_file in json_files:
-        json_to_csv(json_file)
+        json_to_csv(json_file, suffix=suffix)
 
     print("Done! CSV files have been created alongside the JSON files.")
 
@@ -141,6 +146,8 @@ def main():
     parser.add_argument('-o', '--output', help='Output CSV file path (for single file mode)')
     parser.add_argument('-p', '--pattern', default='**/*_results.json',
                        help='Glob pattern for JSON files (default: **/*_results.json)')
+    parser.add_argument('-s', '--suffix', default='',
+                       help='Suffix to add before .csv extension (e.g., "_logs")')
     parser.add_argument('-v', '--verbose', action='store_true',
                        help='Enable verbose logging')
 
@@ -154,10 +161,10 @@ def main():
 
     if input_path.is_file():
         # Process single file
-        json_to_csv(str(input_path), args.output)
+        json_to_csv(str(input_path), args.output, args.suffix)
     elif input_path.is_dir():
         # Process directory
-        process_directory(str(input_path), args.pattern)
+        process_directory(str(input_path), args.pattern, args.suffix)
     else:
         print(f"Error: {input_path} is not a valid file or directory")
         return 1
