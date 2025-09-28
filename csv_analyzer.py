@@ -715,7 +715,7 @@ class CSVToHTMLAnalyzer:
             height: 100%;
             background-color: rgba(0,0,0,0.5);
         }}
-        
+
         .modal-content {{
             background-color: #fff;
             margin: 5% auto;
@@ -725,6 +725,73 @@ class CSVToHTMLAnalyzer:
             max-width: 800px;
             max-height: 80%;
             overflow-y: auto;
+        }}
+
+        .image-modal {{
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            cursor: pointer;
+        }}
+
+        .image-modal-content {{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 95vw;
+            max-height: 95vh;
+            width: auto;
+            height: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }}
+
+        .image-modal img {{
+            max-width: 100%;
+            max-height: calc(95vh - 60px);
+            width: auto;
+            height: auto;
+            display: block;
+            object-fit: contain;
+        }}
+
+        .image-modal-caption {{
+            padding: 15px;
+            background: white;
+            text-align: center;
+            color: #333;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+        }}
+
+        .image-modal-close {{
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: white;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }}
+
+        .image-modal-close:hover {{
+            background: rgba(0,0,0,0.7);
         }}
         
         .close {{
@@ -914,6 +981,15 @@ class CSVToHTMLAnalyzer:
             <span class="close" onclick="closeModal()">&times;</span>
             <h3>Content Detail</h3>
             <pre id="modal-content"></pre>
+        </div>
+    </div>
+
+    <!-- Modal for expanded images -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <div class="image-modal-close" onclick="closeImageModal()">&times;</div>
+        <div class="image-modal-content" onclick="event.stopPropagation()">
+            <img id="modal-image" src="" alt="">
+            <div class="image-modal-caption" id="modal-caption"></div>
         </div>
     </div>
     
@@ -1430,6 +1506,21 @@ class CSVToHTMLAnalyzer:
         function closeModal() {{
             document.getElementById('contentModal').style.display = 'none';
         }}
+
+        function openImageModal(imageSrc, filename) {{
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modal-image');
+            const modalCaption = document.getElementById('modal-caption');
+
+            modalImage.src = imageSrc;
+            modalImage.alt = filename;
+            modalCaption.textContent = filename;
+            modal.style.display = 'block';
+        }}
+
+        function closeImageModal() {{
+            document.getElementById('imageModal').style.display = 'none';
+        }}
         
         function exportData() {{
             const csvContent = [
@@ -1493,7 +1584,7 @@ class CSVToHTMLAnalyzer:
                 const imageSrc = filename.includes('/') ? filename.split('/').pop() : filename;
 
                 galleryItem.innerHTML = `
-                    <img src="${{imageSrc}}" alt="${{filename}}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZjNzU3ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4='; this.alt='Image not found';">
+                    <img src="${{imageSrc}}" alt="${{filename}}" onclick="openImageModal('${{imageSrc}}', '${{filename}}')" style="cursor: pointer;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZjNzU3ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4='; this.alt='Image not found'; this.onclick=null; this.style.cursor='default';">
                     <div class="filename">${{filename}}</div>
                 `;
 
@@ -1625,6 +1716,19 @@ class CSVToHTMLAnalyzer:
                 closeModal();
             }}
         }}
+
+        // Close image modal with Escape key
+        document.addEventListener('keydown', function(event) {{
+            if (event.key === 'Escape') {{
+                const imageModal = document.getElementById('imageModal');
+                const contentModal = document.getElementById('contentModal');
+                if (imageModal.style.display === 'block') {{
+                    closeImageModal();
+                }} else if (contentModal.style.display === 'block') {{
+                    closeModal();
+                }}
+            }}
+        }});
     </script>
 </body>
 </html>'''
