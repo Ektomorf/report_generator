@@ -601,10 +601,52 @@ class CSVToHTMLAnalyzer:
         .sortable {{
             cursor: pointer;
             user-select: none;
+            position: relative;
         }}
-        
+
         .sortable:hover {{
             background: #e9ecef;
+        }}
+
+        .draggable {{
+            cursor: grab;
+            transition: background-color 0.2s;
+        }}
+
+        .draggable:active {{
+            cursor: grabbing;
+        }}
+
+        .draggable.dragging {{
+            opacity: 0.5;
+            background: #007bff;
+            color: white;
+        }}
+
+        .drop-zone {{
+            position: relative;
+        }}
+
+        .drop-indicator {{
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #007bff;
+            z-index: 1000;
+            display: none;
+        }}
+
+        .drop-indicator.left {{
+            left: -2px;
+        }}
+
+        .drop-indicator.right {{
+            right: -2px;
+        }}
+
+        .drop-indicator.show {{
+            display: block;
         }}
         
         .sort-indicator {{
@@ -794,6 +836,7 @@ class CSVToHTMLAnalyzer:
         
         let filteredData = [...data];
         let visibleColumns = new Set(['Pass', 'timestamp', 'message', 'command_method']);
+        let columnOrder = [...columns]; // Track the order of columns
         let sortColumn = null;
         let sortDirection = 'asc';
         let filters = {{}};
@@ -877,17 +920,36 @@ class CSVToHTMLAnalyzer:
         function updateTableHeaders() {{
             const headerRow = document.getElementById('table-header');
             headerRow.innerHTML = '';
-            
-            columns.forEach(col => {{
+
+            columnOrder.forEach(col => {{
                 if (visibleColumns.has(col)) {{
                     const th = document.createElement('th');
-                    th.className = 'sortable';
-                    th.onclick = () => sortBy(col);
-                    
-                    const sortIndicator = sortColumn === col ? 
+                    th.className = 'sortable draggable drop-zone';
+                    th.draggable = true;
+                    th.dataset.column = col;
+                    th.onclick = (e) => {{
+                        if (!e.target.closest('.dragging')) {{
+                            sortBy(col);
+                        }}
+                    }};
+
+                    const sortIndicator = sortColumn === col ?
                         (sortDirection === 'asc' ? '↑' : '↓') : '↕';
-                    
-                    th.innerHTML = `${{col}} <span class="sort-indicator">${{sortIndicator}}</span>`;
+
+                    th.innerHTML = `
+                        <div class="drop-indicator left"></div>
+                        <span style="opacity: 0.5; margin-right: 5px;">⋮⋮</span>${{col}} <span class="sort-indicator">${{sortIndicator}}</span>
+                        <div class="drop-indicator right"></div>
+                    `;
+
+                    // Add drag event listeners
+                    th.addEventListener('dragstart', handleDragStart);
+                    th.addEventListener('dragover', handleDragOver);
+                    th.addEventListener('dragenter', handleDragEnter);
+                    th.addEventListener('dragleave', handleDragLeave);
+                    th.addEventListener('drop', handleDrop);
+                    th.addEventListener('dragend', handleDragEnd);
+
                     headerRow.appendChild(th);
                 }}
             }});
@@ -896,19 +958,19 @@ class CSVToHTMLAnalyzer:
         function updateTableBody() {{
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
-            
+
             filteredData.forEach(row => {{
                 const tr = document.createElement('tr');
                 tr.className = row._row_class || '';
-                
-                columns.forEach(col => {{
+
+                columnOrder.forEach(col => {{
                     if (visibleColumns.has(col)) {{
                         const td = document.createElement('td');
                         let value = row[col];
-                        
+
                         if (value !== null && value !== undefined) {{
                             let valueStr = String(value);
-                            
+
                             // Format timestamp columns
                             if (columnTypes[col] === 'timestamp') {{
                                 const formatted = formatTimestamp(valueStr);
@@ -916,7 +978,7 @@ class CSVToHTMLAnalyzer:
                                     valueStr = formatted;
                                 }}
                             }}
-                            
+
                             if (valueStr.length > 200) {{
                                 td.innerHTML = `<span class="cell-content expandable" onclick="showModal('${{col}}', this)" data-full="${{valueStr}}">${{valueStr.substring(0, 197)}}...</span>`;
                             }} else {{
@@ -925,11 +987,11 @@ class CSVToHTMLAnalyzer:
                         }} else {{
                             td.textContent = '';
                         }}
-                        
+
                         tr.appendChild(td);
                     }}
                 }});
-                
+
                 tbody.appendChild(tr);
             }});
         }}
@@ -1213,11 +1275,11 @@ class CSVToHTMLAnalyzer:
         
         function exportData() {{
             const csvContent = [
-                columns.filter(col => visibleColumns.has(col)).join(','),
-                ...filteredData.map(row => 
-                    columns.filter(col => visibleColumns.has(col))
-                           .map(col => `"${{String(row[col] || '').replace(/"/g, '""')}}"`)
-                           .join(',')
+                columnOrder.filter(col => visibleColumns.has(col)).join(','),
+                ...filteredData.map(row =>
+                    columnOrder.filter(col => visibleColumns.has(col))
+                             .map(col => `"${{String(row[col] || '').replace(/"/g, '""')}}"`)
+                             .join(',')
                 )
             ].join('\\n');
             
@@ -1230,6 +1292,107 @@ class CSVToHTMLAnalyzer:
             window.URL.revokeObjectURL(url);
         }}
         
+        // Drag and Drop functionality for column reordering
+        let draggedColumn = null;
+        let draggedElement = null;
+
+        function handleDragStart(e) {{
+            draggedColumn = e.target.dataset.column;
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.outerHTML);
+        }}
+
+        function handleDragOver(e) {{
+            if (e.preventDefault) {{
+                e.preventDefault();
+            }}
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }}
+
+        function handleDragEnter(e) {{
+            if (e.target.classList.contains('drop-zone') && e.target !== draggedElement) {{
+                const rect = e.target.getBoundingClientRect();
+                const midPoint = rect.left + rect.width / 2;
+                const isLeft = e.clientX < midPoint;
+
+                // Clear all indicators
+                document.querySelectorAll('.drop-indicator').forEach(indicator => {{
+                    indicator.classList.remove('show');
+                }});
+
+                // Show appropriate indicator
+                const indicator = e.target.querySelector(isLeft ? '.drop-indicator.left' : '.drop-indicator.right');
+                if (indicator) {{
+                    indicator.classList.add('show');
+                }}
+            }}
+        }}
+
+        function handleDragLeave(e) {{
+            // Only hide indicators if we're leaving the drop zone entirely
+            if (!e.target.closest('.drop-zone')) {{
+                document.querySelectorAll('.drop-indicator').forEach(indicator => {{
+                    indicator.classList.remove('show');
+                }});
+            }}
+        }}
+
+        function handleDrop(e) {{
+            if (e.stopPropagation) {{
+                e.stopPropagation();
+            }}
+
+            if (draggedColumn && e.target.classList.contains('drop-zone') && e.target !== draggedElement) {{
+                const targetColumn = e.target.dataset.column;
+                const rect = e.target.getBoundingClientRect();
+                const midPoint = rect.left + rect.width / 2;
+                const isLeft = e.clientX < midPoint;
+
+                reorderColumns(draggedColumn, targetColumn, isLeft);
+            }}
+
+            // Clear all indicators
+            document.querySelectorAll('.drop-indicator').forEach(indicator => {{
+                indicator.classList.remove('show');
+            }});
+
+            return false;
+        }}
+
+        function handleDragEnd(e) {{
+            e.target.classList.remove('dragging');
+            draggedColumn = null;
+            draggedElement = null;
+
+            // Clear all indicators
+            document.querySelectorAll('.drop-indicator').forEach(indicator => {{
+                indicator.classList.remove('show');
+            }});
+        }}
+
+        function reorderColumns(draggedCol, targetCol, insertLeft) {{
+            const draggedIndex = columnOrder.indexOf(draggedCol);
+            const targetIndex = columnOrder.indexOf(targetCol);
+
+            if (draggedIndex === -1 || targetIndex === -1) return;
+
+            // Remove dragged column from its current position
+            columnOrder.splice(draggedIndex, 1);
+
+            // Calculate new insertion position
+            let newTargetIndex = columnOrder.indexOf(targetCol);
+            const insertIndex = insertLeft ? newTargetIndex : newTargetIndex + 1;
+
+            // Insert at new position
+            columnOrder.splice(insertIndex, 0, draggedCol);
+
+            // Update display
+            updateDisplay();
+        }}
+
         // Close modal when clicking outside
         window.onclick = function(event) {{
             const modal = document.getElementById('contentModal');
