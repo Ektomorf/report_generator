@@ -13,6 +13,80 @@ from pathlib import Path
 import pandas as pd
 from collections import defaultdict
 import logging
+from datetime import datetime
+import re
+
+def convert_timestamp_to_unix_ms(value):
+    """
+    Convert timestamp string to unix milliseconds.
+    
+    Args:
+        value: Timestamp string in various formats
+        
+    Returns:
+        int: Unix timestamp in milliseconds, or original value if not a timestamp
+    """
+    if not isinstance(value, str):
+        return value
+    
+    # Common timestamp patterns
+    timestamp_patterns = [
+        # 2025-09-26 15:08:15,575 (with comma for milliseconds)
+        (r'^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2},\d{3}$', '%Y-%m-%d %H:%M:%S,%f'),
+        # 2025-09-26 15:08:15.575 (with dot for milliseconds)
+        (r'^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d{3}$', '%Y-%m-%d %H:%M:%S.%f'),
+        # 2025-09-26 15:08:15 (without milliseconds)
+        (r'^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$', '%Y-%m-%d %H:%M:%S'),
+        # ISO format: 2025-09-26T15:08:15.575Z
+        (r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z?$', '%Y-%m-%dT%H:%M:%S.%f'),
+        # ISO format without milliseconds: 2025-09-26T15:08:15Z
+        (r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z?$', '%Y-%m-%dT%H:%M:%S'),
+    ]
+    
+    for pattern, format_str in timestamp_patterns:
+        if re.match(pattern, value.strip()):
+            try:
+                # Handle comma separator for milliseconds by replacing with dot
+                normalized_value = value.strip().replace(',', '.')
+                # Remove Z suffix if present
+                if normalized_value.endswith('Z'):
+                    normalized_value = normalized_value[:-1]
+                
+                dt = datetime.strptime(normalized_value, format_str.replace(',%f', '.%f'))
+                # Convert to unix timestamp in milliseconds
+                return int(dt.timestamp() * 1000)
+            except (ValueError, OSError) as e:
+                # If parsing fails, return original value
+                continue
+    
+    return value
+
+def is_timestamp_field(key):
+    """
+    Check if a field key indicates it contains timestamp data.
+    
+    Args:
+        key: Field name/key
+        
+    Returns:
+        bool: True if key indicates timestamp field
+    """
+    timestamp_keywords = [
+        'timestamp', 'time', 'created', 'updated', 'start', 'end',
+        'created_at', 'updated_at', 'start_time', 'end_time', 'date', 'datetime'
+    ]
+    
+    key_lower = key.lower()
+    # Only match exact 'timestamp' or other keywords, but exclude send_timestamp and receive_timestamp
+    if key_lower == 'timestamp':
+        return True
+    
+    # Check other keywords but exclude send/receive specific timestamps
+    for keyword in timestamp_keywords[1:]:  # Skip 'timestamp' since we handled it above
+        if keyword in key_lower and 'send' not in key_lower and 'receive' not in key_lower:
+            return True
+    
+    return False
 
 def flatten_dict(d, parent_key='', sep='_'):
     """
@@ -43,9 +117,20 @@ def flatten_dict(d, parent_key='', sep='_'):
                     if isinstance(item, dict):
                         items.extend(flatten_dict(item, f"{new_key}_{i}", sep=sep).items())
                     else:
-                        items.append((f"{new_key}_{i}", item))
+                        indexed_key = f"{new_key}_{i}"
+                        # Check if this is a timestamp field and convert if needed
+                        if is_timestamp_field(indexed_key):
+                            converted_item = convert_timestamp_to_unix_ms(item)
+                            items.append((indexed_key, converted_item))
+                        else:
+                            items.append((indexed_key, item))
         else:
-            items.append((new_key, v))
+            # Check if this is a timestamp field and convert if needed
+            if is_timestamp_field(new_key):
+                converted_value = convert_timestamp_to_unix_ms(v)
+                items.append((new_key, converted_value))
+            else:
+                items.append((new_key, v))
     return dict(items)
 
 def process_json_file(json_file_path):
