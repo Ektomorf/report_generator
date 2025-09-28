@@ -126,7 +126,22 @@ class CSVToHTMLAnalyzer:
         if row.get('peak_amplitude') or row.get('frequencies'):
             return True
         return False
-        
+
+    def _is_empty_row(self, row: Dict[str, Any]) -> bool:
+        """Determine if a row only contains timestamp data and no other meaningful content"""
+        # Get all columns except internal ones and common timestamp columns
+        exclude_columns = {'_row_index', '_row_class', '_is_result', 'timestamp', 'Timestamp_original', 'timestamp_logs', 'timestamp_results'}
+        data_columns = [col for col in self.columns if col not in exclude_columns]
+
+        # Check if all data columns are empty/null
+        non_empty_count = 0
+        for col in data_columns:
+            value = row.get(col)
+            if value is not None and str(value).strip() != '':
+                non_empty_count += 1
+
+        return non_empty_count == 0
+
     def _get_row_class(self, row: Dict[str, Any]) -> str:
         """Get CSS class for row styling"""
         if self._is_result_row(row):
@@ -495,6 +510,19 @@ class CSVToHTMLAnalyzer:
             font-size: 12px;
             margin-left: 8px;
         }}
+
+        .toggle-checkbox {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #495057;
+        }}
+
+        .toggle-checkbox input {{
+            margin: 0;
+        }}
         
         .filter-controls {{
             max-height: 300px;
@@ -696,6 +724,10 @@ class CSVToHTMLAnalyzer:
                 <h3>Global Controls</h3>
                 <div class="global-controls">
                     <input type="text" class="global-search" placeholder="Global search..." onkeyup="applyFilters()">
+                    <label class="toggle-checkbox">
+                        <input type="checkbox" id="hide-empty-rows" checked onchange="applyFilters()">
+                        <span>Hide empty rows</span>
+                    </label>
                     <button class="btn" onclick="clearAllFilters()">Clear Filters</button>
                     <button class="btn btn-secondary" onclick="exportData()">Export Data</button>
                 </div>
@@ -766,6 +798,21 @@ class CSVToHTMLAnalyzer:
         let sortDirection = 'asc';
         let filters = {{}};
         
+        // Check if a row is empty based on currently visible columns
+        function isRowEmpty(row) {{
+            const timestampColumns = ['timestamp', 'Timestamp_original', 'timestamp_logs', 'timestamp_results'];
+            const visibleDataColumns = Array.from(visibleColumns).filter(col => !timestampColumns.includes(col));
+
+            for (const col of visibleDataColumns) {{
+                const value = row[col];
+                if (value !== null && value !== undefined && String(value).trim() !== '') {{
+                    return false;
+                }}
+            }}
+
+            return visibleDataColumns.length > 0; // Only consider empty if there are non-timestamp columns visible
+        }}
+
         // Format timestamp from Unix ms or "2025-09-26 17:01:59,358" to "2025-09-26 17:01:59,358"
         function formatTimestamp(timestampStr) {{
             if (!timestampStr || timestampStr.trim() === '') {{
@@ -898,8 +945,15 @@ class CSVToHTMLAnalyzer:
             const totalRows = filteredData.length;
             const resultRows = filteredData.filter(row => row._is_result).length;
             const logRows = totalRows - resultRows;
-            
-            document.getElementById('row-count').textContent = `Showing ${{totalRows}} of ${{data.length}} rows`;
+            const hideEmptyRows = document.getElementById('hide-empty-rows').checked;
+            const hiddenEmptyRows = hideEmptyRows ? data.filter(row => isRowEmpty(row)).length : 0;
+
+            let statsText = `Showing ${{totalRows}} of ${{data.length}} rows`;
+            if (hideEmptyRows && hiddenEmptyRows > 0) {{
+                statsText += ` (${{hiddenEmptyRows}} empty rows hidden)`;
+            }}
+
+            document.getElementById('row-count').textContent = statsText;
             document.getElementById('result-count').textContent = `Results: ${{resultRows}}`;
             document.getElementById('log-count').textContent = `Logs: ${{logRows}}`;
         }}
@@ -917,7 +971,7 @@ class CSVToHTMLAnalyzer:
             }} else {{
                 visibleColumns.add(column);
             }}
-            updateDisplay();
+            applyFilters(); // Recalculate empty rows based on new visible columns
         }}
         
         function toggleGroup(groupName) {{
@@ -933,8 +987,8 @@ class CSVToHTMLAnalyzer:
                     visibleColumns.delete(column);
                 }}
             }});
-            
-            updateDisplay();
+
+            applyFilters(); // Recalculate empty rows based on new visible columns
         }}
         
         function sortBy(column) {{
@@ -975,7 +1029,8 @@ class CSVToHTMLAnalyzer:
         
         function applyFilters() {{
             const globalSearch = document.querySelector('.global-search').value.toLowerCase();
-            
+            const hideEmptyRows = document.getElementById('hide-empty-rows').checked;
+
             // Collect all filter values
             filters = {{}};
             document.querySelectorAll('[data-filter-column]').forEach(input => {{
@@ -999,6 +1054,11 @@ class CSVToHTMLAnalyzer:
             
             // Apply filters
             filteredData = data.filter(row => {{
+                // Hide empty rows filter (dynamic based on visible columns)
+                if (hideEmptyRows && isRowEmpty(row)) {{
+                    return false;
+                }}
+
                 // Global search
                 if (globalSearch) {{
                     const rowText = columns.map(col => String(row[col] || '')).join(' ').toLowerCase();
@@ -1040,6 +1100,7 @@ class CSVToHTMLAnalyzer:
         
         function clearAllFilters() {{
             document.querySelector('.global-search').value = '';
+            document.getElementById('hide-empty-rows').checked = true; // Keep hide empty rows on by default
             document.querySelectorAll('[data-filter-column]').forEach(input => {{
                 if (input.tagName === 'SELECT') {{
                     input.selectedIndex = -1;
@@ -1047,10 +1108,9 @@ class CSVToHTMLAnalyzer:
                     input.value = '';
                 }}
             }});
-            
+
             filters = {{}};
-            filteredData = [...data];
-            updateDisplay();
+            applyFilters(); // Use applyFilters to respect the hide empty rows setting
         }}
         
         function populateFilterOptions() {{
@@ -1233,7 +1293,7 @@ def process_single_file(csv_file: str, output_html: str):
         title = f"Test Analysis - {csv_path.parent.name} - {csv_path.stem}"
         
         analyzer.generate_html(output_html, title)
-        print(f"✓ Generated: {output_html}")
+        print(f"Generated: {output_html}")
         
     except Exception as e:
         print(f"Error processing {csv_file}: {e}")
@@ -1273,13 +1333,13 @@ def process_batch(directory: str):
                 title = f"Test Analysis - {csv_file.stem}"
                 
             analyzer.generate_html(str(output_html), title)
-            print(f"✓ Generated: {output_html}")
+            print(f"Generated: {output_html}")
             
         except Exception as e:
-            print(f"✗ Error processing {csv_file}: {e}")
+            print(f"Error processing {csv_file}: {e}")
             continue
             
-    print(f"\\n✓ Batch processing complete!")
+    print(f"\\nBatch processing complete!")
 
 
 if __name__ == "__main__":

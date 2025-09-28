@@ -4,7 +4,8 @@
       "Bash(python test_docstring_behavior.py:*)",
       "Bash(python:*)",
       "Bash(mv:*)",
-      "Bash(dir \"C:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\" /s)"
+      "Bash(dir \"C:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\" /s)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []
