@@ -358,7 +358,7 @@ class CSVToHTMLAnalyzer:
         * {{
             box-sizing: border-box;
         }}
-        
+
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -366,7 +366,7 @@ class CSVToHTMLAnalyzer:
             background-color: #f5f5f5;
             color: #333;
         }}
-        
+
         .container {{
             max-width: 100%;
             margin: 0 auto;
@@ -375,14 +375,14 @@ class CSVToHTMLAnalyzer:
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             overflow: hidden;
         }}
-        
+
         .header {{
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 20px;
             text-align: center;
         }}
-        
+
         .header h1 {{
             margin: 0;
             font-size: 2em;
@@ -738,19 +738,94 @@ class CSVToHTMLAnalyzer:
         .close:hover {{
             color: #000;
         }}
-        
+
+        .image-gallery {{
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }}
+
+        .image-gallery h3 {{
+            margin: 0 0 20px 0;
+            color: #495057;
+            text-align: center;
+        }}
+
+        .gallery-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }}
+
+        .gallery-item {{
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }}
+
+        .gallery-item:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }}
+
+        .gallery-item img {{
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }}
+
+        .gallery-item .filename {{
+            padding: 10px;
+            font-size: 12px;
+            color: #6c757d;
+            text-align: center;
+            word-break: break-all;
+        }}
+
+        .filename-link {{
+            color: #007bff;
+            text-decoration: underline;
+            cursor: pointer;
+        }}
+
+        .filename-link:hover {{
+            color: #0056b3;
+        }}
+
+        .gallery-empty {{
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px;
+        }}
+
         @media (max-width: 768px) {{
             .controls {{
                 flex-direction: column;
             }}
-            
+
             .control-section {{
                 min-width: auto;
             }}
-            
+
             th, td {{
                 padding: 4px;
                 font-size: 12px;
+            }}
+
+            .gallery-grid {{
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 10px;
+            }}
+
+            .gallery-item img {{
+                height: 150px;
             }}
         }}
     </style>
@@ -821,6 +896,15 @@ class CSVToHTMLAnalyzer:
                     <!-- Data will be populated by JavaScript -->
                 </tbody>
             </table>
+        </div>
+
+        <div class="image-gallery">
+            <h3>Image Gallery</h3>
+            <div id="gallery-grid" class="gallery-grid">
+                <div class="gallery-empty">
+                    No images found in the current data
+                </div>
+            </div>
         </div>
     </div>
     
@@ -916,6 +1000,7 @@ class CSVToHTMLAnalyzer:
             initializeTable();
             populateFilterOptions();
             loadSavedPresets();
+            populateImageGallery();
             updateDisplay();
         }});
         
@@ -985,7 +1070,11 @@ class CSVToHTMLAnalyzer:
                                 }}
                             }}
 
-                            if (valueStr.length > 200) {{
+                            // Handle filename column specially
+                            if (col.toLowerCase() === 'filename' && isImageFile(valueStr)) {{
+                                const imageId = generateImageId(valueStr);
+                                td.innerHTML = `<span class="filename-link" onclick="scrollToImage('${{imageId}}')">${{valueStr}}</span>`;
+                            }} else if (valueStr.length > 200) {{
                                 td.innerHTML = `<span class="cell-content expandable" onclick="showModal('${{col}}', this)" data-full="${{valueStr}}">${{valueStr.substring(0, 197)}}...</span>`;
                             }} else {{
                                 td.textContent = valueStr;
@@ -1351,7 +1440,7 @@ class CSVToHTMLAnalyzer:
                              .join(',')
                 )
             ].join('\\n');
-            
+
             const blob = new Blob([csvContent], {{ type: 'text/csv' }});
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1359,6 +1448,69 @@ class CSVToHTMLAnalyzer:
             a.download = 'filtered_data.csv';
             a.click();
             window.URL.revokeObjectURL(url);
+        }}
+
+        // Image gallery functions
+        function isImageFile(filename) {{
+            if (!filename) return false;
+            const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg', '.webp'];
+            const lowerFilename = filename.toLowerCase();
+            return imageExtensions.some(ext => lowerFilename.endsWith(ext));
+        }}
+
+        function generateImageId(filename) {{
+            // Create a unique ID from filename by replacing problematic characters
+            return 'img_' + filename.replace(/[^a-zA-Z0-9_-]/g, '_');
+        }}
+
+        function populateImageGallery() {{
+            const galleryGrid = document.getElementById('gallery-grid');
+            const imageFiles = new Set();
+
+            // Find all image files in the filename column
+            data.forEach(row => {{
+                const filename = row.filename;
+                if (filename && isImageFile(filename)) {{
+                    imageFiles.add(filename);
+                }}
+            }});
+
+            if (imageFiles.size === 0) {{
+                galleryGrid.innerHTML = '<div class="gallery-empty">No images found in the current data</div>';
+                return;
+            }}
+
+            // Create gallery items
+            galleryGrid.innerHTML = '';
+            imageFiles.forEach(filename => {{
+                const imageId = generateImageId(filename);
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item';
+                galleryItem.id = imageId;
+
+                galleryItem.innerHTML = `
+                    <img src="${{filename}}" alt="${{filename}}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZjNzU3ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4='; this.alt='Image not found';">
+                    <div class="filename">${{filename}}</div>
+                `;
+
+                galleryGrid.appendChild(galleryItem);
+            }});
+        }}
+
+        function scrollToImage(imageId) {{
+            const imageElement = document.getElementById(imageId);
+            if (imageElement) {{
+                imageElement.scrollIntoView({{
+                    behavior: 'smooth',
+                    block: 'center'
+                }});
+
+                // Add highlight effect
+                imageElement.style.boxShadow = '0 4px 20px rgba(0,123,255,0.5)';
+                setTimeout(() => {{
+                    imageElement.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                }}, 2000);
+            }}
         }}
         
         // Drag and Drop functionality for column reordering
