@@ -2,7 +2,7 @@
 echo Converting all JSON result files to CSV format...
 echo.
 
-python json_to_csv.py output/ --pattern "**/*_results.json" --verbose
+python process_result_csv.py output/ --pattern "**/*_results.json" --verbose
 
 echo.
 echo Done! CSV files have been created alongside each JSON result file.

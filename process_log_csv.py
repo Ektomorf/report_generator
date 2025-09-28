@@ -11,6 +11,7 @@ import glob
 import argparse
 from pathlib import Path
 import logging
+from datetime import datetime
 
 def safe_json_parse(json_string):
     """
@@ -92,6 +93,73 @@ def safe_json_parse(json_string):
     logging.warning(f"Failed to parse JSON after all attempts: {cleaned_string[:200]}...")
     return {}
 
+def convert_timestamp_to_unix_ms(timestamp_str):
+    """
+    Convert timestamp string to Unix milliseconds.
+    
+    Args:
+        timestamp_str: String containing timestamp in various formats
+        
+    Returns:
+        int: Unix timestamp in milliseconds, or None if parsing fails
+    """
+    if not timestamp_str or not isinstance(timestamp_str, str):
+        return None
+    
+    # List of common timestamp formats to try
+    formats = [
+        '%Y-%m-%d %H:%M:%S,%f',      # 2025-09-26 17:01:59,383 (with comma for milliseconds)
+        '%Y-%m-%d %H:%M:%S.%f',      # 2023-09-28 10:30:45.123456
+        '%Y-%m-%d %H:%M:%S',         # 2023-09-28 10:30:45
+        '%Y-%m-%dT%H:%M:%S.%fZ',     # 2023-09-28T10:30:45.123456Z (ISO format)
+        '%Y-%m-%dT%H:%M:%SZ',        # 2023-09-28T10:30:45Z (ISO format)
+        '%Y-%m-%dT%H:%M:%S.%f',      # 2023-09-28T10:30:45.123456 (ISO without Z)
+        '%Y-%m-%dT%H:%M:%S',         # 2023-09-28T10:30:45 (ISO without Z)
+        '%m/%d/%Y %H:%M:%S',         # 09/28/2023 10:30:45
+        '%d/%m/%Y %H:%M:%S',         # 28/09/2023 10:30:45
+        '%Y%m%d_%H%M%S',             # 20230928_103045
+        '%Y%m%d%H%M%S',              # 20230928103045
+        '%Y-%d-%m %H:%M:%S,%f'       # 2025-26-09 15:08:15,575 (day-month swapped with comma)
+    ]
+    
+    # Clean up the timestamp string
+    timestamp_str = timestamp_str.strip()
+    
+    # Try parsing with each format
+    for fmt in formats:
+        try:
+            # Handle comma separator for milliseconds by converting to format Python expects
+            if ',%f' in fmt and ',' in timestamp_str:
+                # Python's %f expects dot separator, but we have comma
+                # Convert comma to dot for parsing
+                test_str = timestamp_str.replace(',', '.')
+                test_fmt = fmt.replace(',%f', '.%f')
+                dt = datetime.strptime(test_str, test_fmt)
+            else:
+                dt = datetime.strptime(timestamp_str, fmt)
+            # Convert to Unix timestamp in milliseconds
+            return int(dt.timestamp() * 1000)
+        except ValueError:
+            continue
+    
+    # Try parsing as Unix timestamp (seconds or milliseconds)
+    try:
+        # Check if it's already a numeric timestamp
+        timestamp_num = float(timestamp_str)
+        
+        # If it looks like seconds (reasonable range), convert to milliseconds
+        if 1000000000 <= timestamp_num <= 9999999999:  # Years 2001-2286 in seconds
+            return int(timestamp_num * 1000)
+        # If it looks like milliseconds (reasonable range), return as-is
+        elif 1000000000000 <= timestamp_num <= 9999999999999:  # Years 2001-2286 in milliseconds
+            return int(timestamp_num)
+    except (ValueError, OverflowError):
+        pass
+    
+    # If all parsing attempts fail, log and return None
+    logging.warning(f"Failed to parse timestamp: {timestamp_str}")
+    return None
+
 def process_log_csv(input_file_path, output_file_path=None):
     """
     Process a log CSV file and flatten JSON in the message column.
@@ -119,10 +187,20 @@ def process_log_csv(input_file_path, output_file_path=None):
             for row in reader:
                 new_row = {}
 
-                # Copy all original columns except message
+                # Copy all original columns except message, raw_line, and source_file
                 for field in original_fieldnames:
-                    if field != 'message':
-                        new_row[field] = row.get(field, '')
+                    if field not in ['message', 'raw_line', 'source_file']:
+                        original_value = row.get(field, '')
+                        
+                        # Convert timestamp columns to Unix milliseconds directly
+                        if field.lower() in ['timestamp', 'time']:
+                            unix_ms = convert_timestamp_to_unix_ms(original_value)
+                            if unix_ms is not None:
+                                new_row[field] = unix_ms
+                            else:
+                                new_row[field] = original_value
+                        else:
+                            new_row[field] = original_value
                         fieldnames.add(field)
 
                 # Parse JSON from message column
@@ -130,32 +208,43 @@ def process_log_csv(input_file_path, output_file_path=None):
                 if message:
                     parsed_json = safe_json_parse(message)
 
-                    # Add parsed JSON fields to the row
-                    for key, value in parsed_json.items():
-                        # Handle nested dictionaries by flattening them
-                        if isinstance(value, dict):
-                            for nested_key, nested_value in value.items():
-                                flat_key = f"{key}_{nested_key}"
-                                new_row[flat_key] = str(nested_value)
-                                fieldnames.add(flat_key)
-                        elif isinstance(value, list):
-                            # Convert lists to comma-separated strings
-                            new_row[key] = ','.join(str(item) for item in value)
-                            fieldnames.add(key)
-                        else:
-                            new_row[key] = str(value)
-                            fieldnames.add(key)
-
-                    # If no fields were parsed but message exists, mark as parse_failed
-                    if not parsed_json and message.strip():
-                        new_row['parse_failed'] = 'true'
-                        new_row['parse_failed_reason'] = 'JSON parsing failed'
-                        fieldnames.add('parse_failed')
-                        fieldnames.add('parse_failed_reason')
-
-                # Keep original message for reference
-                new_row['original_message'] = message
-                fieldnames.add('original_message')
+                    # If JSON was successfully parsed, add parsed fields to the row
+                    if parsed_json:
+                        for key, value in parsed_json.items():
+                            # Handle nested dictionaries by flattening them
+                            if isinstance(value, dict):
+                                for nested_key, nested_value in value.items():
+                                    flat_key = f"{key}_{nested_key}"
+                                    str_value = str(nested_value)
+                                    new_row[flat_key] = str_value
+                                    fieldnames.add(flat_key)
+                                    
+                                    # Convert timestamp fields from nested JSON to Unix ms
+                                    if nested_key.lower() in ['timestamp', 'time']:
+                                        unix_ms = convert_timestamp_to_unix_ms(str_value)
+                                        if unix_ms is not None:
+                                            new_row[flat_key] = unix_ms
+                            elif isinstance(value, list):
+                                # Convert lists to comma-separated strings
+                                new_row[key] = ','.join(str(item) for item in value)
+                                fieldnames.add(key)
+                            else:
+                                str_value = str(value)
+                                
+                                # Convert timestamp fields from JSON to Unix ms
+                                if key.lower() in ['timestamp', 'time']:
+                                    unix_ms = convert_timestamp_to_unix_ms(str_value)
+                                    if unix_ms is not None:
+                                        new_row[key] = unix_ms
+                                    else:
+                                        new_row[key] = str_value
+                                else:
+                                    new_row[key] = str_value
+                                fieldnames.add(key)
+                    else:
+                        # If JSON parsing failed, treat as plain text message
+                        new_row['message'] = message
+                        fieldnames.add('message')
 
                 rows.append(new_row)
 
