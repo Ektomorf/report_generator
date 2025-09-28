@@ -778,11 +778,16 @@ class CSVToHTMLAnalyzer:
                     <select class="preset-select" onchange="loadPreset(this.value)">
                         <option value="">Select Preset...</option>
                         <option value="default">Default View</option>
+                        <option value="test-overview">Test Overview</option>
                         <option value="results-only">Results Only</option>
+                        <option value="failures-only">Failures Only</option>
                         <option value="logs-only">Logs Only</option>
                         <option value="errors-warnings">Errors & Warnings</option>
+                        <option value="debug-view">Debug View</option>
+                        <option value="commands-only">Commands Only</option>
+                        <option value="measurements">Measurements</option>
+                        <option value="timing-analysis">Timing Analysis</option>
                     </select>
-                    <button class="btn btn-secondary" onclick="savePreset()">Save Preset</button>
                 </div>
             </div>
             
@@ -910,6 +915,7 @@ class CSVToHTMLAnalyzer:
         document.addEventListener('DOMContentLoaded', function() {{
             initializeTable();
             populateFilterOptions();
+            loadSavedPresets();
             updateDisplay();
         }});
         
@@ -1183,7 +1189,7 @@ class CSVToHTMLAnalyzer:
                     if (select) {{
                         const uniqueValues = [...new Set(data.map(row => row[column]).filter(v => v !== null && v !== undefined))];
                         uniqueValues.sort();
-                        
+
                         uniqueValues.forEach(value => {{
                             const option = document.createElement('option');
                             option.value = value;
@@ -1194,13 +1200,20 @@ class CSVToHTMLAnalyzer:
                 }}
             }});
         }}
+
+        function loadSavedPresets() {{
+            // No longer needed - presets are now built-in
+        }}
         
         function loadPreset(presetName) {{
             if (!presetName) return;
-            
+
+            let preset = null;
+
+            // All presets are now built-in
             const presets = {{
                 'default': {{
-                    columns: ['Pass', 'timestamp', 'message', 'command_method', 'level'],
+                    columns: ['Pass', 'timestamp', 'command_method', 'command_str', 'raw_response'],
                     filters: {{}}
                 }},
                 'results-only': {{
@@ -1214,10 +1227,35 @@ class CSVToHTMLAnalyzer:
                 'errors-warnings': {{
                     columns: ['timestamp', 'level', 'message', 'line_number'],
                     filters: {{ 'level': ['ERROR', 'WARNING'] }}
+                }},
+                'test-overview': {{
+                    columns: ['Pass', 'timestamp', 'command_method', 'peak_amplitude', 'peak_frequency', 'level', 'message'],
+                    filters: {{}}
+                }},
+                'commands-only': {{
+                    columns: ['timestamp', 'command_method', 'keysight_xsan_command', 'command_str', 'response_str'],
+                    filters: {{}}
+                }},
+                'measurements': {{
+                    columns: ['timestamp', 'peak_amplitude', 'peak_frequency', 'frequencies', 'peak_table', 'trace_name'],
+                    filters: {{}}
+                }},
+                'timing-analysis': {{
+                    columns: ['timestamp', 'send_time_str', 'receive_time_str', 'command_method', 'level'],
+                    filters: {{}}
+                }},
+                'failures-only': {{
+                    columns: ['Pass', 'timestamp', 'command_method', 'level', 'message', 'peak_amplitude'],
+                    filters: {{ 'Pass': ['False'] }}
+                }},
+                'debug-view': {{
+                    columns: ['timestamp', 'level', 'message', 'line_number', 'command_method', 'docstring'],
+                    filters: {{ 'level': ['DEBUG', 'INFO', 'WARNING', 'ERROR'] }}
                 }}
             }};
-            
-            const preset = presets[presetName];
+
+            preset = presets[presetName];
+
             if (preset) {{
                 // Set visible columns
                 visibleColumns.clear();
@@ -1226,42 +1264,73 @@ class CSVToHTMLAnalyzer:
                         visibleColumns.add(col);
                     }}
                 }});
-                
+
                 // Update checkboxes
                 document.querySelectorAll('input[data-column]').forEach(cb => {{
                     cb.checked = visibleColumns.has(cb.dataset.column);
                 }});
-                
-                // Apply preset filters
+
+                // Clear all filters first
                 clearAllFilters();
-                if (preset.filters._is_result !== undefined) {{
-                    filteredData = data.filter(row => row._is_result === preset.filters._is_result);
+
+                // Apply saved filters
+                if (preset.filters) {{
+                    Object.entries(preset.filters).forEach(([column, filter]) => {{
+                        if (filter.type === 'text') {{
+                            const input = document.querySelector(`input[data-filter-column="${{column}}"]`);
+                            if (input && input.type === 'text') {{
+                                input.value = filter.value;
+                            }}
+                        }} else if (filter.type === 'select') {{
+                            const select = document.querySelector(`select[data-filter-column="${{column}}"]`);
+                            if (select) {{
+                                filter.values.forEach(value => {{
+                                    const option = select.querySelector(`option[value="${{value}}"]`);
+                                    if (option) option.selected = true;
+                                }});
+                            }}
+                        }} else if (filter.type === 'range') {{
+                            if (filter.min !== undefined) {{
+                                const minInput = document.querySelector(`input[data-filter-column="${{column}}"][data-filter-type="min"]`);
+                                if (minInput) minInput.value = filter.min;
+                            }}
+                            if (filter.max !== undefined) {{
+                                const maxInput = document.querySelector(`input[data-filter-column="${{column}}"][data-filter-type="max"]`);
+                                if (maxInput) maxInput.value = filter.max;
+                            }}
+                        }}
+                    }});
                 }}
-                if (preset.filters.level) {{
-                    const levelSelect = document.querySelector('select[data-filter-column="level"]');
-                    if (levelSelect) {{
-                        preset.filters.level.forEach(level => {{
-                            const option = levelSelect.querySelector(`option[value="${{level}}"]`);
-                            if (option) option.selected = true;
-                        }});
+
+                // Apply special preset filters
+                if (preset.filters) {{
+                    // Handle result filtering
+                    if (preset.filters._is_result !== undefined) {{
+                        filteredData = data.filter(row => row._is_result === preset.filters._is_result);
+                    }}
+
+                    // Handle Pass filter for failures-only
+                    if (preset.filters.Pass) {{
+                        const passValues = preset.filters.Pass;
+                        filteredData = filteredData.filter(row => passValues.includes(String(row.Pass || '')));
+                    }}
+
+                    // Handle level filter
+                    if (preset.filters.level) {{
+                        const levelSelect = document.querySelector('select[data-filter-column="level"]');
+                        if (levelSelect) {{
+                            preset.filters.level.forEach(level => {{
+                                const option = levelSelect.querySelector(`option[value="${{level}}"]`);
+                                if (option) option.selected = true;
+                            }});
+                        }}
                     }}
                 }}
-                
-                updateDisplay();
+
+                applyFilters();
             }}
         }}
         
-        function savePreset() {{
-            const presetName = prompt('Enter preset name:');
-            if (presetName) {{
-                const preset = {{
-                    columns: Array.from(visibleColumns),
-                    filters: filters
-                }};
-                localStorage.setItem(`preset_${{presetName}}`, JSON.stringify(preset));
-                alert('Preset saved!');
-            }}
-        }}
         
         function showModal(column, element) {{
             const fullContent = element.dataset.full || element.textContent;
