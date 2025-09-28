@@ -1,0 +1,126 @@
+@echo off
+echo ========================================================================
+echo                    COMPLETE TEST DATA PROCESSING PIPELINE
+echo ========================================================================
+echo This will process all test data in the following order:
+echo 1. Convert log files to CSV format (flattening JSON data)
+echo 2. Convert JSON result files to CSV format  
+echo 3. Combine results and logs CSV files by timestamp
+echo 4. Generate interactive HTML analyzers for each combined CSV
+echo ========================================================================
+echo.
+
+set start_time=%time%
+echo Started at: %start_time%
+echo.
+
+REM Step 1: Convert logs to CSV
+echo ========================================================================
+echo STEP 1: Converting log files to CSV format...
+echo ========================================================================
+echo Processing log CSV files and flattening JSON data in message column...
+echo.
+
+python process_log_csv.py output/ --pattern "**/*.log" --verbose
+
+if %errorlevel% neq 0 (
+    echo ERROR: Log processing failed!
+    pause
+    exit /b %errorlevel%
+)
+
+echo.
+echo ✓ Step 1 Complete: CSV files with flattened JSON data created with _logs.csv suffix
+echo.
+
+REM Step 2: Convert results to CSV
+echo ========================================================================
+echo STEP 2: Converting JSON result files to CSV format...
+echo ========================================================================
+echo Converting all JSON result files to CSV format...
+echo.
+
+python process_result_csv.py output/ --pattern "**/*_results.json" --verbose
+
+if %errorlevel% neq 0 (
+    echo ERROR: Result processing failed!
+    pause
+    exit /b %errorlevel%
+)
+
+echo.
+echo ✓ Step 2 Complete: CSV files created alongside each JSON result file
+echo.
+
+REM Step 3: Combine CSV files
+echo ========================================================================
+echo STEP 3: Combining CSV files from results and logs...
+echo ========================================================================
+echo Combining CSV files based on timestamp...
+echo.
+
+python combine_csv_files.py output/ --verbose
+
+if %errorlevel% neq 0 (
+    echo ERROR: CSV combination failed!
+    pause
+    exit /b %errorlevel%
+)
+
+echo.
+echo ✓ Step 3 Complete: Combined CSV files created with _combined.csv suffix
+echo.
+
+REM Step 4: Generate HTML analyzers
+echo ========================================================================
+echo STEP 4: Generating interactive HTML analyzers...
+echo ========================================================================
+echo Creating HTML analyzers for all combined CSV files...
+echo This includes Unix timestamp conversion to readable format (yyyy-mm-dd hh:mm:ss,ms)
+echo.
+
+python csv_analyzer.py --batch output/
+
+if %errorlevel% neq 0 (
+    echo ERROR: HTML analyzer generation failed!
+    pause
+    exit /b %errorlevel%
+)
+
+echo.
+echo ✓ Step 4 Complete: Interactive HTML analyzers generated with _analyzer.html suffix
+echo.
+
+REM Calculate processing time
+set end_time=%time%
+echo ========================================================================
+echo                            PROCESSING COMPLETE!
+echo ========================================================================
+echo Started at:  %start_time%
+echo Completed at: %end_time%
+echo.
+echo Summary of generated files:
+echo • *_logs.csv         - Log files converted to CSV with flattened JSON
+echo • *_results.csv      - JSON results converted to CSV
+echo • *_combined.csv     - Results and logs combined by timestamp
+echo • *_analyzer.html    - Interactive HTML analyzers with Unix timestamp conversion
+echo.
+echo Features of HTML analyzers:
+echo • Column visibility controls and grouping
+echo • Advanced filtering (global + per-column)
+echo • Preset management with local storage
+echo • Cell expansion for large content
+echo • Row highlighting (results vs logs, pass/fail, error levels)
+echo • Unix timestamp conversion to readable format
+echo • Data export functionality
+echo • Responsive design for all devices
+echo.
+echo You can now:
+echo 1. Open any *_analyzer.html file in your web browser
+echo 2. Use the interactive controls to analyze your test data
+echo 3. Create custom presets for different analysis workflows
+echo 4. Export filtered data as CSV for further analysis
+echo.
+echo Happy analyzing! 🚀
+echo ========================================================================
+pause

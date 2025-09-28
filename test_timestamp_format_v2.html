@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Analysis - test_gp4323__test_gp4323_channel1_status_read - test_gp4323_channel1_status_read_combined</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .control-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .control-section h3 {
+            margin: 0 0 15px 0;
+            color: #495057;
+        }
+        
+        .global-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .global-search {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            background: #007bff;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .preset-select {
+            min-width: 150px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .column-controls {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background: white;
+        }
+        
+        .column-group {
+            margin-bottom: 15px;
+        }
+        
+        .column-group h4 {
+            margin: 0 0 8px 0;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .group-toggle {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .column-checkbox {
+            display: block;
+            padding: 4px 0;
+            cursor: pointer;
+        }
+        
+        .column-checkbox input {
+            margin-right: 8px;
+        }
+        
+        .column-name {
+            font-weight: 500;
+        }
+        
+        .column-type {
+            color: #6c757d;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        
+        .filter-controls {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background: white;
+        }
+        
+        .filter-control {
+            margin-bottom: 10px;
+        }
+        
+        .filter-control label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .filter-control input,
+        .filter-control select {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .filter-control input[type="number"] {
+            width: 48%;
+            margin-right: 4%;
+        }
+        
+        .filter-control input[type="number"]:last-child {
+            margin-right: 0;
+        }
+        
+        .stats {
+            text-align: center;
+            padding: 10px;
+            background: #e9ecef;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .table-container {
+            overflow: auto;
+            max-height: 70vh;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+            word-wrap: break-word;
+            max-width: 300px;
+            position: relative;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .sortable:hover {
+            background: #e9ecef;
+        }
+        
+        .sort-indicator {
+            float: right;
+            opacity: 0.5;
+        }
+        
+        .result-row {
+            background: #f8fff8;
+        }
+        
+        .result-pass {
+            border-left: 4px solid #28a745;
+        }
+        
+        .result-fail {
+            border-left: 4px solid #dc3545;
+            background: #fff5f5;
+        }
+        
+        .log-row {
+            background: #fafafa;
+        }
+        
+        .log-error {
+            border-left: 4px solid #dc3545;
+            background: #fff5f5;
+        }
+        
+        .log-warning {
+            border-left: 4px solid #ffc107;
+            background: #fffbf0;
+        }
+        
+        .log-info {
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .log-debug {
+            border-left: 4px solid #6c757d;
+        }
+        
+        .cell-content.expandable {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+        }
+        
+        .expanded {
+            white-space: pre-wrap;
+            max-width: none !important;
+            word-break: break-all;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .control-section {
+                min-width: auto;
+            }
+            
+            th, td {
+                padding: 4px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Test Analysis - test_gp4323__test_gp4323_channel1_status_read - test_gp4323_channel1_status_read_combined</h1>
+        </div>
+        
+        <div class="controls">
+            <div class="control-section">
+                <h3>Global Controls</h3>
+                <div class="global-controls">
+                    <input type="text" class="global-search" placeholder="Global search..." onkeyup="applyFilters()">
+                    <button class="btn" onclick="clearAllFilters()">Clear Filters</button>
+                    <button class="btn btn-secondary" onclick="exportData()">Export Data</button>
+                </div>
+                
+                <div class="presets">
+                    <select class="preset-select" onchange="loadPreset(this.value)">
+                        <option value="">Select Preset...</option>
+                        <option value="default">Default View</option>
+                        <option value="results-only">Results Only</option>
+                        <option value="logs-only">Logs Only</option>
+                        <option value="errors-warnings">Errors & Warnings</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="savePreset()">Save Preset</button>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Column Visibility</h3>
+                <div class="column-controls">
+                    <div class="column-group">
+<h4>Test Results <button class="group-toggle" onclick="toggleGroup('Test Results')">Toggle All</button></h4>
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="timestamp_results" data-group="Test Results" 
+                               onchange="toggleColumn('timestamp_results')">
+                        <span class="column-name">timestamp_results</span>
+                        <span class="column-type">(timestamp)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="level_results" data-group="Test Results" 
+                               onchange="toggleColumn('level_results')">
+                        <span class="column-name">level_results</span>
+                        <span class="column-type">(text)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="command_str_results" data-group="Test Results" 
+                               onchange="toggleColumn('command_str_results')">
+                        <span class="column-name">command_str_results</span>
+                        <span class="column-type">(text)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_success_results" data-group="Test Results" 
+                               onchange="toggleColumn('response_success_results')">
+                        <span class="column-name">response_success_results</span>
+                        <span class="column-type">(boolean)</span>
+                    </label>
+                
+</div>
+<div class="column-group">
+<h4>Commands <button class="group-toggle" onclick="toggleGroup('Commands')">Toggle All</button></h4>
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="command_str_logs" data-group="Commands" 
+                               onchange="toggleColumn('command_str_logs')">
+                        <span class="column-name">command_str_logs</span>
+                        <span class="column-type">(text)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status" data-group="Commands" 
+                               onchange="toggleColumn('response_status')">
+                        <span class="column-name">response_status</span>
+                        <span class="column-type">(text)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_success_logs" data-group="Commands" 
+                               onchange="toggleColumn('response_success_logs')">
+                        <span class="column-name">response_success_logs</span>
+                        <span class="column-type">(boolean)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_1_current_limit" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_1_current_limit')">
+                        <span class="column-name">response_status_channels_1_current_limit</span>
+                        <span class="column-type">(number)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_1_current_measured" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_1_current_measured')">
+                        <span class="column-name">response_status_channels_1_current_measured</span>
+                        <span class="column-type">(number)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_1_state" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_1_state')">
+                        <span class="column-name">response_status_channels_1_state</span>
+                        <span class="column-type">(boolean)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_1_voltage_set" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_1_voltage_set')">
+                        <span class="column-name">response_status_channels_1_voltage_set</span>
+                        <span class="column-type">(number)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_2_current_limit" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_2_current_limit')">
+                        <span class="column-name">response_status_channels_2_current_limit</span>
+                        <span class="column-type">(number)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_2_current_measured" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_2_current_measured')">
+                        <span class="column-name">response_status_channels_2_current_measured</span>
+                        <span class="column-type">(number)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_2_state" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_2_state')">
+                        <span class="column-name">response_status_channels_2_state</span>
+                        <span class="column-type">(boolean)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_2_voltage_set" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_2_voltage_set')">
+                        <span class="column-name">response_status_channels_2_voltage_set</span>
+                        <span class="column-type">(number)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_3_current_limit" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_3_current_limit')">
+                        <span class="column-name">response_status_channels_3_current_limit</span>
+                        <span class="column-type">(number)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_3_current_measured" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_3_current_measured')">
+                        <span class="column-name">response_status_channels_3_current_measured</span>
+                        <span class="column-type">(number)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_3_state" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_3_state')">
+                        <span class="column-name">response_status_channels_3_state</span>
+                        <span class="column-type">(boolean)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_channels_3_voltage_set" data-group="Commands" 
+                               onchange="toggleColumn('response_status_channels_3_voltage_set')">
+                        <span class="column-name">response_status_channels_3_voltage_set</span>
+                        <span class="column-type">(number)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="response_status_parallel_mode" data-group="Commands" 
+                               onchange="toggleColumn('response_status_parallel_mode')">
+                        <span class="column-name">response_status_parallel_mode</span>
+                        <span class="column-type">(boolean)</span>
+                    </label>
+                
+</div>
+<div class="column-group">
+<h4>Timing <button class="group-toggle" onclick="toggleGroup('Timing')">Toggle All</button></h4>
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="timestamp_logs" data-group="Timing" 
+                               onchange="toggleColumn('timestamp_logs')">
+                        <span class="column-name">timestamp_logs</span>
+                        <span class="column-type">(timestamp)</span>
+                    </label>
+                
+</div>
+<div class="column-group">
+<h4>Logging <button class="group-toggle" onclick="toggleGroup('Logging')">Toggle All</button></h4>
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="level_logs" data-group="Logging" 
+                               onchange="toggleColumn('level_logs')">
+                        <span class="column-name">level_logs</span>
+                        <span class="column-type">(text)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="line_number" data-group="Logging" 
+                               onchange="toggleColumn('line_number')">
+                        <span class="column-name">line_number</span>
+                        <span class="column-type">(number)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="original_message" data-group="Logging" 
+                               onchange="toggleColumn('original_message')">
+                        <span class="column-name">original_message</span>
+                        <span class="column-type">(text)</span>
+                    </label>
+                
+</div>
+<div class="column-group">
+<h4>Other <button class="group-toggle" onclick="toggleGroup('Other')">Toggle All</button></h4>
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="raw_line" data-group="Other" 
+                               onchange="toggleColumn('raw_line')">
+                        <span class="column-name">raw_line</span>
+                        <span class="column-type">(text)</span>
+                    </label>
+                
+
+                    <label class="column-checkbox">
+                        <input type="checkbox"  data-column="source_file" data-group="Other" 
+                               onchange="toggleColumn('source_file')">
+                        <span class="column-name">source_file</span>
+                        <span class="column-type">(text)</span>
+                    </label>
+                
+</div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>Column Filters</h3>
+                <div class="filter-controls">
+                    
+                    <div class="filter-control" data-column="command_str_logs" style="display: none;">
+                        <label>command_str_logs (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="command_str_logs">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="level_logs" style="display: none;">
+                        <label>level_logs (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="level_logs">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="line_number" style="display: none;">
+                        <label>line_number (number)</label>
+                        <input type="number" placeholder="Min" onchange="applyFilters()" data-filter-type="min" data-filter-column="line_number">
+                        <input type="number" placeholder="Max" onchange="applyFilters()" data-filter-type="max" data-filter-column="line_number">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="original_message" style="display: none;">
+                        <label>original_message (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="original_message">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="raw_line" style="display: none;">
+                        <label>raw_line (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="raw_line">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status" style="display: none;">
+                        <label>response_status (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="response_status">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_success_logs" style="display: none;">
+                        <label>response_success_logs (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="response_success_logs">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="source_file" style="display: none;">
+                        <label>source_file (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="source_file">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="timestamp_logs" style="display: none;">
+                        <label>timestamp_logs (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="timestamp_logs">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="timestamp_results" style="display: none;">
+                        <label>timestamp_results (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="timestamp_results">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="level_results" style="display: none;">
+                        <label>level_results (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="level_results">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="command_str_results" style="display: none;">
+                        <label>command_str_results (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="command_str_results">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_1_current_limit" style="display: none;">
+                        <label>response_status_channels_1_current_limit (number)</label>
+                        <input type="number" placeholder="Min" onchange="applyFilters()" data-filter-type="min" data-filter-column="response_status_channels_1_current_limit">
+                        <input type="number" placeholder="Max" onchange="applyFilters()" data-filter-type="max" data-filter-column="response_status_channels_1_current_limit">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_1_current_measured" style="display: none;">
+                        <label>response_status_channels_1_current_measured (number)</label>
+                        <input type="number" placeholder="Min" onchange="applyFilters()" data-filter-type="min" data-filter-column="response_status_channels_1_current_measured">
+                        <input type="number" placeholder="Max" onchange="applyFilters()" data-filter-type="max" data-filter-column="response_status_channels_1_current_measured">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_1_state" style="display: none;">
+                        <label>response_status_channels_1_state (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="response_status_channels_1_state">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_1_voltage_set" style="display: none;">
+                        <label>response_status_channels_1_voltage_set (number)</label>
+                        <input type="number" placeholder="Min" onchange="applyFilters()" data-filter-type="min" data-filter-column="response_status_channels_1_voltage_set">
+                        <input type="number" placeholder="Max" onchange="applyFilters()" data-filter-type="max" data-filter-column="response_status_channels_1_voltage_set">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_2_current_limit" style="display: none;">
+                        <label>response_status_channels_2_current_limit (number)</label>
+                        <input type="number" placeholder="Min" onchange="applyFilters()" data-filter-type="min" data-filter-column="response_status_channels_2_current_limit">
+                        <input type="number" placeholder="Max" onchange="applyFilters()" data-filter-type="max" data-filter-column="response_status_channels_2_current_limit">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_2_current_measured" style="display: none;">
+                        <label>response_status_channels_2_current_measured (number)</label>
+                        <input type="number" placeholder="Min" onchange="applyFilters()" data-filter-type="min" data-filter-column="response_status_channels_2_current_measured">
+                        <input type="number" placeholder="Max" onchange="applyFilters()" data-filter-type="max" data-filter-column="response_status_channels_2_current_measured">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_2_state" style="display: none;">
+                        <label>response_status_channels_2_state (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="response_status_channels_2_state">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_2_voltage_set" style="display: none;">
+                        <label>response_status_channels_2_voltage_set (number)</label>
+                        <input type="number" placeholder="Min" onchange="applyFilters()" data-filter-type="min" data-filter-column="response_status_channels_2_voltage_set">
+                        <input type="number" placeholder="Max" onchange="applyFilters()" data-filter-type="max" data-filter-column="response_status_channels_2_voltage_set">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_3_current_limit" style="display: none;">
+                        <label>response_status_channels_3_current_limit (number)</label>
+                        <input type="number" placeholder="Min" onchange="applyFilters()" data-filter-type="min" data-filter-column="response_status_channels_3_current_limit">
+                        <input type="number" placeholder="Max" onchange="applyFilters()" data-filter-type="max" data-filter-column="response_status_channels_3_current_limit">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_3_current_measured" style="display: none;">
+                        <label>response_status_channels_3_current_measured (number)</label>
+                        <input type="number" placeholder="Min" onchange="applyFilters()" data-filter-type="min" data-filter-column="response_status_channels_3_current_measured">
+                        <input type="number" placeholder="Max" onchange="applyFilters()" data-filter-type="max" data-filter-column="response_status_channels_3_current_measured">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_3_state" style="display: none;">
+                        <label>response_status_channels_3_state (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="response_status_channels_3_state">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_channels_3_voltage_set" style="display: none;">
+                        <label>response_status_channels_3_voltage_set (number)</label>
+                        <input type="number" placeholder="Min" onchange="applyFilters()" data-filter-type="min" data-filter-column="response_status_channels_3_voltage_set">
+                        <input type="number" placeholder="Max" onchange="applyFilters()" data-filter-type="max" data-filter-column="response_status_channels_3_voltage_set">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_status_parallel_mode" style="display: none;">
+                        <label>response_status_parallel_mode (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="response_status_parallel_mode">
+                    </div>
+                
+
+                    <div class="filter-control" data-column="response_success_results" style="display: none;">
+                        <label>response_success_results (text)</label>
+                        <input type="text" placeholder="Filter..." onchange="applyFilters()" data-filter-column="response_success_results">
+                    </div>
+                
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <span id="row-count">Loading...</span> | 
+            <span id="result-count">Results: 0</span> | 
+            <span id="log-count">Logs: 0</span>
+        </div>
+        
+        <div class="table-container">
+            <table id="data-table">
+                <thead id="table-header">
+                    <!-- Headers will be generated by JavaScript -->
+                </thead>
+                <tbody id="table-body">
+                    <!-- Data will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Modal for expanded content -->
+    <div id="contentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Content Detail</h3>
+            <pre id="modal-content"></pre>
+        </div>
+    </div>
+    
+    <script>
+        // Data and state
+        const data = [
+  {
+    "_row_class": "log-row",
+    "_is_result": false,
+    "command_str_logs": "get_status()",
+    "level_logs": "INFO",
+    "line_number": "1",
+    "original_message": "{'command_str': 'get_status()', 'response': {'success': True, 'status': {'parallel_mode': False, 'channels': {1: {'voltage_set': 12.0, 'current_limit': 2.0, 'current_measured': 1.5, 'state': True}, 2: {'voltage_set': 5.0, 'current_limit': 1.0, 'current_measured': 0.8, 'state': True}, 3: {'voltage_set': 3.3, 'current_limit': 1.5, 'current_measured': 1.2, 'state': False}}}}}",
+    "raw_line": "2025-09-26 17:01:59,358 - INFO - {'command_str': 'get_status()', 'response': {'success': True, 'status': {'parallel_mode': False, 'channels': {1: {'voltage_set': 12.0, 'current_limit': 2.0, 'current_measured': 1.5, 'state': True}, 2: {'voltage_set': 5.0, 'current_limit': 1.0, 'current_measured': 0.8, 'state': True}, 3: {'voltage_set': 3.3, 'current_limit': 1.5, 'current_measured': 1.2, 'state': False}}}}}",
+    "response_status": "{'parallel_mode': False, 'channels': {1: {'voltage_set': 12.0, 'current_limit': 2.0, 'current_measured': 1.5, 'state': True}, 2: {'voltage_set': 5.0, 'current_limit': 1.0, 'current_measured': 0.8, 'state': True}, 3: {'voltage_set': 3.3, 'current_limit': 1.5, 'current_measured': 1.2, 'state': False}}}",
+    "response_success_logs": "True",
+    "source_file": "output\\v1_1_tests_fwd_260925_170156\\test_gp4323__test_gp4323_channel1_status_read\\test_gp4323_channel1_status_read.log",
+    "timestamp_logs": "2025:09:26 17:01:59.358",
+    "timestamp_results": "2025:09:26 17:01:59.358",
+    "level_results": "INFO",
+    "command_str_results": "get_status()",
+    "response_status_channels_1_current_limit": "2.0",
+    "response_status_channels_1_current_measured": "1.5",
+    "response_status_channels_1_state": "True",
+    "response_status_channels_1_voltage_set": "12.0",
+    "response_status_channels_2_current_limit": "1.0",
+    "response_status_channels_2_current_measured": "0.8",
+    "response_status_channels_2_state": "True",
+    "response_status_channels_2_voltage_set": "5.0",
+    "response_status_channels_3_current_limit": "1.5",
+    "response_status_channels_3_current_measured": "1.2",
+    "response_status_channels_3_state": "False",
+    "response_status_channels_3_voltage_set": "3.3",
+    "response_status_parallel_mode": "False",
+    "response_success_results": "True"
+  }
+];
+        const columns = ["command_str_logs", "level_logs", "line_number", "original_message", "raw_line", "response_status", "response_success_logs", "source_file", "timestamp_logs", "timestamp_results", "level_results", "command_str_results", "response_status_channels_1_current_limit", "response_status_channels_1_current_measured", "response_status_channels_1_state", "response_status_channels_1_voltage_set", "response_status_channels_2_current_limit", "response_status_channels_2_current_measured", "response_status_channels_2_state", "response_status_channels_2_voltage_set", "response_status_channels_3_current_limit", "response_status_channels_3_current_measured", "response_status_channels_3_state", "response_status_channels_3_voltage_set", "response_status_parallel_mode", "response_success_results"];
+        const columnTypes = {"command_str_logs": "text", "level_logs": "text", "line_number": "number", "original_message": "text", "raw_line": "text", "response_status": "text", "response_success_logs": "boolean", "source_file": "text", "timestamp_logs": "timestamp", "timestamp_results": "timestamp", "level_results": "text", "command_str_results": "text", "response_status_channels_1_current_limit": "number", "response_status_channels_1_current_measured": "number", "response_status_channels_1_state": "boolean", "response_status_channels_1_voltage_set": "number", "response_status_channels_2_current_limit": "number", "response_status_channels_2_current_measured": "number", "response_status_channels_2_state": "boolean", "response_status_channels_2_voltage_set": "number", "response_status_channels_3_current_limit": "number", "response_status_channels_3_current_measured": "number", "response_status_channels_3_state": "boolean", "response_status_channels_3_voltage_set": "number", "response_status_parallel_mode": "boolean", "response_success_results": "boolean"};
+        
+        let filteredData = [...data];
+        let visibleColumns = new Set(['Pass', 'timestamp', 'message', 'command_method']);
+        let sortColumn = null;
+        let sortDirection = 'asc';
+        let filters = {};
+        
+        // Format timestamp from "2025-09-26 17:01:59,358" to "2025:09:26 17:01:59.358"
+        function formatTimestamp(timestampStr) {
+            if (!timestampStr || timestampStr.trim() === '') {
+                return '';
+            }
+            
+            try {
+                // Handle the format: "2025-09-26 17:01:59,358"
+                let formattedStr = timestampStr.replace(',', '.');
+                
+                // Parse and reformat
+                const date = new Date(formattedStr);
+                if (isNaN(date.getTime())) {
+                    return timestampStr; // Return original if parsing fails
+                }
+                
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                const ms = String(date.getMilliseconds()).padStart(3, '0');
+                
+                return `${year}:${month}:${day} ${hours}:${minutes}:${seconds}.${ms}`;
+                
+            } catch (e) {
+                return timestampStr; // Return original if error
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTable();
+            populateFilterOptions();
+            updateDisplay();
+        });
+        
+        function initializeTable() {
+            updateTableHeaders();
+        }
+        
+        function updateTableHeaders() {
+            const headerRow = document.getElementById('table-header');
+            headerRow.innerHTML = '';
+            
+            columns.forEach(col => {
+                if (visibleColumns.has(col)) {
+                    const th = document.createElement('th');
+                    th.className = 'sortable';
+                    th.onclick = () => sortBy(col);
+                    
+                    const sortIndicator = sortColumn === col ? 
+                        (sortDirection === 'asc' ? '↑' : '↓') : '↕';
+                    
+                    th.innerHTML = `${col} <span class="sort-indicator">${sortIndicator}</span>`;
+                    headerRow.appendChild(th);
+                }
+            });
+        }
+        
+        function updateTableBody() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            
+            filteredData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = row._row_class || '';
+                
+                columns.forEach(col => {
+                    if (visibleColumns.has(col)) {
+                        const td = document.createElement('td');
+                        let value = row[col];
+                        
+                        if (value !== null && value !== undefined) {
+                            let valueStr = String(value);
+                            
+                            // Format timestamp columns
+                            if (columnTypes[col] === 'timestamp') {
+                                const formatted = formatTimestamp(valueStr);
+                                if (formatted !== valueStr) {
+                                    valueStr = formatted;
+                                }
+                            }
+                            
+                            if (valueStr.length > 200) {
+                                td.innerHTML = `<span class="cell-content expandable" onclick="showModal('${col}', this)" data-full="${valueStr}">${valueStr.substring(0, 197)}...</span>`;
+                            } else {
+                                td.textContent = valueStr;
+                            }
+                        } else {
+                            td.textContent = '';
+                        }
+                        
+                        tr.appendChild(td);
+                    }
+                });
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function updateDisplay() {
+            updateTableHeaders();
+            updateTableBody();
+            updateStats();
+            updateFilterVisibility();
+        }
+        
+        function updateStats() {
+            const totalRows = filteredData.length;
+            const resultRows = filteredData.filter(row => row._is_result).length;
+            const logRows = totalRows - resultRows;
+            
+            document.getElementById('row-count').textContent = `Showing ${totalRows} of ${data.length} rows`;
+            document.getElementById('result-count').textContent = `Results: ${resultRows}`;
+            document.getElementById('log-count').textContent = `Logs: ${logRows}`;
+        }
+        
+        function updateFilterVisibility() {
+            document.querySelectorAll('.filter-control').forEach(control => {
+                const column = control.dataset.column;
+                control.style.display = visibleColumns.has(column) ? 'block' : 'none';
+            });
+        }
+        
+        function toggleColumn(column) {
+            if (visibleColumns.has(column)) {
+                visibleColumns.delete(column);
+            } else {
+                visibleColumns.add(column);
+            }
+            updateDisplay();
+        }
+        
+        function toggleGroup(groupName) {
+            const checkboxes = document.querySelectorAll(`input[data-group="${groupName}"]`);
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            
+            checkboxes.forEach(cb => {
+                cb.checked = !anyChecked;
+                const column = cb.dataset.column;
+                if (!anyChecked) {
+                    visibleColumns.add(column);
+                } else {
+                    visibleColumns.delete(column);
+                }
+            });
+            
+            updateDisplay();
+        }
+        
+        function sortBy(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+            
+            filteredData.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+                
+                // Handle null/undefined values
+                if (valA === null || valA === undefined) valA = '';
+                if (valB === null || valB === undefined) valB = '';
+                
+                // Try numeric comparison
+                const numA = parseFloat(valA);
+                const numB = parseFloat(valB);
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return sortDirection === 'asc' ? numA - numB : numB - numA;
+                }
+                
+                // String comparison
+                const strA = String(valA).toLowerCase();
+                const strB = String(valB).toLowerCase();
+                if (sortDirection === 'asc') {
+                    return strA < strB ? -1 : strA > strB ? 1 : 0;
+                } else {
+                    return strA > strB ? -1 : strA < strB ? 1 : 0;
+                }
+            });
+            
+            updateDisplay();
+        }
+        
+        function applyFilters() {
+            const globalSearch = document.querySelector('.global-search').value.toLowerCase();
+            
+            // Collect all filter values
+            filters = {};
+            document.querySelectorAll('[data-filter-column]').forEach(input => {
+                const column = input.dataset.filterColumn;
+                const filterType = input.dataset.filterType;
+                
+                if (input.tagName === 'SELECT') {
+                    const selected = Array.from(input.selectedOptions).map(opt => opt.value);
+                    if (selected.length > 0) {
+                        filters[column] = { type: 'select', values: selected };
+                    }
+                } else if (filterType === 'min' || filterType === 'max') {
+                    if (!filters[column]) filters[column] = { type: 'range' };
+                    if (input.value) {
+                        filters[column][filterType] = parseFloat(input.value);
+                    }
+                } else if (input.value) {
+                    filters[column] = { type: 'text', value: input.value.toLowerCase() };
+                }
+            });
+            
+            // Apply filters
+            filteredData = data.filter(row => {
+                // Global search
+                if (globalSearch) {
+                    const rowText = columns.map(col => String(row[col] || '')).join(' ').toLowerCase();
+                    if (!rowText.includes(globalSearch)) {
+                        return false;
+                    }
+                }
+                
+                // Column filters
+                for (const [column, filter] of Object.entries(filters)) {
+                    const value = row[column];
+                    
+                    if (filter.type === 'text') {
+                        if (!String(value || '').toLowerCase().includes(filter.value)) {
+                            return false;
+                        }
+                    } else if (filter.type === 'select') {
+                        if (!filter.values.includes(String(value || ''))) {
+                            return false;
+                        }
+                    } else if (filter.type === 'range') {
+                        const numValue = parseFloat(value);
+                        if (isNaN(numValue)) continue;
+                        
+                        if (filter.min !== undefined && numValue < filter.min) {
+                            return false;
+                        }
+                        if (filter.max !== undefined && numValue > filter.max) {
+                            return false;
+                        }
+                    }
+                }
+                
+                return true;
+            });
+            
+            updateDisplay();
+        }
+        
+        function clearAllFilters() {
+            document.querySelector('.global-search').value = '';
+            document.querySelectorAll('[data-filter-column]').forEach(input => {
+                if (input.tagName === 'SELECT') {
+                    input.selectedIndex = -1;
+                } else {
+                    input.value = '';
+                }
+            });
+            
+            filters = {};
+            filteredData = [...data];
+            updateDisplay();
+        }
+        
+        function populateFilterOptions() {
+            // Populate select options for category columns
+            columns.forEach(column => {
+                if (columnTypes[column] === 'category') {
+                    const select = document.querySelector(`select[data-filter-column="${column}"]`);
+                    if (select) {
+                        const uniqueValues = [...new Set(data.map(row => row[column]).filter(v => v !== null && v !== undefined))];
+                        uniqueValues.sort();
+                        
+                        uniqueValues.forEach(value => {
+                            const option = document.createElement('option');
+                            option.value = value;
+                            option.textContent = value;
+                            select.appendChild(option);
+                        });
+                    }
+                }
+            });
+        }
+        
+        function loadPreset(presetName) {
+            if (!presetName) return;
+            
+            const presets = {
+                'default': {
+                    columns: ['Pass', 'timestamp', 'message', 'command_method', 'level'],
+                    filters: {}
+                },
+                'results-only': {
+                    columns: ['Pass', 'timestamp', 'command_method', 'peak_amplitude', 'peak_frequency'],
+                    filters: { '_is_result': true }
+                },
+                'logs-only': {
+                    columns: ['timestamp', 'level', 'message', 'line_number'],
+                    filters: { '_is_result': false }
+                },
+                'errors-warnings': {
+                    columns: ['timestamp', 'level', 'message', 'line_number'],
+                    filters: { 'level': ['ERROR', 'WARNING'] }
+                }
+            };
+            
+            const preset = presets[presetName];
+            if (preset) {
+                // Set visible columns
+                visibleColumns.clear();
+                preset.columns.forEach(col => {
+                    if (columns.includes(col)) {
+                        visibleColumns.add(col);
+                    }
+                });
+                
+                // Update checkboxes
+                document.querySelectorAll('input[data-column]').forEach(cb => {
+                    cb.checked = visibleColumns.has(cb.dataset.column);
+                });
+                
+                // Apply preset filters
+                clearAllFilters();
+                if (preset.filters._is_result !== undefined) {
+                    filteredData = data.filter(row => row._is_result === preset.filters._is_result);
+                }
+                if (preset.filters.level) {
+                    const levelSelect = document.querySelector('select[data-filter-column="level"]');
+                    if (levelSelect) {
+                        preset.filters.level.forEach(level => {
+                            const option = levelSelect.querySelector(`option[value="${level}"]`);
+                            if (option) option.selected = true;
+                        });
+                    }
+                }
+                
+                updateDisplay();
+            }
+        }
+        
+        function savePreset() {
+            const presetName = prompt('Enter preset name:');
+            if (presetName) {
+                const preset = {
+                    columns: Array.from(visibleColumns),
+                    filters: filters
+                };
+                localStorage.setItem(`preset_${presetName}`, JSON.stringify(preset));
+                alert('Preset saved!');
+            }
+        }
+        
+        function showModal(column, element) {
+            const fullContent = element.dataset.full || element.textContent;
+            document.getElementById('modal-content').textContent = fullContent;
+            document.getElementById('contentModal').style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('contentModal').style.display = 'none';
+        }
+        
+        function exportData() {
+            const csvContent = [
+                columns.filter(col => visibleColumns.has(col)).join(','),
+                ...filteredData.map(row => 
+                    columns.filter(col => visibleColumns.has(col))
+                           .map(col => `"${String(row[col] || '').replace(/"/g, '""')}"`)
+                           .join(',')
+                )
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'filtered_data.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('contentModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
