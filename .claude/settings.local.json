@@ -6,7 +6,8 @@
       "Bash(mv:*)",
       "Bash(dir \"C:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\" /s)",
       "Bash(dir:*)",
-      "Bash(start \"C:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\\v1_1_tests_fwd_260925_170156\\test_v1_1_fwd__test_fwd_defaults\\test_fwd_defaults_combined_analyzer.html\")"
+      "Bash(start \"C:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\\v1_1_tests_fwd_260925_170156\\test_v1_1_fwd__test_fwd_defaults\\test_fwd_defaults_combined_analyzer.html\")",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

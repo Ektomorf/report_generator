@@ -112,6 +112,25 @@ echo.
 echo ✓ Step 5 Complete: Test failure information added to viewer and analyzer HTML files
 echo.
 
+REM Step 6: Generate test campaign browser index
+echo ========================================================================
+echo STEP 6: Generating test campaign browser index...
+echo ========================================================================
+echo Creating index.html for browsing test campaigns and failures...
+echo.
+
+python generate_index.py
+
+if %errorlevel% neq 0 (
+    echo ERROR: Index generation failed!
+    pause
+    exit /b %errorlevel%
+)
+
+echo.
+echo ✓ Step 6 Complete: Test campaign browser index.html generated in output/
+echo.
+
 REM Calculate processing time
 set end_time=%time%
 echo ========================================================================
@@ -127,6 +146,7 @@ echo • *_combined.csv     - Results and logs combined by timestamp
 echo • *_analyzer.html    - Interactive HTML analyzers with Unix timestamp conversion
 echo • *_viewer.html      - Enhanced viewer files with test failure information
 echo • *_analyzer.html    - Enhanced analyzer files with test failure information
+echo • index.html         - Test campaign browser for navigating all test results
 echo.
 echo Features of HTML analyzers:
 echo • Column visibility controls and grouping
@@ -145,11 +165,12 @@ echo • Professional styling with red background for failed tests
 echo • Complete failure traces and error messages
 echo.
 echo You can now:
-echo 1. Open any *_analyzer.html file in your web browser
-echo 2. Use the interactive controls to analyze your test data
-echo 3. Create custom presets for different analysis workflows
-echo 4. Export filtered data as CSV for further analysis
-echo 5. View test failure details directly in *_viewer.html and *_analyzer.html files
+echo 1. Open output/index.html to browse all test campaigns and results
+echo 2. Open any *_analyzer.html file in your web browser
+echo 3. Use the interactive controls to analyze your test data
+echo 4. Create custom presets for different analysis workflows
+echo 5. Export filtered data as CSV for further analysis
+echo 6. View test failure details directly in *_viewer.html and *_analyzer.html files
 echo.
 echo Happy analyzing! 🚀
 echo ========================================================================
