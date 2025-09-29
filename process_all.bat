@@ -6,10 +6,11 @@ echo ========================================================================
 echo This will process all test data in the following order:
 echo 1. Convert log files to CSV format (flattening JSON data)
 echo 2. Extract .tar archives in test campaign folders
-echo 3. Convert JSON result files to CSV format  
-echo 4. Combine results and logs CSV files by timestamp
-echo 5. Generate interactive HTML analyzers for each combined CSV
-echo 6. Add test failure information to viewer and analyzer HTML files
+echo 3. Convert journalctl.log files to CSV format (parsed system logs)
+echo 4. Convert JSON result files to CSV format  
+echo 5. Combine results and logs CSV files by timestamp
+echo 6. Generate interactive HTML analyzers for each combined CSV
+echo 7. Add test failure information to viewer and analyzer HTML files
 echo ========================================================================
 echo.
 
@@ -56,6 +57,25 @@ for /r "output\" %%f in (*.tar) do (
 )
 
 echo ✓ Step 1.5 Complete: All .tar archives extracted
+echo.
+
+REM Step 1.75: Convert journalctl logs to CSV
+echo ========================================================================
+echo STEP 1.75: Converting journalctl.log files to CSV format...
+echo ========================================================================
+echo Converting journalctl.log files to CSV format with parsed timestamp, hostname, program, and message...
+echo.
+
+python process_journalctl_logs.py output/ --batch --verbose
+
+if !errorlevel! neq 0 (
+    echo ERROR: Journalctl log processing failed!
+    pause
+    exit /b !errorlevel!
+)
+
+echo.
+echo ✓ Step 1.75 Complete: All journalctl.log files converted to CSV format
 echo.
 
 REM Step 2: Convert results to CSV
@@ -164,9 +184,10 @@ echo Started at:  %start_time%
 echo Completed at: %end_time%
 echo.
 echo Summary of generated files:
-echo • Extracted archives - .tar files extracted to their respective folders
-echo • *_logs.csv         - Log files converted to CSV with flattened JSON
-echo • *_results.csv      - JSON results converted to CSV
+echo • Extracted archives    - .tar files extracted to their respective folders
+echo • *_journalctl.csv      - System logs converted to CSV with parsed timestamp, hostname, program, PID, message
+echo • *_logs.csv            - Log files converted to CSV with flattened JSON
+echo • *_results.csv         - JSON results converted to CSV
 echo • *_combined.csv     - Results and logs combined by timestamp
 echo • *_analyzer.html    - Interactive HTML analyzers with Unix timestamp conversion
 echo • *_viewer.html      - Enhanced viewer files with test failure information
