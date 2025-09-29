@@ -317,7 +317,11 @@ Examples:
             output_file = Path(args.output)
         else:
             # Create CSV file in the same directory as the log file
-            output_file = log_file.parent / f"{log_file.stem}_journalctl.csv"
+            # For journalctl.log, create journalctl_logs.csv instead of journalctl_journalctl.csv
+            if log_file.stem == "journalctl":
+                output_file = log_file.parent / "journalctl_logs.csv"
+            else:
+                output_file = log_file.parent / f"{log_file.stem}_journalctl.csv"
         
         # Convert the file
         success, errors, total = convert_journalctl_to_csv(log_file, output_file)

@@ -20,114 +20,172 @@ def setup_logging(verbose=False):
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
-def find_csv_pairs(root_dir, pattern="**/*"):
+def find_csv_sets(root_dir, pattern="**/*"):
     """
-    Find pairs of _results.csv and _logs.csv files.
+    Find sets of _results.csv, _logs.csv, and journalctl_logs.csv files.
     
     Args:
         root_dir: Root directory to search in
         pattern: Glob pattern for searching
         
     Returns:
-        List of tuples (results_csv_path, logs_csv_path, base_name)
+        List of tuples (results_csv_path, logs_csv_path, journalctl_logs_path, base_name)
+        where any of the CSV paths can be None if the file doesn't exist
     """
-    pairs = []
+    sets = []
     results_pattern = os.path.join(root_dir, pattern + "_results.csv")
     results_files = glob.glob(results_pattern, recursive=True)
     
     for results_file in results_files:
-        # Derive the corresponding logs file path
+        # Derive the corresponding logs file paths
         base_name = results_file.replace("_results.csv", "")
         logs_file = base_name + "_logs.csv"
         
-        if os.path.exists(logs_file):
-            pairs.append((results_file, logs_file, base_name))
-            logging.info(f"Found pair: {os.path.basename(results_file)} + {os.path.basename(logs_file)}")
+        # Look for journalctl_logs.csv in the campaign directory (system_status folder)
+        results_dir = os.path.dirname(results_file)
+        # Go up to campaign level and look for system_status/journalctl_logs.csv
+        campaign_dir = os.path.dirname(results_dir)
+        journalctl_logs_file = os.path.join(campaign_dir, "system_status", "journalctl_logs.csv")
+        
+        # Check which files exist
+        logs_exists = os.path.exists(logs_file)
+        journalctl_exists = os.path.exists(journalctl_logs_file)
+        
+        if logs_exists or journalctl_exists:
+            file_list = []
+            if logs_exists:
+                file_list.append(f"{os.path.basename(logs_file)}")
+            if journalctl_exists:
+                file_list.append("journalctl_logs.csv")
+            
+            sets.append((
+                results_file,
+                logs_file if logs_exists else None,
+                journalctl_logs_file if journalctl_exists else None,
+                base_name
+            ))
+            logging.info(f"Found set: {os.path.basename(results_file)} + {' + '.join(file_list)}")
         else:
-            logging.warning(f"No corresponding logs file found for {results_file}")
+            logging.warning(f"No corresponding logs files found for {results_file}")
     
-    return pairs
+    return sets
 
-def combine_csv_files(results_csv, logs_csv, output_csv):
+def combine_csv_files(results_csv, logs_csv, journalctl_csv, output_csv):
     """
-    Combine results and logs CSV files using timestamp as index.
+    Combine results, logs, and journalctl CSV files using timestamp as index.
     
     Args:
         results_csv: Path to results CSV file
-        logs_csv: Path to logs CSV file
+        logs_csv: Path to logs CSV file (can be None)
+        journalctl_csv: Path to journalctl logs CSV file (can be None)
         output_csv: Path for output combined CSV file
         
     Returns:
         bool: True if successful, False otherwise
     """
     try:
-        # Read CSV files
+        dataframes = []
+        
+        # Read results CSV (required)
         logging.debug(f"Reading results CSV: {results_csv}")
         results_df = pd.read_csv(results_csv)
         
-        logging.debug(f"Reading logs CSV: {logs_csv}")
-        logs_df = pd.read_csv(logs_csv)
-        
-        # Check if timestamp columns exist
         if 'timestamp' not in results_df.columns:
             logging.error(f"No 'timestamp' column found in results CSV: {results_csv}")
             return False
             
-        if 'timestamp' not in logs_df.columns:
-            logging.error(f"No 'timestamp' column found in logs CSV: {logs_csv}")
-            return False
-        
-        # Remove rows where timestamp is NaN or empty
         results_df = results_df.dropna(subset=['timestamp'])
-        logs_df = logs_df.dropna(subset=['timestamp'])
-        
         if results_df.empty:
             logging.warning(f"No valid timestamp data in results CSV: {results_csv}")
             return False
-            
-        if logs_df.empty:
-            logging.warning(f"No valid timestamp data in logs CSV: {logs_csv}")
-            return False
         
-        # Convert timestamp to numeric if it's not already
+        # Convert timestamp to numeric
         try:
             results_df['timestamp'] = pd.to_numeric(results_df['timestamp'], errors='coerce')
-            logs_df['timestamp'] = pd.to_numeric(logs_df['timestamp'], errors='coerce')
+            results_df = results_df.dropna(subset=['timestamp'])
         except Exception as e:
-            logging.error(f"Error converting timestamps to numeric: {e}")
+            logging.error(f"Error converting timestamps to numeric in results: {e}")
             return False
         
-        # Remove rows where timestamp conversion failed
-        results_df = results_df.dropna(subset=['timestamp'])
-        logs_df = logs_df.dropna(subset=['timestamp'])
-        
+        dataframes.append(('results', results_df))
         logging.info(f"Results data: {len(results_df)} rows with valid timestamps")
-        logging.info(f"Logs data: {len(logs_df)} rows with valid timestamps")
         
-        # Handle column name conflicts by adding suffixes first
-        common_columns = set(results_df.columns).intersection(set(logs_df.columns))
-        common_columns.discard('timestamp')  # Don't suffix the timestamp column
+        # Read logs CSV (optional)
+        if logs_csv and os.path.exists(logs_csv):
+            logging.debug(f"Reading logs CSV: {logs_csv}")
+            logs_df = pd.read_csv(logs_csv)
+            
+            if 'timestamp' in logs_df.columns:
+                logs_df = logs_df.dropna(subset=['timestamp'])
+                if not logs_df.empty:
+                    try:
+                        logs_df['timestamp'] = pd.to_numeric(logs_df['timestamp'], errors='coerce')
+                        logs_df = logs_df.dropna(subset=['timestamp'])
+                        dataframes.append(('logs', logs_df))
+                        logging.info(f"Logs data: {len(logs_df)} rows with valid timestamps")
+                    except Exception as e:
+                        logging.error(f"Error converting timestamps to numeric in logs: {e}")
+            else:
+                logging.warning(f"No 'timestamp' column found in logs CSV: {logs_csv}")
+        
+        # Read journalctl CSV (optional)  
+        if journalctl_csv and os.path.exists(journalctl_csv):
+            logging.debug(f"Reading journalctl CSV: {journalctl_csv}")
+            journalctl_df = pd.read_csv(journalctl_csv)
+            
+            if 'timestamp' in journalctl_df.columns:
+                journalctl_df = journalctl_df.dropna(subset=['timestamp'])
+                if not journalctl_df.empty:
+                    try:
+                        journalctl_df['timestamp'] = pd.to_numeric(journalctl_df['timestamp'], errors='coerce')
+                        journalctl_df = journalctl_df.dropna(subset=['timestamp'])
+                        dataframes.append(('journalctl', journalctl_df))
+                        logging.info(f"Journalctl data: {len(journalctl_df)} rows with valid timestamps")
+                    except Exception as e:
+                        logging.error(f"Error converting timestamps to numeric in journalctl: {e}")
+            else:
+                logging.warning(f"No 'timestamp' column found in journalctl CSV: {journalctl_csv}")
+        
+        if len(dataframes) == 0:
+            logging.error("No valid dataframes to combine")
+            return False
+        
+        # Handle column name conflicts by adding suffixes
+        all_columns = set()
+        for _, df in dataframes:
+            all_columns.update(df.columns)
+        all_columns.discard('timestamp')
+        
+        # Find common columns across dataframes
+        common_columns = set(dataframes[0][1].columns)
+        for _, df in dataframes[1:]:
+            common_columns = common_columns.intersection(set(df.columns))
+        common_columns.discard('timestamp')
         
         if common_columns:
             logging.info(f"Found {len(common_columns)} common columns: {list(common_columns)[:5]}...")
+        
+        # Rename columns to avoid conflicts and set index
+        processed_dfs = []
+        for suffix, df in dataframes:
+            df_copy = df.copy()
             
-            # Rename common columns to avoid conflicts
+            # Rename common columns (except timestamp)
             for col in common_columns:
-                results_df.rename(columns={col: f"{col}_results"}, inplace=True)
-                logs_df.rename(columns={col: f"{col}_logs"}, inplace=True)
+                if col in df_copy.columns:
+                    df_copy.rename(columns={col: f"{col}_{suffix}"}, inplace=True)
+            
+            df_copy.set_index('timestamp', inplace=True)
+            processed_dfs.append(df_copy)
         
-        # Set timestamp as index for both dataframes to handle duplicates properly
-        results_df.set_index('timestamp', inplace=True)
-        logs_df.set_index('timestamp', inplace=True)
-        
-        # Use outer join to preserve ALL rows from both dataframes
-        logging.info("Merging dataframes using outer join to preserve all rows...")
-        combined_df = pd.concat([results_df, logs_df], axis=0, join='outer', sort=True)
+        # Combine all dataframes
+        logging.info(f"Merging {len(processed_dfs)} dataframes using outer join to preserve all rows...")
+        combined_df = pd.concat(processed_dfs, axis=0, join='outer', sort=True)
         
         # Reset index to make timestamp a column again
         combined_df.reset_index(inplace=True)
         
-        # Sort by timestamp (already sorted but ensure it)
+        # Sort by timestamp
         combined_df.sort_values('timestamp', inplace=True)
         
         logging.info(f"Combined data: {len(combined_df)} rows")
@@ -186,19 +244,19 @@ Examples:
         logging.error(f"Input directory does not exist: {args.input_directory}")
         return 1
     
-    # Find CSV pairs
-    logging.info(f"Searching for CSV pairs in: {args.input_directory}")
-    pairs = find_csv_pairs(args.input_directory, args.pattern)
+    # Find CSV sets
+    logging.info(f"Searching for CSV sets in: {args.input_directory}")
+    sets = find_csv_sets(args.input_directory, args.pattern)
     
-    if not pairs:
-        logging.warning("No CSV pairs found!")
+    if not sets:
+        logging.warning("No CSV sets found!")
         return 0
     
-    logging.info(f"Found {len(pairs)} CSV pairs to process")
+    logging.info(f"Found {len(sets)} CSV sets to process")
     
-    # Process each pair
+    # Process each set
     success_count = 0
-    for results_csv, logs_csv, base_name in pairs:
+    for results_csv, logs_csv, journalctl_csv, base_name in sets:
         logging.info(f"Processing: {os.path.basename(base_name)}")
         
         # Determine output path
@@ -211,16 +269,16 @@ Examples:
             output_csv = base_name + "_combined.csv"
         
         # Combine the files
-        if combine_csv_files(results_csv, logs_csv, output_csv):
+        if combine_csv_files(results_csv, logs_csv, journalctl_csv, output_csv):
             success_count += 1
         else:
-            logging.error(f"Failed to process pair: {base_name}")
+            logging.error(f"Failed to process set: {base_name}")
     
-    logging.info(f"Successfully processed {success_count}/{len(pairs)} CSV pairs")
+    logging.info(f"Successfully processed {success_count}/{len(sets)} CSV sets")
     
     if success_count > 0:
         logging.info("Combined CSV files have been created with _combined.csv suffix")
-        logging.info("The files include all columns from both results and logs CSVs, indexed by timestamp")
+        logging.info("The files include all columns from results, logs, and journalctl CSVs, indexed by timestamp")
     
     return 0 if success_count > 0 else 1
 

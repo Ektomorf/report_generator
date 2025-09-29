@@ -101,7 +101,7 @@ REM Step 3: Combine CSV files
 echo ========================================================================
 echo STEP 3: Combining CSV files from results and logs...
 echo ========================================================================
-echo Combining CSV files based on timestamp...
+echo Combining CSV files based on timestamp (includes results, logs, and journalctl system logs)...
 echo.
 
 python combine_csv_files.py output/ --verbose
@@ -113,7 +113,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo ✓ Step 3 Complete: Combined CSV files created with _combined.csv suffix
+echo ✓ Step 3 Complete: Combined CSV files created with _combined.csv suffix (includes journalctl system logs)
 echo.
 
 REM Step 4: Generate HTML analyzers
@@ -185,10 +185,10 @@ echo Completed at: %end_time%
 echo.
 echo Summary of generated files:
 echo • Extracted archives    - .tar files extracted to their respective folders
-echo • *_journalctl.csv      - System logs converted to CSV with parsed timestamp, hostname, program, PID, message
+echo • journalctl_logs.csv   - System logs converted to CSV with Unix ms timestamp, hostname, program, PID, message
 echo • *_logs.csv            - Log files converted to CSV with flattened JSON
 echo • *_results.csv         - JSON results converted to CSV
-echo • *_combined.csv     - Results and logs combined by timestamp
+echo • *_combined.csv        - Results, logs, and journalctl system logs combined by timestamp
 echo • *_analyzer.html    - Interactive HTML analyzers with Unix timestamp conversion
 echo • *_viewer.html      - Enhanced viewer files with test failure information
 echo • *_analyzer.html    - Enhanced analyzer files with test failure information
