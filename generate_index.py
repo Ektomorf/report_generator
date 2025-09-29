@@ -7,6 +7,22 @@ import os
 import re
 import json
 from pathlib import Path
+from datetime import datetime
+
+def get_test_start_time(output_dir, campaign, test_path, test_name):
+    """Extract start time from test status JSON file"""
+    try:
+        status_file = output_dir / campaign / test_path / f'{test_name}_status.json'
+        if status_file.exists():
+            with open(status_file, 'r', encoding='utf-8') as f:
+                status_data = json.load(f)
+                start_time_str = status_data.get('start_time', '')
+                if start_time_str:
+                    # Parse ISO 8601 timestamp
+                    return datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
+    except Exception as e:
+        print(f'Warning: Could not extract start time for {test_name}: {e}')
+    return None
 
 def extract_campaign_info():
     output_dir = Path('output')
@@ -61,11 +77,18 @@ def extract_campaign_info():
                         analyzer_path = test_dir / analyzer_file
                         
                         if analyzer_path.exists():
+                            # Get test start time for chronological ordering
+                            start_time = get_test_start_time(output_dir, campaign, test_dir.name, test_name)
+                            start_time_str = start_time.strftime('%H:%M:%S') if start_time else 'Unknown'
+                            start_timestamp = start_time.timestamp() if start_time else float('inf')
+                            
                             campaigns[campaign]['tests'].append({
                                 'name': test_name,
                                 'path': test_path,
                                 'file': analyzer_file,
-                                'status': test.get('outcome', 'unknown')
+                                'status': test.get('outcome', 'unknown'),
+                                'start_time': start_time_str,
+                                'start_timestamp': start_timestamp
                             })
         except Exception as e:
             print(f'Warning: Could not process {report_file}: {e}')
@@ -100,14 +123,26 @@ def extract_campaign_info():
             # Check if this test is already in the campaign
             existing_test = next((t for t in campaigns[campaign]['tests'] if t['name'] == test_name), None)
             if not existing_test:
+                # Get test start time for chronological ordering
+                start_time = get_test_start_time(output_dir, campaign, test_dir, test_name)
+                start_time_str = start_time.strftime('%H:%M:%S') if start_time else 'Unknown'
+                start_timestamp = start_time.timestamp() if start_time else float('inf')
+                
                 campaigns[campaign]['tests'].append({
                     'name': test_name,
                     'path': test_dir,
                     'file': file_name,
-                    'status': 'unknown'
+                    'status': 'unknown',
+                    'start_time': start_time_str,
+                    'start_timestamp': start_timestamp
                 })
 
-    return list(campaigns.values())
+    # Sort tests within each campaign chronologically
+    campaign_list = list(campaigns.values())
+    for campaign in campaign_list:
+        campaign['tests'].sort(key=lambda x: x['start_timestamp'])
+    
+    return campaign_list
 
 def generate_index_html():
     # Generate the index.html
@@ -153,8 +188,9 @@ def generate_index_html():
         .test-card.failed { border-left: 4px solid #dc3545; background: #fff5f5; }
         .test-card.passed { border-left: 4px solid #28a745; background: #f8fff8; }
         .test-card.unknown { border-left: 4px solid #ffc107; background: #fffdf5; }
-        .test-name { font-weight: bold; margin-bottom: 8px; color: #495057; }
-        .test-path { font-size: 0.85em; color: #6c757d; margin-bottom: 10px; font-family: monospace; }
+        .test-name { font-weight: bold; margin-bottom: 5px; color: #495057; }
+        .test-path { font-size: 0.85em; color: #6c757d; margin-bottom: 5px; font-family: monospace; }
+        .test-time { font-size: 0.9em; color: #28a745; margin-bottom: 10px; font-weight: bold; }
         .test-status {
             display: inline-block; padding: 4px 8px; border-radius: 4px;
             font-size: 0.8em; font-weight: bold; margin-bottom: 10px;
@@ -224,7 +260,7 @@ def generate_index_html():
                 campaignDiv.className = 'campaign-section';
                 const campaignHeader = document.createElement('div');
                 campaignHeader.className = 'campaign-header';
-                campaignHeader.innerHTML = `<div class="campaign-title">${campaign.campaign}</div><div class="campaign-date">Date: ${campaign.date}</div>`;
+                campaignHeader.innerHTML = `<div class="campaign-title">${campaign.campaign}</div><div class="campaign-date">Date: ${campaign.date} • Tests shown in chronological order</div>`;
                 const testsGrid = document.createElement('div');
                 testsGrid.className = 'tests-grid';
                 campaign.tests.forEach(test => {
@@ -234,7 +270,7 @@ def generate_index_html():
                     let statusClass = 'status-unknown', statusText = 'Unknown';
                     if (test.status === 'failed') { statusClass = 'status-failed'; statusText = 'FAILED'; failedTests++; }
                     else if (test.status === 'passed') { statusClass = 'status-passed'; statusText = 'PASSED'; passedTests++; }
-                    testCard.innerHTML = `<div class="test-name">${test.name}</div><div class="test-path">${test.path}</div><div class="test-status ${statusClass}">${statusText}</div><a href="${campaign.campaign}/${test.path}/${test.file}" class="test-link" target="_blank">View Analysis →</a>`;
+                    testCard.innerHTML = `<div class="test-name">${test.name}</div><div class="test-path">${test.path}</div><div class="test-time">⏱️ Started: ${test.start_time}</div><div class="test-status ${statusClass}">${statusText}</div><a href="${campaign.campaign}/${test.path}/${test.file}" class="test-link" target="_blank">View Analysis →</a>`;
                     testsGrid.appendChild(testCard);
                 });
                 campaignDiv.appendChild(campaignHeader);

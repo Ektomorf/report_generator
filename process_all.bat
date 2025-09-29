@@ -1,13 +1,15 @@
 @echo off
+setlocal enabledelayedexpansion
 echo ========================================================================
 echo                    COMPLETE TEST DATA PROCESSING PIPELINE
 echo ========================================================================
 echo This will process all test data in the following order:
 echo 1. Convert log files to CSV format (flattening JSON data)
-echo 2. Convert JSON result files to CSV format  
-echo 3. Combine results and logs CSV files by timestamp
-echo 4. Generate interactive HTML analyzers for each combined CSV
-echo 5. Add test failure information to viewer and analyzer HTML files
+echo 2. Extract .tar archives in test campaign folders
+echo 3. Convert JSON result files to CSV format  
+echo 4. Combine results and logs CSV files by timestamp
+echo 5. Generate interactive HTML analyzers for each combined CSV
+echo 6. Add test failure information to viewer and analyzer HTML files
 echo ========================================================================
 echo.
 
@@ -32,6 +34,28 @@ if %errorlevel% neq 0 (
 
 echo.
 echo ✓ Step 1 Complete: CSV files with flattened JSON data created with _logs.csv suffix
+echo.
+
+REM Step 1.5: Extract tar files in test campaign folders
+echo ========================================================================
+echo STEP 1.5: Extracting .tar archives in test campaign folders...
+echo ========================================================================
+echo Searching for and extracting .tar files...
+echo.
+
+for /r "output\" %%f in (*.tar) do (
+    echo Found archive: %%f
+    echo Extracting to: %%~dpf
+    powershell -Command "tar -xf '%%f' -C '%%~dpf'"
+    if !errorlevel! equ 0 (
+        echo ✓ Successfully extracted: %%~nxf
+    ) else (
+        echo ✗ Failed to extract: %%~nxf
+    )
+    echo.
+)
+
+echo ✓ Step 1.5 Complete: All .tar archives extracted
 echo.
 
 REM Step 2: Convert results to CSV
@@ -140,6 +164,7 @@ echo Started at:  %start_time%
 echo Completed at: %end_time%
 echo.
 echo Summary of generated files:
+echo • Extracted archives - .tar files extracted to their respective folders
 echo • *_logs.csv         - Log files converted to CSV with flattened JSON
 echo • *_results.csv      - JSON results converted to CSV
 echo • *_combined.csv     - Results and logs combined by timestamp
