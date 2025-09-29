@@ -160,12 +160,76 @@ def convert_timestamp_to_unix_ms(timestamp_str):
     logging.warning(f"Failed to parse timestamp: {timestamp_str}")
     return None
 
-def process_log_csv(input_file_path, output_file_path=None):
+def parse_plain_text_log_line(line):
     """
-    Process a log CSV file and flatten JSON in the message column.
+    Parse a plain text log line in format: TIMESTAMP - LEVEL - JSON_DATA
 
     Args:
-        input_file_path: Path to input CSV file
+        line: Log line string
+
+    Returns:
+        dict: Parsed log entry with timestamp, level, and message
+    """
+    import re
+
+    # Pattern to match: TIMESTAMP - LEVEL - MESSAGE
+    # Example: 2025-09-26 19:00:16,116 - INFO - {'log_type': 'RFMatrixCommand', ...}
+    pattern = r'^(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2},\d{3})\s*-\s*(\w+)\s*-\s*(.+)$'
+
+    match = re.match(pattern, line.strip())
+    if match:
+        timestamp_str, level, message = match.groups()
+        return {
+            'timestamp': timestamp_str,
+            'level': level,
+            'message': message.strip()
+        }
+
+    # If pattern doesn't match, return the line as a message
+    return {
+        'timestamp': '',
+        'level': '',
+        'message': line.strip()
+    }
+
+def is_plain_text_log_file(file_path):
+    """
+    Determine if a file is a plain text log file or CSV file.
+
+    Args:
+        file_path: Path to the file
+
+    Returns:
+        bool: True if it's a plain text log file, False if CSV
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            first_line = f.readline().strip()
+
+            # Check if first line looks like a plain text log entry
+            # Format: TIMESTAMP - LEVEL - MESSAGE
+            import re
+            log_pattern = r'^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2},\d{3}\s*-\s*\w+\s*-\s*.+'
+
+            if re.match(log_pattern, first_line):
+                return True
+
+            # Check if it looks like CSV (has comma-separated headers)
+            if ',' in first_line and not first_line.startswith('{'):
+                return False
+
+            # Default to plain text log if uncertain
+            return True
+
+    except Exception:
+        return True
+
+def process_log_csv(input_file_path, output_file_path=None):
+    """
+    Process a log file (either plain text or CSV) and flatten JSON data.
+
+    Args:
+        input_file_path: Path to input log file
         output_file_path: Path to output CSV file (optional)
     """
     if output_file_path is None:
@@ -176,77 +240,158 @@ def process_log_csv(input_file_path, output_file_path=None):
     logging.info(f"Processing {input_file_path} -> {output_file_path}")
 
     try:
-        # Read the input CSV
+        # Determine if input is plain text log or CSV
+        is_plain_text = is_plain_text_log_file(input_file_path)
+
         rows = []
         fieldnames = set()
 
-        with open(input_file_path, 'r', encoding='utf-8', newline='') as infile:
-            reader = csv.DictReader(infile)
-            original_fieldnames = reader.fieldnames or []
+        if is_plain_text:
+            # Process plain text log file
+            logging.debug(f"Processing as plain text log file")
 
-            for row in reader:
-                new_row = {}
+            with open(input_file_path, 'r', encoding='utf-8') as infile:
+                for line_num, line in enumerate(infile, 1):
+                    if not line.strip():
+                        continue
 
-                # Copy all original columns except message, raw_line, and source_file
-                for field in original_fieldnames:
-                    if field not in ['message', 'raw_line', 'source_file']:
-                        original_value = row.get(field, '')
-                        
-                        # Convert timestamp columns to Unix milliseconds directly
-                        if field.lower() in ['timestamp', 'time']:
-                            unix_ms = convert_timestamp_to_unix_ms(original_value)
-                            if unix_ms is not None:
-                                new_row[field] = unix_ms
-                            else:
-                                new_row[field] = original_value
+                    # Parse the plain text log line
+                    parsed_line = parse_plain_text_log_line(line)
+
+                    new_row = {}
+
+                    # Add basic fields
+                    timestamp_str = parsed_line.get('timestamp', '')
+                    level = parsed_line.get('level', '')
+                    message = parsed_line.get('message', '')
+
+                    # Convert timestamp to Unix milliseconds
+                    if timestamp_str:
+                        unix_ms = convert_timestamp_to_unix_ms(timestamp_str)
+                        if unix_ms is not None:
+                            new_row['timestamp'] = unix_ms
+                            fieldnames.add('timestamp')
                         else:
-                            new_row[field] = original_value
-                        fieldnames.add(field)
+                            new_row['timestamp_original'] = timestamp_str
+                            fieldnames.add('timestamp_original')
 
-                # Parse JSON from message column
-                message = row.get('message', '')
-                if message:
-                    parsed_json = safe_json_parse(message)
+                    if level:
+                        new_row['level'] = level
+                        fieldnames.add('level')
 
-                    # If JSON was successfully parsed, add parsed fields to the row
-                    if parsed_json:
-                        for key, value in parsed_json.items():
-                            # Handle nested dictionaries by flattening them
-                            if isinstance(value, dict):
-                                for nested_key, nested_value in value.items():
-                                    flat_key = f"{key}_{nested_key}"
-                                    str_value = str(nested_value)
-                                    new_row[flat_key] = str_value
-                                    fieldnames.add(flat_key)
-                                    
-                                    # Convert timestamp fields from nested JSON to Unix ms
-                                    if nested_key.lower() in ['timestamp', 'time']:
+                    # Parse JSON from message
+                    if message:
+                        parsed_json = safe_json_parse(message)
+
+                        if parsed_json:
+                            for key, value in parsed_json.items():
+                                # Handle nested dictionaries by flattening them
+                                if isinstance(value, dict):
+                                    for nested_key, nested_value in value.items():
+                                        flat_key = f"{key}_{nested_key}"
+                                        str_value = str(nested_value)
+                                        new_row[flat_key] = str_value
+                                        fieldnames.add(flat_key)
+
+                                        # Convert timestamp fields from nested JSON to Unix ms
+                                        if nested_key.lower() in ['timestamp', 'time']:
+                                            unix_ms = convert_timestamp_to_unix_ms(str_value)
+                                            if unix_ms is not None:
+                                                new_row[flat_key] = unix_ms
+                                elif isinstance(value, list):
+                                    # Convert lists to comma-separated strings
+                                    new_row[key] = ','.join(str(item) for item in value)
+                                    fieldnames.add(key)
+                                else:
+                                    str_value = str(value)
+
+                                    # Convert timestamp fields from JSON to Unix ms
+                                    if key.lower() in ['timestamp', 'time']:
                                         unix_ms = convert_timestamp_to_unix_ms(str_value)
                                         if unix_ms is not None:
-                                            new_row[flat_key] = unix_ms
-                            elif isinstance(value, list):
-                                # Convert lists to comma-separated strings
-                                new_row[key] = ','.join(str(item) for item in value)
-                                fieldnames.add(key)
-                            else:
-                                str_value = str(value)
-                                
-                                # Convert timestamp fields from JSON to Unix ms
-                                if key.lower() in ['timestamp', 'time']:
-                                    unix_ms = convert_timestamp_to_unix_ms(str_value)
-                                    if unix_ms is not None:
-                                        new_row[key] = unix_ms
+                                            new_row[key] = unix_ms
+                                        else:
+                                            new_row[key] = str_value
                                     else:
                                         new_row[key] = str_value
-                                else:
-                                    new_row[key] = str_value
-                                fieldnames.add(key)
-                    else:
-                        # If JSON parsing failed, treat as plain text message
-                        new_row['message'] = message
-                        fieldnames.add('message')
+                                    fieldnames.add(key)
+                        else:
+                            # If JSON parsing failed, treat as plain text message
+                            new_row['message'] = message
+                            fieldnames.add('message')
 
-                rows.append(new_row)
+                    rows.append(new_row)
+        else:
+            # Process CSV file (existing logic)
+            logging.debug(f"Processing as CSV file")
+
+            with open(input_file_path, 'r', encoding='utf-8', newline='') as infile:
+                reader = csv.DictReader(infile)
+                original_fieldnames = reader.fieldnames or []
+
+                for row in reader:
+                    new_row = {}
+
+                    # Copy all original columns except message, raw_line, and source_file
+                    for field in original_fieldnames:
+                        if field not in ['message', 'raw_line', 'source_file']:
+                            original_value = row.get(field, '')
+
+                            # Convert timestamp columns to Unix milliseconds directly
+                            if field.lower() in ['timestamp', 'time']:
+                                unix_ms = convert_timestamp_to_unix_ms(original_value)
+                                if unix_ms is not None:
+                                    new_row[field] = unix_ms
+                                else:
+                                    new_row[field] = original_value
+                            else:
+                                new_row[field] = original_value
+                            fieldnames.add(field)
+
+                    # Parse JSON from message column
+                    message = row.get('message', '')
+                    if message:
+                        parsed_json = safe_json_parse(message)
+
+                        # If JSON was successfully parsed, add parsed fields to the row
+                        if parsed_json:
+                            for key, value in parsed_json.items():
+                                # Handle nested dictionaries by flattening them
+                                if isinstance(value, dict):
+                                    for nested_key, nested_value in value.items():
+                                        flat_key = f"{key}_{nested_key}"
+                                        str_value = str(nested_value)
+                                        new_row[flat_key] = str_value
+                                        fieldnames.add(flat_key)
+
+                                        # Convert timestamp fields from nested JSON to Unix ms
+                                        if nested_key.lower() in ['timestamp', 'time']:
+                                            unix_ms = convert_timestamp_to_unix_ms(str_value)
+                                            if unix_ms is not None:
+                                                new_row[flat_key] = unix_ms
+                                elif isinstance(value, list):
+                                    # Convert lists to comma-separated strings
+                                    new_row[key] = ','.join(str(item) for item in value)
+                                    fieldnames.add(key)
+                                else:
+                                    str_value = str(value)
+
+                                    # Convert timestamp fields from JSON to Unix ms
+                                    if key.lower() in ['timestamp', 'time']:
+                                        unix_ms = convert_timestamp_to_unix_ms(str_value)
+                                        if unix_ms is not None:
+                                            new_row[key] = unix_ms
+                                        else:
+                                            new_row[key] = str_value
+                                    else:
+                                        new_row[key] = str_value
+                                    fieldnames.add(key)
+                        else:
+                            # If JSON parsing failed, treat as plain text message
+                            new_row['message'] = message
+                            fieldnames.add('message')
+
+                    rows.append(new_row)
 
         # Sort fieldnames for consistent output
         fieldnames = sorted(list(fieldnames))
@@ -262,7 +407,10 @@ def process_log_csv(input_file_path, output_file_path=None):
                 writer.writerow(complete_row)
 
         print(f"Successfully processed {input_file_path} -> {output_file_path}")
-        print(f"  Original columns: {len(original_fieldnames)}, New columns: {len(fieldnames)}")
+        if not is_plain_text:
+            print(f"  Original columns: {len(original_fieldnames)}, New columns: {len(fieldnames)}")
+        else:
+            print(f"  New columns: {len(fieldnames)}")
 
     except Exception as e:
         logging.error(f"Error processing {input_file_path}: {e}")

@@ -43,20 +43,30 @@ def extract_campaign_info():
                     # Remove leading :: from nodeid
                     test_name = nodeid.lstrip(':')
 
-                    # Convert test name to match expected analyzer file pattern
-                    test_path = f'test_{test_name}' if not test_name.startswith('test_') else test_name
-
-                    # Look for corresponding analyzer file
-                    analyzer_file = f'{test_path}_combined_analyzer.html'
-                    analyzer_path = report_file.parent / test_path / analyzer_file
-
-                    if analyzer_path.exists():
-                        campaigns[campaign]['tests'].append({
-                            'name': test_name,
-                            'path': test_path,
-                            'file': analyzer_file,
-                            'status': test.get('outcome', 'unknown')
-                        })
+                    # Find the actual directory that contains this test
+                    # Look for directories that contain the test name
+                    matching_dirs = []
+                    for item in report_file.parent.iterdir():
+                        if item.is_dir() and item.name.startswith('test_') and test_name in item.name:
+                            # More specific match - ensure it's the exact test name after the last __
+                            if item.name.endswith(f'__{test_name}') or item.name == f'test_{test_name}':
+                                matching_dirs.append(item)
+                    
+                    if matching_dirs:
+                        test_dir = matching_dirs[0]  # Use the first matching directory
+                        test_path = test_dir.name
+                        
+                        # Look for analyzer file in the test directory
+                        analyzer_file = f'{test_name}_combined_analyzer.html'
+                        analyzer_path = test_dir / analyzer_file
+                        
+                        if analyzer_path.exists():
+                            campaigns[campaign]['tests'].append({
+                                'name': test_name,
+                                'path': test_path,
+                                'file': analyzer_file,
+                                'status': test.get('outcome', 'unknown')
+                            })
         except Exception as e:
             print(f'Warning: Could not process {report_file}: {e}')
             continue
