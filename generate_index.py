@@ -290,7 +290,7 @@ def generate_index_html():
     with open('output/index.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
 
-    print('✓ Test campaign browser index.html generated successfully!')
+    print('Test campaign browser index.html generated successfully!')
 
 if __name__ == '__main__':
     generate_index_html()

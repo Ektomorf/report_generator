@@ -89,10 +89,10 @@ def combine_csv_files(results_csv, logs_csv, output_csv):
             logging.warning(f"No valid timestamp data in logs CSV: {logs_csv}")
             return False
         
-        # Convert timestamp to numeric if it's not already
+        # Convert timestamp to integer (Unix ms) if it's not already
         try:
-            results_df['timestamp'] = pd.to_numeric(results_df['timestamp'], errors='coerce')
-            logs_df['timestamp'] = pd.to_numeric(logs_df['timestamp'], errors='coerce')
+            results_df['timestamp'] = pd.to_numeric(results_df['timestamp'], errors='coerce').astype('Int64')
+            logs_df['timestamp'] = pd.to_numeric(logs_df['timestamp'], errors='coerce').astype('Int64')
         except Exception as e:
             logging.error(f"Error converting timestamps to numeric: {e}")
             return False

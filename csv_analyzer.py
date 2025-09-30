@@ -354,6 +354,11 @@ class CSVToHTMLAnalyzer:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{html_escape(title)}</title>
+    <script>
+        // Journalctl data will be loaded from parent directory
+        var journalctlData = [];
+    </script>
+    <script src="../journalctl_data.js" onerror="console.warn('journalctl_data.js not found - double-click feature will not work')"></script>
     <style>
         * {{
             box-sizing: border-box;
@@ -1130,6 +1135,13 @@ class CSVToHTMLAnalyzer:
                 const tr = document.createElement('tr');
                 tr.className = row._row_class || '';
 
+                // Add double-click handler to open journalctl view
+                tr.ondblclick = function() {{
+                    openJournalctlView(row);
+                }};
+                tr.style.cursor = 'pointer';
+                tr.title = 'Double-click to view journalctl logs (±5s)';
+
                 columnOrder.forEach(col => {{
                     if (visibleColumns.has(col)) {{
                         const td = document.createElement('td');
@@ -1729,6 +1741,196 @@ class CSVToHTMLAnalyzer:
                 }}
             }}
         }});
+
+        // Open journalctl view with ±5 second window
+        function openJournalctlView(row) {{
+            // Find the timestamp column - try multiple common names
+            const timestampColumns = ['timestamp', 'Timestamp_original', 'timestamp_results', 'timestamp_logs'];
+            let timestamp = null;
+            let timestampCol = null;
+
+            for (const col of timestampColumns) {{
+                if (row[col] !== null && row[col] !== undefined) {{
+                    timestamp = row[col];
+                    timestampCol = col;
+                    break;
+                }}
+            }}
+
+            if (!timestamp) {{
+                alert('No timestamp found in this row');
+                return;
+            }}
+
+            // Convert to Unix milliseconds if needed
+            let timestampMs = null;
+            // Check if it's a number (integer or float) - handles both "1759230172236" and "1759230172236.0"
+            if (/^\\d+(\\.\\d+)?$/.test(String(timestamp).trim())) {{
+                timestampMs = parseInt(parseFloat(String(timestamp).trim()));
+            }} else if (typeof timestamp === 'number') {{
+                // Already a number
+                timestampMs = parseInt(timestamp);
+            }} else {{
+                // Try to parse as date string
+                const dateStr = String(timestamp).replace(',', '.');
+                const date = new Date(dateStr);
+                if (!isNaN(date.getTime())) {{
+                    timestampMs = date.getTime();
+                }} else {{
+                    alert('Could not parse timestamp: ' + timestamp);
+                    return;
+                }}
+            }}
+
+            // Calculate ±5 second window (5000ms)
+            const startTime = timestampMs - 5000;
+            const endTime = timestampMs + 5000;
+
+            // Show loading message
+            const loadingWindow = window.open('', '_blank', 'width=1200,height=800');
+            loadingWindow.document.write('<html><body style="font-family: Arial; padding: 50px; text-align: center;"><h2>Loading journalctl logs...</h2><p>Please wait while we fetch the data.</p></body></html>');
+
+            // Load and filter journalctl data
+            // We'll use the journalctl_data variable that should be loaded separately
+            if (typeof journalctlData === 'undefined') {{
+                loadingWindow.document.write('<html><body style="font-family: Arial; padding: 50px;"><h2>Error</h2><p>Journalctl data not loaded. Please ensure journalctl_data.js exists in the parent directory.</p><p>Run process_all.bat to generate this file.</p></body></html>');
+                return;
+            }}
+
+            // Filter rows by timestamp
+            const filteredRows = journalctlData.filter(row => {{
+                const rowTimestamp = parseInt(row.timestamp || '0');
+                return rowTimestamp >= startTime && rowTimestamp <= endTime;
+            }});
+
+            // Generate HTML for viewer
+            const viewerHTML = generateJournalctlHTML(filteredRows, ['timestamp', 'hostname', 'program', 'pid', 'message'], timestampMs, startTime, endTime);
+
+            // Write to the window
+            loadingWindow.document.open();
+            loadingWindow.document.write(viewerHTML);
+            loadingWindow.document.close();
+        }}
+
+
+        // Generate HTML for journalctl viewer
+        function generateJournalctlHTML(rows, headers, centerTime, startTime, endTime) {{
+            const centerFormatted = formatTimestamp(String(centerTime));
+            const startFormatted = formatTimestamp(String(startTime));
+            const endFormatted = formatTimestamp(String(endTime));
+
+            let tableRows = '';
+            rows.forEach(row => {{
+                const isCenterRow = Math.abs(parseInt(row.timestamp) - centerTime) < 500;
+                const rowClass = isCenterRow ? 'class="center-row"' : '';
+
+                tableRows += '<tr ' + rowClass + '>';
+                headers.forEach(header => {{
+                    const value = row[header] || '';
+                    const displayValue = header === 'timestamp' ? formatTimestamp(value) : escapeHtml(value);
+                    tableRows += '<td>' + displayValue + '</td>';
+                }});
+                tableRows += '</tr>';
+            }});
+
+            return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Journalctl Logs ±5s</title>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }}
+        .header h1 {{
+            margin: 0 0 10px 0;
+        }}
+        .time-range {{
+            font-size: 14px;
+            opacity: 0.9;
+        }}
+        .container {{
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }}
+        th, td {{
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+            word-wrap: break-word;
+        }}
+        th {{
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }}
+        tr:hover {{
+            background: #f8f9fa;
+        }}
+        .center-row {{
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            font-weight: bold;
+        }}
+        .stats {{
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 14px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Journalctl System Logs</h1>
+        <div class="time-range">
+            <strong>Center Time:</strong> ${{centerFormatted}}<br>
+            <strong>Time Range:</strong> ${{startFormatted}} to ${{endFormatted}} (±5 seconds)
+        </div>
+    </div>
+    <div class="container">
+        <div class="stats">
+            Showing <strong>${{rows.length}}</strong> log entries
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    ${{headers.map(h => '<th>' + escapeHtml(h) + '</th>').join('')}}
+                </tr>
+            </thead>
+            <tbody>
+                ${{tableRows}}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>`;
+        }}
+
+        function escapeHtml(text) {{
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }}
     </script>
 </body>
 </html>'''
@@ -1793,44 +1995,96 @@ def process_single_file(csv_file: str, output_html: str):
         traceback.print_exc()
 
 
+def generate_journalctl_js(csv_file: str, output_js: str):
+    """Convert journalctl CSV to JavaScript data file"""
+    print(f"Generating journalctl data file: {output_js}")
+
+    try:
+        with open(csv_file, 'r', encoding='utf-8', newline='') as f:
+            reader = csv.DictReader(f)
+            rows = []
+
+            for row in reader:
+                # Only keep essential columns and convert to minimal format
+                rows.append({
+                    'timestamp': row.get('timestamp', ''),
+                    'hostname': row.get('hostname', ''),
+                    'program': row.get('program', ''),
+                    'pid': row.get('pid', ''),
+                    'message': row.get('message', '')
+                })
+
+        # Write as JavaScript file
+        with open(output_js, 'w', encoding='utf-8') as f:
+            f.write('// Journalctl data for test campaign\n')
+            f.write('// Auto-generated by csv_analyzer.py\n')
+            f.write('var journalctlData = ')
+            json.dump(rows, f, indent=2)
+            f.write(';\n')
+
+        print(f"Generated journalctl_data.js with {len(rows)} entries")
+
+    except Exception as e:
+        print(f"Error generating journalctl data: {e}")
+        import traceback
+        traceback.print_exc()
+
+
 def process_batch(directory: str):
     """Process all *combined.csv files in directory recursively"""
     base_path = Path(directory)
     if not base_path.exists():
         print(f"Error: Directory not found: {directory}")
         sys.exit(1)
-        
+
     # Find all combined CSV files
     csv_files = list(base_path.rglob("*combined.csv"))
-    
+
     if not csv_files:
         print(f"No *combined.csv files found in {directory}")
         return
-        
+
     print(f"Found {len(csv_files)} combined CSV files")
-    
+
+    # Find and generate journalctl_data.js for each test campaign
+    test_campaigns = set()
+    for csv_file in csv_files:
+        # Find the test campaign root (contains system_status folder)
+        for parent in csv_file.parents:
+            system_status = parent / 'system_status'
+            if system_status.exists():
+                test_campaigns.add(parent)
+                break
+
+    # Generate journalctl_data.js for each campaign
+    for campaign_dir in test_campaigns:
+        journalctl_csv = campaign_dir / 'system_status' / 'journalctl_journalctl.csv'
+        if journalctl_csv.exists():
+            output_js = campaign_dir / 'journalctl_data.js'
+            generate_journalctl_js(str(journalctl_csv), str(output_js))
+
     for csv_file in csv_files:
         try:
             # Generate HTML in same directory as CSV
             output_html = csv_file.with_name(f"{csv_file.stem}_analyzer.html")
-            
+
             analyzer = CSVToHTMLAnalyzer()
             analyzer.load_csv(str(csv_file))
-            
+
             # Generate title from path structure
             parts = csv_file.parts
             if len(parts) >= 2:
                 title = f"Test Analysis - {parts[-2]} - {csv_file.stem}"
             else:
                 title = f"Test Analysis - {csv_file.stem}"
-                
+
             analyzer.generate_html(str(output_html), title)
             print(f"Generated: {output_html}")
-            
+
         except Exception as e:
             print(f"Error processing {csv_file}: {e}")
             continue
-            
+
     print(f"\\nBatch processing complete!")
 
 

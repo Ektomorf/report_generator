@@ -68,28 +68,15 @@ def convert_timestamp_to_unix_ms(value):
 def is_timestamp_field(key):
     """
     Check if a field key indicates it contains timestamp data.
-    
+
     Args:
         key: Field name/key
-        
+
     Returns:
-        bool: True if key indicates timestamp field
+        bool: True if key indicates Unix ms timestamp field
     """
-    timestamp_keywords = [
-        'timestamp', 'Timestamp'
-    ]
-    
-    key_lower = key.lower()
-    # Only match exact 'timestamp' or other keywords, but exclude send_timestamp and receive_timestamp
-    if key_lower == 'timestamp':
-        return True
-    
-    # Check other keywords but exclude send/receive specific timestamps
-    for keyword in timestamp_keywords[1:]:  # Skip 'timestamp' since we handled it above
-        if keyword in key_lower and 'send' not in key_lower and 'receive' not in key_lower:
-            return True
-    
-    return False
+    # Only match timestamp_unix_ms field - this contains Unix ms already
+    return key.lower() == 'timestamp_unix_ms'
 
 def flatten_dict(d, parent_key='', sep='_'):
     """
@@ -121,27 +108,23 @@ def flatten_dict(d, parent_key='', sep='_'):
                         items.extend(flatten_dict(item, f"{new_key}_{i}", sep=sep).items())
                     else:
                         indexed_key = f"{new_key}_{i}"
-                        # Check if this is a timestamp field and convert if needed
+                        # Check if this is the timestamp_unix_ms field
                         if is_timestamp_field(indexed_key):
-                            # Keep original timestamp with '_original' suffix
-                            original_field = f"{indexed_key}_original"
-                            items.append((original_field, item))
-                            # Add converted timestamp in 'timestamp' column
-                            converted_item = convert_timestamp_to_unix_ms(item)
-                            if converted_item != item:  # Only add if conversion was successful
-                                items.append(('timestamp', converted_item))
+                            # Rename timestamp_unix_ms to just 'timestamp'
+                            items.append(('timestamp', item))
+                        elif indexed_key.lower().endswith('timestamp') and isinstance(item, str):
+                            # This is the original timestamp string
+                            items.append((f"{indexed_key}_original", item))
                         else:
                             items.append((indexed_key, item))
         else:
-            # Check if this is a timestamp field and convert if needed
+            # Check if this is the timestamp_unix_ms field
             if is_timestamp_field(new_key):
-                # Keep original timestamp with '_original' suffix
-                original_field = f"{new_key}_original"
-                items.append((original_field, v))
-                # Add converted timestamp in 'timestamp' column
-                converted_value = convert_timestamp_to_unix_ms(v)
-                if converted_value != v:  # Only add if conversion was successful
-                    items.append(('timestamp', converted_value))
+                # Rename timestamp_unix_ms to just 'timestamp'
+                items.append(('timestamp', v))
+            elif new_key.lower() == 'timestamp' and isinstance(v, str):
+                # This is the original timestamp string, rename to Timestamp_original
+                items.append(('Timestamp_original', v))
             else:
                 items.append((new_key, v))
     return dict(items)
