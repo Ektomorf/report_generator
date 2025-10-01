@@ -20,7 +20,7 @@ import argparse
 import sys
 from pathlib import Path
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 
 # Set up logging
@@ -29,32 +29,29 @@ logger = logging.getLogger(__name__)
 
 def convert_journalctl_timestamp_to_unix_ms(timestamp_str, year=None):
     """
-    Convert journalctl timestamp to Unix milliseconds.
+    Convert journalctl timestamp to Unix milliseconds (UTC).
     
     Args:
         timestamp_str (str): Timestamp in format "Sep 26 18:08:02"
         year (int): Year to use (if None, infer from current year)
         
     Returns:
-        int: Unix timestamp in milliseconds, or 0 if conversion fails
+        int: Unix timestamp in milliseconds (UTC), or 0 if conversion fails
     """
     try:
-        # If no year provided, use current year as default
         if year is None:
             year = datetime.now().year
-        
-        # Parse the timestamp with the inferred year
+
         # Format: "Sep 26 18:08:02" -> "2025 Sep 26 18:08:02"
         full_timestamp_str = f"{year} {timestamp_str}"
-        
-        # Parse using strptime
+
+        # Parse as naive datetime, then set as UTC
         dt = datetime.strptime(full_timestamp_str, "%Y %b %d %H:%M:%S")
-        
-        # Convert to Unix timestamp in milliseconds
-        unix_timestamp_ms = int(dt.timestamp() * 1000)
-        
+        dt_utc = dt.replace(tzinfo=timezone.utc)
+
+        unix_timestamp_ms = int(dt_utc.timestamp() * 1000)
         return unix_timestamp_ms
-        
+
     except Exception as e:
         logger.warning(f"Failed to convert timestamp '{timestamp_str}': {str(e)}")
         return 0

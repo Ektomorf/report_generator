@@ -364,6 +364,11 @@ class CSVToHTMLAnalyzer:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{html_escape(title)}</title>
+    <script>
+        // Journalctl data will be loaded from parent directory
+        var journalctlData = [];
+    </script>
+    <script src="../journalctl_data.js" onerror="console.warn('journalctl_data.js not found - double-click feature will not work')"></script>
     <style>
         * {{
             box-sizing: border-box;

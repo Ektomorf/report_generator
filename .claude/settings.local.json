@@ -8,8 +8,8 @@
       "Bash(dir:*)",
       "Bash(start \"C:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\\v1_1_tests_fwd_260925_170156\\test_v1_1_fwd__test_fwd_defaults\\test_fwd_defaults_combined_analyzer.html\")",
       "Bash(findstr:*)",
-      "Bash(start \"C:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\\index.html\")",
-      "Bash(cmd /c:*)"
+      "Bash(start \"c:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\\v1_1_tests_fwd_260925_150629\\test_v1_1_fwd__test_fwd_defaults\\test_fwd_defaults_combined_analyzer.html\")",
+      "Bash(start \"c:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\\v1_1_tests_rtn_300925_122621\\test_v1_1_rtn__test_rtn_freq_sweep\\test_rtn_freq_sweep_combined_analyzer.html\")"
     ],
     "deny": [],
     "ask": []
