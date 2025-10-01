@@ -230,7 +230,17 @@ class CSVToHTMLAnalyzer:
         """Generate interactive HTML analyzer"""
         if title is None:
             title = f"Test Analysis - {Path(output_path).stem}"
-            
+
+        # Extract docstring if available in the data
+        docstring = None
+        if 'docstring' in self.columns and self.data:
+            # Get docstring from first row that has a non-empty value
+            for row in self.data:
+                doc_value = row.get('docstring', '').strip()
+                if doc_value:
+                    docstring = doc_value
+                    break
+
         # Prepare data for JavaScript
         js_data = []
         for row in self.data:
@@ -247,15 +257,15 @@ class CSVToHTMLAnalyzer:
                 else:
                     js_row[col] = value
             js_data.append(js_row)
-            
+
         # Group columns by category
         column_groups = self._group_columns()
-        
-        html_content = self._generate_html_template(title, js_data, column_groups)
-        
+
+        html_content = self._generate_html_template(title, js_data, column_groups, docstring)
+
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
-            
+
         print(f"Generated HTML analyzer: {output_path}")
         
     def _group_columns(self) -> Dict[str, List[str]]:
@@ -294,7 +304,7 @@ class CSVToHTMLAnalyzer:
         # Remove empty groups
         return {k: v for k, v in groups.items() if v}
         
-    def _generate_html_template(self, title: str, js_data: List[Dict], column_groups: Dict[str, List[str]]) -> str:
+    def _generate_html_template(self, title: str, js_data: List[Dict], column_groups: Dict[str, List[str]], docstring: str = None) -> str:
         """Generate the complete HTML template"""
         
         # Column visibility checkboxes HTML
@@ -902,7 +912,12 @@ class CSVToHTMLAnalyzer:
         <div class="header">
             <h1>{html_escape(title)}</h1>
         </div>
-        
+        {f'''
+        <div class="docstring-section" style="background: #e7f3ff; border-left: 4px solid #2196F3; color: #1565C0; padding: 15px 20px; margin: 15px 20px; border-radius: 4px;">
+            <h3 style="margin: 0 0 10px 0; color: #1565C0; font-size: 1.1em;">Test Description</h3>
+            <p style="margin: 0; white-space: pre-wrap; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6;">{html_escape(docstring)}</p>
+        </div>
+        ''' if docstring else ''}
         <div class="controls">
             <div class="control-section">
                 <h3>Global Controls</h3>
