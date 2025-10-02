@@ -145,7 +145,25 @@ def process_json_file(json_file_path):
 
         # Handle both single objects and arrays
         if isinstance(data, list):
-            flattened_data = [flatten_dict(item) for item in data]
+            # Merge consecutive objects where first has only 'timestamp' and second has 'timestamp_unix_ms'
+            merged_data = []
+            i = 0
+            while i < len(data):
+                current = data[i]
+
+                # Check if this is a timestamp-only object followed by a data object
+                if (i + 1 < len(data) and
+                    len(current) == 1 and 'timestamp' in current and
+                    'timestamp_unix_ms' in data[i + 1]):
+                    # Merge the two objects
+                    merged = {**current, **data[i + 1]}
+                    merged_data.append(merged)
+                    i += 2  # Skip both objects
+                else:
+                    merged_data.append(current)
+                    i += 1
+
+            flattened_data = [flatten_dict(item) for item in merged_data]
         else:
             flattened_data = [flatten_dict(data)]
 

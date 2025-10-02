@@ -34,17 +34,8 @@ class CSVToHTMLAnalyzer:
         print(f"Loading CSV: {csv_path}")
         
         with open(csv_path, 'r', encoding='utf-8', newline='') as f:
-            # Try to detect dialect, fallback to standard CSV
-            sample = f.read(8192)
-            f.seek(0)
-            
-            try:
-                dialect = csv.Sniffer().sniff(sample)
-            except csv.Error:
-                # Fallback to standard CSV format
-                dialect = csv.excel
-            
-            reader = csv.DictReader(f, dialect=dialect)
+            # Just use standard CSV format - no need to detect dialect
+            reader = csv.DictReader(f)
             self.columns = reader.fieldnames or []
             
             # Load all data
@@ -208,14 +199,18 @@ class CSVToHTMLAnalyzer:
         """Format cell value for display"""
         if value is None:
             return ''
-            
+
         value_str = str(value)
-        
+
         # Handle timestamp columns
         if self.column_types.get(column) == 'timestamp':
-            formatted_ts = self._format_timestamp(value_str)
-            if formatted_ts != value_str:  # Only show formatted if different
-                value_str = formatted_ts
+            # Skip formatting if the value is "None" or empty
+            if value_str and value_str != 'None':
+                formatted_ts = self._format_timestamp(value_str)
+                if formatted_ts != value_str:  # Only show formatted if different
+                    value_str = formatted_ts
+            else:
+                value_str = ''
         
         # Handle very long values
         if len(value_str) > 200:
@@ -236,10 +231,12 @@ class CSVToHTMLAnalyzer:
         if 'docstring' in self.columns and self.data:
             # Get docstring from first row that has a non-empty value
             for row in self.data:
-                doc_value = row.get('docstring', '').strip()
-                if doc_value:
-                    docstring = doc_value
-                    break
+                doc_value = row.get('docstring', '')
+                if doc_value and doc_value is not None:
+                    doc_value = doc_value.strip()
+                    if doc_value:
+                        docstring = doc_value
+                        break
 
         # Prepare data for JavaScript
         js_data = []
@@ -2073,7 +2070,11 @@ def process_batch(directory: str):
 
     # Generate journalctl_data.js for each campaign
     for campaign_dir in test_campaigns:
-        journalctl_csv = campaign_dir / 'system_status' / 'journalctl_journalctl.csv'
+        # Try both naming patterns
+        journalctl_csv = campaign_dir / 'system_status' / 'journalctl_logs.csv'
+        if not journalctl_csv.exists():
+            journalctl_csv = campaign_dir / 'system_status' / 'journalctl_journalctl.csv'
+
         if journalctl_csv.exists():
             output_js = campaign_dir / 'journalctl_data.js'
             generate_journalctl_js(str(journalctl_csv), str(output_js))

@@ -98,15 +98,10 @@ def combine_csv_files(results_csv, logs_csv, journalctl_csv, output_csv):
         if results_df.empty:
             logging.warning(f"No valid timestamp data in results CSV: {results_csv}")
             return False
-            
-        if logs_df.empty:
-            logging.warning(f"No valid timestamp data in logs CSV: {logs_csv}")
-            return False
-        
+
         # Convert timestamp to integer (Unix ms) if it's not already
         try:
             results_df['timestamp'] = pd.to_numeric(results_df['timestamp'], errors='coerce').astype('Int64')
-            logs_df['timestamp'] = pd.to_numeric(logs_df['timestamp'], errors='coerce').astype('Int64')
         except Exception as e:
             logging.error(f"Error converting timestamps to numeric in results: {e}")
             return False
@@ -169,29 +164,27 @@ def combine_csv_files(results_csv, logs_csv, journalctl_csv, output_csv):
         if common_columns:
             logging.info(f"Found {len(common_columns)} common columns: {list(common_columns)[:5]}...")
         
-        # Rename columns to avoid conflicts and set index
+        # Rename columns to avoid conflicts
         processed_dfs = []
         for suffix, df in dataframes:
             df_copy = df.copy()
-            
+
             # Rename common columns (except timestamp)
             for col in common_columns:
                 if col in df_copy.columns:
                     df_copy.rename(columns={col: f"{col}_{suffix}"}, inplace=True)
-            
-            df_copy.set_index('timestamp', inplace=True)
-            processed_dfs.append(df_copy)
-        
-        # Combine all dataframes
-        logging.info(f"Merging {len(processed_dfs)} dataframes using outer join to preserve all rows...")
-        combined_df = pd.concat(processed_dfs, axis=0, join='outer', sort=True)
-        
-        # Reset index to make timestamp a column again
-        combined_df.reset_index(inplace=True)
-        
+
+            processed_dfs.append((suffix, df_copy))
+
+        # Instead of merging (which creates Cartesian products for duplicate timestamps),
+        # concatenate all dataframes vertically and sort by timestamp
+        # This ensures each row represents exactly ONE original entry (result OR log OR journalctl)
+        all_dfs = [df for suffix, df in processed_dfs]
+        combined_df = pd.concat(all_dfs, axis=0, ignore_index=True, sort=False)
+
         # Sort by timestamp
-        combined_df.sort_values('timestamp', inplace=True)
-        
+        combined_df.sort_values('timestamp', inplace=True, ignore_index=True)
+
         logging.info(f"Combined data: {len(combined_df)} rows")
         
         # Save combined CSV
