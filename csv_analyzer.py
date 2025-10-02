@@ -46,8 +46,20 @@ class CSVToHTMLAnalyzer:
                     if value == '':
                         cleaned_row[key] = None
                     else:
-                        cleaned_row[key] = value
-                
+                        # Try to parse string representations of lists
+                        if value.startswith('[') and value.endswith(']'):
+                            try:
+                                import ast
+                                parsed_value = ast.literal_eval(value)
+                                if isinstance(parsed_value, list):
+                                    cleaned_row[key] = parsed_value
+                                else:
+                                    cleaned_row[key] = value
+                            except (ValueError, SyntaxError):
+                                cleaned_row[key] = value
+                        else:
+                            cleaned_row[key] = value
+
                 cleaned_row['_row_index'] = row_idx
                 self.data.append(cleaned_row)
         
@@ -1152,7 +1164,14 @@ class CSVToHTMLAnalyzer:
                         let value = row[col];
 
                         if (value !== null && value !== undefined) {{
-                            let valueStr = String(value);
+                            let valueStr;
+
+                            // Handle arrays by joining with newlines
+                            if (Array.isArray(value)) {{
+                                valueStr = value.join('\\n');
+                            }} else {{
+                                valueStr = String(value);
+                            }}
 
                             // Format timestamp columns
                             if (columnTypes[col] === 'timestamp') {{
@@ -1169,6 +1188,10 @@ class CSVToHTMLAnalyzer:
                             }} else if (valueStr.length > 200) {{
                                 td.innerHTML = `<span class="cell-content expandable" onclick="showModal('${{col}}', this)" data-full="${{valueStr}}">${{valueStr.substring(0, 197)}}...</span>`;
                             }} else {{
+                                // Use pre-wrap to preserve newlines in arrays
+                                if (Array.isArray(value)) {{
+                                    td.style.whiteSpace = 'pre-wrap';
+                                }}
                                 td.textContent = valueStr;
                             }}
                         }} else {{
