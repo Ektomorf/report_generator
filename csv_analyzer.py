@@ -1394,7 +1394,7 @@ class CSVToHTMLAnalyzer:
             // All presets are now built-in
             const presets = {{
                 'default': {{
-                    columns: ['Pass', 'timestamp', 'command_method', 'command_str', 'raw_response', 'peak_frequency', 'peak_amplitude', 'log_type'],
+                    columns: ['timestamp', 'Pass', 'command_method', 'command_str', 'raw_response', 'peak_frequency', 'peak_amplitude', 'log_type'],
                     filters: {{}}
                 }},
                 'results-only': {{
