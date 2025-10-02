@@ -937,15 +937,7 @@ class CSVToHTMLAnalyzer:
                     <select class="preset-select" onchange="loadPreset(this.value)">
                         <option value="">Select Preset...</option>
                         <option value="default">Default View</option>
-                        <option value="test-overview">Test Overview</option>
                         <option value="results-only">Results Only</option>
-                        <option value="failures-only">Failures Only</option>
-                        <option value="logs-only">Logs Only</option>
-                        <option value="errors-warnings">Errors & Warnings</option>
-                        <option value="debug-view">Debug View</option>
-                        <option value="commands-only">Commands Only</option>
-                        <option value="measurements">Measurements</option>
-                        <option value="timing-analysis">Timing Analysis</option>
                     </select>
                 </div>
             </div>
@@ -1409,38 +1401,6 @@ class CSVToHTMLAnalyzer:
                     columns: ['timestamp', 'rf_matrix_command', 'rf_matrix_raw_response', 'socan_command', 'socan_raw_response', 'peak_amplitude', 'peak_frequency', 'Pass', 'Failure_Messages'],
                     filters: {{ '_is_result': true }}
                 }},
-                'logs-only': {{
-                    columns: ['timestamp', 'level', 'message', 'line_number'],
-                    filters: {{ '_is_result': false }}
-                }},
-                'errors-warnings': {{
-                    columns: ['timestamp', 'level', 'message', 'line_number'],
-                    filters: {{ 'level': ['ERROR', 'WARNING'] }}
-                }},
-                'test-overview': {{
-                    columns: ['Pass', 'timestamp', 'command_method', 'peak_amplitude', 'peak_frequency', 'level', 'message'],
-                    filters: {{}}
-                }},
-                'commands-only': {{
-                    columns: ['timestamp', 'command_method', 'keysight_xsan_command', 'command_str', 'response_str'],
-                    filters: {{}}
-                }},
-                'measurements': {{
-                    columns: ['timestamp', 'peak_amplitude', 'peak_frequency', 'frequencies', 'peak_table', 'trace_name'],
-                    filters: {{}}
-                }},
-                'timing-analysis': {{
-                    columns: ['timestamp', 'send_time_str', 'receive_time_str', 'command_method', 'level'],
-                    filters: {{}}
-                }},
-                'failures-only': {{
-                    columns: ['Pass', 'timestamp', 'command_method', 'level', 'message', 'peak_amplitude'],
-                    filters: {{ 'Pass': ['False'] }}
-                }},
-                'debug-view': {{
-                    columns: ['timestamp', 'level', 'message', 'line_number', 'command_method', 'docstring'],
-                    filters: {{ 'level': ['DEBUG', 'INFO', 'WARNING', 'ERROR'] }}
-                }}
             }};
 
             preset = presets[presetName];
