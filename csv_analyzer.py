@@ -1406,13 +1406,22 @@ class CSVToHTMLAnalyzer:
             preset = presets[presetName];
 
             if (preset) {{
-                // Set visible columns
+                // Set visible columns and update column order to match preset
                 visibleColumns.clear();
+                const newColumnOrder = [];
                 preset.columns.forEach(col => {{
                     if (columns.includes(col)) {{
                         visibleColumns.add(col);
+                        newColumnOrder.push(col);
                     }}
                 }});
+                // Add remaining columns that aren't in the preset
+                columns.forEach(col => {{
+                    if (!newColumnOrder.includes(col)) {{
+                        newColumnOrder.push(col);
+                    }}
+                }});
+                columnOrder = newColumnOrder;
 
                 // Update checkboxes
                 document.querySelectorAll('input[data-column]').forEach(cb => {{
