@@ -8,6 +8,7 @@ import re
 import json
 from pathlib import Path
 from datetime import datetime
+import pandas as pd
 
 def get_test_start_time(output_dir, campaign, test_path, test_name):
     """Extract start time from test status JSON file"""
@@ -23,6 +24,23 @@ def get_test_start_time(output_dir, campaign, test_path, test_name):
     except Exception as e:
         print(f'Warning: Could not extract start time for {test_name}: {e}')
     return None
+
+def get_test_status_from_csv(output_dir, campaign, test_path, test_name):
+    """
+    Determine test status by checking combined.csv for any Pass=False entries.
+    Returns 'passed' if no False values in Pass column, 'failed' if any False, 'unknown' if file not found.
+    """
+    try:
+        combined_csv = output_dir / campaign / test_path / f'{test_name}_combined.csv'
+        if combined_csv.exists():
+            df = pd.read_csv(combined_csv)
+            if 'Pass' in df.columns:
+                # Check if there's any False value in Pass column
+                has_failure = (df['Pass'] == False).any()
+                return 'failed' if has_failure else 'passed'
+    except Exception as e:
+        print(f'Warning: Could not determine status from CSV for {test_name}: {e}')
+    return 'unknown'
 
 def extract_campaign_info():
     output_dir = Path('output')
@@ -81,12 +99,15 @@ def extract_campaign_info():
                             start_time = get_test_start_time(output_dir, campaign, test_dir.name, test_name)
                             start_time_str = start_time.strftime('%H:%M:%S') if start_time else 'Unknown'
                             start_timestamp = start_time.timestamp() if start_time else float('inf')
-                            
+
+                            # Determine status from combined.csv instead of report.json
+                            status = get_test_status_from_csv(output_dir, campaign, test_dir.name, test_name)
+
                             campaigns[campaign]['tests'].append({
                                 'name': test_name,
                                 'path': test_path,
                                 'file': analyzer_file,
-                                'status': test.get('outcome', 'unknown'),
+                                'status': status,
                                 'start_time': start_time_str,
                                 'start_timestamp': start_timestamp
                             })
@@ -127,12 +148,15 @@ def extract_campaign_info():
                 start_time = get_test_start_time(output_dir, campaign, test_dir, test_name)
                 start_time_str = start_time.strftime('%H:%M:%S') if start_time else 'Unknown'
                 start_timestamp = start_time.timestamp() if start_time else float('inf')
-                
+
+                # Determine status from combined.csv
+                status = get_test_status_from_csv(output_dir, campaign, test_dir, test_name)
+
                 campaigns[campaign]['tests'].append({
                     'name': test_name,
                     'path': test_dir,
                     'file': file_name,
-                    'status': 'unknown',
+                    'status': status,
                     'start_time': start_time_str,
                     'start_timestamp': start_timestamp
                 })

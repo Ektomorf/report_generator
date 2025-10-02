@@ -12,7 +12,8 @@
       "Bash(start \"c:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\\v1_1_tests_rtn_300925_122621\\test_v1_1_rtn__test_rtn_freq_sweep\\test_rtn_freq_sweep_combined_analyzer.html\")",
       "Bash(start \"c:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\\v1_1_tests_rtn_011025_224045\\test_v1_1_rtn__test_rtn_defaults\\test_rtn_defaults_combined_analyzer.html\")",
       "Bash(awk:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(start c:/Users/GeorgeMartin/Downloads/report_generator/output/index.html)"
     ],
     "deny": [],
     "ask": []
