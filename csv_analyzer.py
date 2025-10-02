@@ -1406,7 +1406,7 @@ class CSVToHTMLAnalyzer:
                     filters: {{}}
                 }},
                 'results-only': {{
-                    columns: ['Pass', 'timestamp', 'command_method', 'peak_amplitude', 'peak_frequency'],
+                    columns: ['timestamp', 'rf_matrix_command', 'rf_matrix_raw_response', 'socan_command', 'socan_raw_response', 'peak_amplitude', 'peak_frequency', 'Pass', 'Failure_Messages'],
                     filters: {{ '_is_result': true }}
                 }},
                 'logs-only': {{
