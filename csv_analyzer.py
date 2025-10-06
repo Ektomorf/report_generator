@@ -1026,7 +1026,17 @@ class CSVToHTMLAnalyzer:
         let sortColumn = null;
         let sortDirection = 'asc';
         let filters = {{}};
-        
+
+        // Escape HTML attribute values
+        function escapeHtmlAttr(str) {{
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }}
+
         // Check if a row is empty based on currently visible columns
         function isRowEmpty(row) {{
             const timestampColumns = ['timestamp', 'Timestamp_original', 'timestamp_logs', 'timestamp_results'];
@@ -1166,9 +1176,17 @@ class CSVToHTMLAnalyzer:
                         if (value !== null && value !== undefined) {{
                             let valueStr;
 
-                            // Handle arrays by joining with newlines
+                            // Handle arrays and objects
                             if (Array.isArray(value)) {{
-                                valueStr = value.join('\\n');
+                                // Check if array contains objects
+                                if (value.length > 0 && typeof value[0] === 'object') {{
+                                    valueStr = value.map(item => JSON.stringify(item)).join('\\n');
+                                }} else {{
+                                    valueStr = value.join('\\n');
+                                }}
+                            }} else if (typeof value === 'object') {{
+                                // Handle objects by JSON stringifying them
+                                valueStr = JSON.stringify(value, null, 2);
                             }} else {{
                                 valueStr = String(value);
                             }}
@@ -1186,7 +1204,8 @@ class CSVToHTMLAnalyzer:
                                 const imageId = generateImageId(valueStr);
                                 td.innerHTML = `<span class="filename-link" onclick="scrollToImage('${{imageId}}')">${{valueStr}}</span>`;
                             }} else if (valueStr.length > 200) {{
-                                td.innerHTML = `<span class="cell-content expandable" onclick="showModal('${{col}}', this)" data-full="${{valueStr}}">${{valueStr.substring(0, 197)}}...</span>`;
+                                const escapedValue = escapeHtmlAttr(valueStr);
+                                td.innerHTML = `<span class="cell-content expandable" onclick="showModal('${{col}}', this)" data-full="${{escapedValue}}">${{valueStr.substring(0, 197)}}...</span>`;
                             }} else {{
                                 // Use pre-wrap to preserve newlines in arrays
                                 if (Array.isArray(value)) {{
@@ -1514,7 +1533,11 @@ class CSVToHTMLAnalyzer:
         
         
         function showModal(column, element) {{
-            const fullContent = element.dataset.full || element.textContent;
+            let fullContent = element.dataset.full || element.textContent;
+            // Unescape HTML entities from the data attribute
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = fullContent;
+            fullContent = textarea.value;
             document.getElementById('modal-content').textContent = fullContent;
             document.getElementById('contentModal').style.display = 'block';
         }}
