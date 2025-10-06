@@ -42,6 +42,25 @@ def get_test_status_from_csv(output_dir, campaign, test_path, test_name):
         print(f'Warning: Could not determine status from CSV for {test_name}: {e}')
     return 'unknown'
 
+def get_failure_messages_from_csv(output_dir, campaign, test_path, test_name):
+    """
+    Extract all failure messages from combined.csv where Pass=False.
+    Returns list of failure messages.
+    """
+    try:
+        combined_csv = output_dir / campaign / test_path / f'{test_name}_combined.csv'
+        if combined_csv.exists():
+            df = pd.read_csv(combined_csv)
+            if 'Pass' in df.columns and 'Failure_Messages' in df.columns:
+                # Get rows where Pass is False
+                failed_rows = df[df['Pass'] == False]
+                # Extract non-null Failure_Messages
+                messages = failed_rows['Failure_Messages'].dropna().tolist()
+                return messages
+    except Exception as e:
+        print(f'Warning: Could not extract failure messages for {test_name}: {e}')
+    return []
+
 def extract_campaign_info():
     output_dir = Path('output')
     report_files = list(output_dir.glob('**/report.json'))
@@ -103,13 +122,17 @@ def extract_campaign_info():
                             # Determine status from combined.csv instead of report.json
                             status = get_test_status_from_csv(output_dir, campaign, test_dir.name, test_name)
 
+                            # Get failure messages
+                            failure_messages = get_failure_messages_from_csv(output_dir, campaign, test_dir.name, test_name)
+
                             campaigns[campaign]['tests'].append({
                                 'name': test_name,
                                 'path': test_path,
                                 'file': analyzer_file,
                                 'status': status,
                                 'start_time': start_time_str,
-                                'start_timestamp': start_timestamp
+                                'start_timestamp': start_timestamp,
+                                'failure_messages': failure_messages
                             })
         except Exception as e:
             print(f'Warning: Could not process {report_file}: {e}')
@@ -152,13 +175,17 @@ def extract_campaign_info():
                 # Determine status from combined.csv
                 status = get_test_status_from_csv(output_dir, campaign, test_dir, test_name)
 
+                # Get failure messages
+                failure_messages = get_failure_messages_from_csv(output_dir, campaign, test_dir, test_name)
+
                 campaigns[campaign]['tests'].append({
                     'name': test_name,
                     'path': test_dir,
                     'file': file_name,
                     'status': status,
                     'start_time': start_time_str,
-                    'start_timestamp': start_timestamp
+                    'start_timestamp': start_timestamp,
+                    'failure_messages': failure_messages
                 })
 
     # Sort tests within each campaign chronologically
@@ -243,6 +270,21 @@ def generate_index_html():
         .stat-passed .stat-number { color: #28a745; }
         .stat-total .stat-number { color: #667eea; }
         .stat-campaigns .stat-number { color: #6f42c1; }
+        .test-failures {
+            margin-top: 8px; padding: 6px; background: #fff5f5;
+            border-radius: 4px; border: 1px solid #f5c6cb;
+            max-height: 100px; overflow-y: auto;
+        }
+        .test-failures-title {
+            font-size: 0.65em; font-weight: bold; color: #dc3545;
+            margin-bottom: 3px; text-transform: uppercase;
+        }
+        .test-failure-msg {
+            font-size: 0.55em; color: #721c24; margin: 2px 0;
+            padding: 2px 4px; background: white; border-radius: 2px;
+            font-family: 'Courier New', monospace; line-height: 1.2;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
@@ -276,6 +318,13 @@ def generate_index_html():
     </div>
     <script>
         const testData = ''' + json.dumps(campaign_data) + ''';
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function renderCampaigns() {
             const container = document.getElementById('campaigns-container');
             let totalTests = 0, passedTests = 0, failedTests = 0;
@@ -294,7 +343,17 @@ def generate_index_html():
                     let statusClass = 'status-unknown', statusText = 'Unknown';
                     if (test.status === 'failed') { statusClass = 'status-failed'; statusText = 'FAILED'; failedTests++; }
                     else if (test.status === 'passed') { statusClass = 'status-passed'; statusText = 'PASSED'; passedTests++; }
-                    testCard.innerHTML = `<div class="test-name">${test.name}</div><div class="test-path">${test.path}</div><div class="test-time">⏱️ Started: ${test.start_time}</div><div class="test-status ${statusClass}">${statusText}</div><a href="${campaign.campaign}/${test.path}/${test.file}" class="test-link" target="_blank">View Analysis →</a>`;
+
+                    // Build failure messages HTML if present
+                    let failuresHtml = '';
+                    if (test.failure_messages && test.failure_messages.length > 0) {
+                        const messagesHtml = test.failure_messages.map(msg =>
+                            `<div class="test-failure-msg">${escapeHtml(msg)}</div>`
+                        ).join('');
+                        failuresHtml = `<div class="test-failures"><div class="test-failures-title">Failure Messages:</div>${messagesHtml}</div>`;
+                    }
+
+                    testCard.innerHTML = `<div class="test-name">${test.name}</div><div class="test-path">${test.path}</div><div class="test-time">⏱️ Started: ${test.start_time}</div><div class="test-status ${statusClass}">${statusText}</div>${failuresHtml}<a href="${campaign.campaign}/${test.path}/${test.file}" class="test-link" target="_blank">View Analysis →</a>`;
                     testsGrid.appendChild(testCard);
                 });
                 campaignDiv.appendChild(campaignHeader);
