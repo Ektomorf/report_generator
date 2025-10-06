@@ -1602,22 +1602,78 @@ class CSVToHTMLAnalyzer:
         }}
         
         function exportData() {{
-            const csvContent = [
-                columnOrder.filter(col => visibleColumns.has(col)).join(','),
-                ...filteredData.map(row =>
-                    columnOrder.filter(col => visibleColumns.has(col))
-                             .map(col => `"${{String(row[col] || '').replace(/"/g, '""')}}"`)
-                             .join(',')
-                )
-            ].join('\\n');
+            // Get visible columns in current order
+            const visibleCols = columnOrder.filter(col => visibleColumns.has(col));
 
-            const blob = new Blob([csvContent], {{ type: 'text/csv' }});
+            // Helper function to properly escape CSV values
+            function escapeCsvValue(value) {{
+                if (value === null || value === undefined) {{
+                    return '';
+                }}
+
+                // Convert to string
+                let strValue = String(value);
+
+                // Handle arrays by joining with newlines
+                if (Array.isArray(value)) {{
+                    strValue = value.join('\\n');
+                }}
+
+                // Handle objects by stringifying
+                if (typeof value === 'object' && !Array.isArray(value)) {{
+                    strValue = JSON.stringify(value);
+                }}
+
+                // Escape double quotes by doubling them
+                strValue = strValue.replace(/"/g, '""');
+
+                // Always quote the value to handle newlines, commas, and quotes properly
+                return `"${{strValue}}"`;
+            }}
+
+            // Build CSV content
+            const csvRows = [];
+
+            // Add header row
+            csvRows.push(visibleCols.map(col => escapeCsvValue(col)).join(','));
+
+            // Add data rows from filtered data
+            filteredData.forEach(row => {{
+                const rowValues = visibleCols.map(col => {{
+                    // Get the original full value (not truncated)
+                    let value = row[col];
+
+                    // Format timestamps for better readability
+                    if (columnTypes[col] === 'timestamp' && value) {{
+                        const formatted = formatTimestamp(String(value));
+                        if (formatted !== String(value)) {{
+                            value = formatted;
+                        }}
+                    }}
+
+                    return escapeCsvValue(value);
+                }});
+
+                csvRows.push(rowValues.join(','));
+            }});
+
+            const csvContent = csvRows.join('\\n');
+
+            // Create and download the file
+            const blob = new Blob([csvContent], {{ type: 'text/csv;charset=utf-8;' }});
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'filtered_data.csv';
+
+            // Generate filename based on current filters
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const rowCount = filteredData.length;
+            a.download = `export_${{rowCount}}_rows_${{timestamp}}.csv`;
+
             a.click();
             window.URL.revokeObjectURL(url);
+
+            console.log(`Exported ${{rowCount}} rows with ${{visibleCols.length}} columns`);
         }}
 
         // Image gallery functions
