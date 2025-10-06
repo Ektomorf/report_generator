@@ -14,7 +14,11 @@
       "Bash(awk:*)",
       "Bash(grep:*)",
       "Bash(start c:/Users/GeorgeMartin/Downloads/report_generator/output/index.html)",
-      "Bash(start \"c:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\\v1_1_tests_rtn_021025_130502\\test_v1_1_rtn__test_rtn_defaults\\test_rtn_defaults_combined_analyzer.html\")"
+      "Bash(start \"c:\\Users\\GeorgeMartin\\Downloads\\report_generator\\output\\v1_1_tests_rtn_021025_130502\\test_v1_1_rtn__test_rtn_defaults\\test_rtn_defaults_combined_analyzer.html\")",
+      "Bash(start \"output\\atmega_normal_mode_061025_115459\\test_atmega__test_memory_patch_and_verify\\test_memory_patch_and_verify_combined_analyzer_test.html\")",
+      "Bash(start \"output\\socan_061025_103235\\test_atmega__test_rtn_overdrive_threshold\\test_rtn_overdrive_threshold_combined_analyzer.html\")",
+      "Bash(start \"output\\atmega_normal_mode_061025_121001\\test_atmega__test_rtn_overdrive_threshold\\test_rtn_overdrive_threshold_combined_analyzer_test.html\")",
+      "Bash(start \"output\\socan_031025_153917\\test_versal_commands__test_deploy_firmware_noninteractive\\test_deploy_firmware_noninteractive_combined_analyzer.html\")"
     ],
     "deny": [],
     "ask": []
