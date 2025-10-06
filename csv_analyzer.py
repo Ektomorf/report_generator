@@ -28,11 +28,13 @@ class CSVToHTMLAnalyzer:
         self.data: List[Dict[str, Any]] = []
         self.columns: List[str] = []
         self.column_types: Dict[str, str] = {}
-        
+        self.csv_path: Optional[str] = None
+
     def load_csv(self, csv_path: str) -> None:
         """Load CSV data and analyze column types"""
         print(f"Loading CSV: {csv_path}")
-        
+        self.csv_path = csv_path
+
         with open(csv_path, 'r', encoding='utf-8', newline='') as f:
             # Just use standard CSV format - no need to detect dialect
             reader = csv.DictReader(f)
@@ -169,6 +171,33 @@ class CSVToHTMLAnalyzer:
             else:
                 return 'log-row'
         
+    def _extract_test_params(self, csv_path: str = None) -> Dict[str, Any]:
+        """Extract test parameters from params JSON file"""
+        test_params = {}
+
+        if not csv_path:
+            return test_params
+
+        # Find the params.json file in the same directory as the CSV
+        csv_path_obj = Path(csv_path)
+        params_json_path = csv_path_obj.parent / f"{csv_path_obj.stem}_params.json"
+
+        if not params_json_path.exists():
+            # Fallback: try without _combined suffix
+            params_json_path = csv_path_obj.parent / f"{csv_path_obj.stem.replace('_combined', '')}_params.json"
+
+        if params_json_path.exists():
+            try:
+                with open(params_json_path, 'r', encoding='utf-8') as f:
+                    params_data = json.load(f)
+                    # The JSON has a "params" key containing the actual parameters
+                    if 'params' in params_data:
+                        test_params = params_data['params']
+            except Exception as e:
+                print(f"Warning: Could not load params from {params_json_path}: {e}")
+
+        return test_params
+
     def _format_timestamp(self, timestamp_str: str) -> str:
         """Convert Unix timestamp (ms) to readable format yyyy-mm-dd hh:mm:ss,ms UTC"""
         if not timestamp_str or timestamp_str.strip() == '':
@@ -250,6 +279,9 @@ class CSVToHTMLAnalyzer:
                         docstring = doc_value
                         break
 
+        # Extract test parameters from params JSON file
+        test_params = self._extract_test_params(self.csv_path)
+
         # Prepare data for JavaScript
         js_data = []
         for row in self.data:
@@ -270,7 +302,7 @@ class CSVToHTMLAnalyzer:
         # Group columns by category
         column_groups = self._group_columns()
 
-        html_content = self._generate_html_template(title, js_data, column_groups, docstring)
+        html_content = self._generate_html_template(title, js_data, column_groups, docstring, test_params)
 
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
@@ -313,7 +345,7 @@ class CSVToHTMLAnalyzer:
         # Remove empty groups
         return {k: v for k, v in groups.items() if v}
         
-    def _generate_html_template(self, title: str, js_data: List[Dict], column_groups: Dict[str, List[str]], docstring: str = None) -> str:
+    def _generate_html_template(self, title: str, js_data: List[Dict], column_groups: Dict[str, List[str]], docstring: str = None, test_params: Dict[str, Any] = None) -> str:
         """Generate the complete HTML template"""
         
         # Column visibility checkboxes HTML
@@ -932,6 +964,14 @@ class CSVToHTMLAnalyzer:
             <p style="margin: 0; white-space: pre-wrap; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6;">{html_escape(docstring)}</p>
         </div>
         ''' if docstring else ''}
+        {f'''
+        <div class="test-params-section" style="background: #f0f8f0; border-left: 4px solid #4CAF50; color: #2e7d32; padding: 15px 20px; margin: 15px 20px; border-radius: 4px;">
+            <h3 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 1.1em;">Test Parameters</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">
+                {''.join([f'<tr><td style="padding: 5px 10px; border: 1px solid #c8e6c9; font-weight: 500; background: #e8f5e9; width: 40%;">{html_escape(key)}</td><td style="padding: 5px 10px; border: 1px solid #c8e6c9; background: white;">{html_escape(str(value))}</td></tr>' for key, value in test_params.items()])}
+            </table>
+        </div>
+        ''' if test_params else ''}
         <div class="controls">
             <div class="control-section">
                 <h3>Global Controls</h3>
