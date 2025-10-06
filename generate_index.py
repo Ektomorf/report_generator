@@ -241,6 +241,10 @@ def generate_index_html():
             background: #6c757d; color: white;
         }
         .filter-btn-secondary:hover { background: #545b62; }
+        .filter-btn-export {
+            background: #28a745; color: white;
+        }
+        .filter-btn-export:hover { background: #218838; }
         .filter-info {
             font-size: 0.9em; color: #6c757d; font-style: italic;
         }
@@ -322,6 +326,7 @@ def generate_index_html():
             <input type="text" id="failure-filter" class="filter-input" placeholder="Filter tests by failure message text..." onkeyup="applyFailureFilter()">
             <button class="filter-btn filter-btn-primary" onclick="showOnlyFailures()">Show Only Failed Tests</button>
             <button class="filter-btn filter-btn-secondary" onclick="clearFilter()">Show All Tests</button>
+            <button class="filter-btn filter-btn-export" onclick="exportFailuresToCSV()">📥 Export All Failures to CSV</button>
             <span id="filter-info" class="filter-info"></span>
         </div>
         <div id="campaigns-container"></div>
@@ -463,6 +468,91 @@ def generate_index_html():
             } else {
                 info.textContent = visibleCount > 0 ? `Showing all ${visibleCount} test(s)` : '';
             }
+        }
+
+        function exportFailuresToCSV() {
+            // Collect all failures across all campaigns in chronological order
+            const failures = [];
+
+            testData.forEach(campaign => {
+                campaign.tests.forEach(test => {
+                    if (test.status === 'failed' && test.failure_messages && test.failure_messages.length > 0) {
+                        test.failure_messages.forEach(message => {
+                            failures.push({
+                                campaign: campaign.campaign,
+                                campaign_date: campaign.date,
+                                test_name: test.name,
+                                test_path: test.path,
+                                start_time: test.start_time,
+                                start_timestamp: test.start_timestamp,
+                                failure_message: message
+                            });
+                        });
+                    }
+                });
+            });
+
+            // Sort failures chronologically by start_timestamp
+            failures.sort((a, b) => a.start_timestamp - b.start_timestamp);
+
+            if (failures.length === 0) {
+                alert('No failures found to export!');
+                return;
+            }
+
+            // Helper function to escape CSV values
+            function escapeCsvValue(value) {
+                if (value === null || value === undefined) {
+                    return '';
+                }
+                let strValue = String(value);
+                // Escape double quotes by doubling them
+                strValue = strValue.replace(/"/g, '""');
+                // Always quote to handle newlines, commas, and quotes
+                return `"${strValue}"`;
+            }
+
+            // Build CSV content
+            const csvRows = [];
+
+            // Add header
+            csvRows.push([
+                'Campaign',
+                'Campaign Date',
+                'Test Name',
+                'Test Path',
+                'Start Time',
+                'Failure Message'
+            ].map(h => escapeCsvValue(h)).join(','));
+
+            // Add data rows
+            failures.forEach(failure => {
+                csvRows.push([
+                    failure.campaign,
+                    failure.campaign_date,
+                    failure.test_name,
+                    failure.test_path,
+                    failure.start_time,
+                    failure.failure_message
+                ].map(v => escapeCsvValue(v)).join(','));
+            });
+
+            const csvContent = csvRows.join('\\n');
+
+            // Create and download the file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            a.download = `all_failures_${failures.length}_items_${timestamp}.csv`;
+
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+            console.log(`Exported ${failures.length} failure(s) to CSV`);
         }
 
         document.addEventListener('DOMContentLoaded', renderCampaigns);
