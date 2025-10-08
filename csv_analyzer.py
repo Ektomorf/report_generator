@@ -1206,7 +1206,7 @@ class CSVToHTMLAnalyzer:
                     openJournalctlView(row);
                 }};
                 tr.style.cursor = 'pointer';
-                tr.title = 'Double-click to view journalctl logs (±5s)';
+                tr.title = 'Double-click to view journalctl logs (configurable time window)';
 
                 columnOrder.forEach(col => {{
                     if (visibleColumns.has(col)) {{
@@ -1865,7 +1865,7 @@ class CSVToHTMLAnalyzer:
             }}
         }});
 
-        // Open journalctl view with ±5 second window
+        // Open journalctl view with configurable time window
         function openJournalctlView(row) {{
             // Find the timestamp column - try multiple common names
             const timestampColumns = ['timestamp', 'Timestamp_original', 'timestamp_results', 'timestamp_logs'];
@@ -1905,9 +1905,22 @@ class CSVToHTMLAnalyzer:
                 }}
             }}
 
-            // Calculate ±5 second window (5000ms)
-            const startTime = timestampMs - 5000;
-            const endTime = timestampMs + 5000;
+            // Prompt user for time window (default 5 seconds)
+            const timeWindowInput = prompt('Enter time window in seconds (e.g., 5, 10, 60, or 0 for no filter):', '5');
+            if (timeWindowInput === null) {{
+                return; // User cancelled
+            }}
+
+            const timeWindowSeconds = parseFloat(timeWindowInput);
+            if (isNaN(timeWindowSeconds) || timeWindowSeconds < 0) {{
+                alert('Invalid time window. Please enter a positive number or 0.');
+                return;
+            }}
+
+            // Calculate time window (convert seconds to milliseconds)
+            const timeWindowMs = timeWindowSeconds * 1000;
+            const startTime = timeWindowSeconds === 0 ? 0 : timestampMs - timeWindowMs;
+            const endTime = timeWindowSeconds === 0 ? Number.MAX_SAFE_INTEGER : timestampMs + timeWindowMs;
 
             // Show loading message
             const loadingWindow = window.open('', '_blank', 'width=1200,height=800');
@@ -1920,14 +1933,16 @@ class CSVToHTMLAnalyzer:
                 return;
             }}
 
-            // Filter rows by timestamp
-            const filteredRows = journalctlData.filter(row => {{
-                const rowTimestamp = parseInt(row.timestamp || '0');
-                return rowTimestamp >= startTime && rowTimestamp <= endTime;
-            }});
+            // Filter rows by timestamp (or show all if time window is 0)
+            const filteredRows = timeWindowSeconds === 0
+                ? journalctlData
+                : journalctlData.filter(row => {{
+                    const rowTimestamp = parseInt(row.timestamp || '0');
+                    return rowTimestamp >= startTime && rowTimestamp <= endTime;
+                }});
 
             // Generate HTML for viewer
-            const viewerHTML = generateJournalctlHTML(filteredRows, ['timestamp', 'hostname', 'program', 'pid', 'message'], timestampMs, startTime, endTime);
+            const viewerHTML = generateJournalctlHTML(filteredRows, ['timestamp', 'hostname', 'program', 'pid', 'message'], timestampMs, startTime, endTime, timeWindowSeconds);
 
             // Write to the window
             loadingWindow.document.open();
@@ -1937,10 +1952,11 @@ class CSVToHTMLAnalyzer:
 
 
         // Generate HTML for journalctl viewer
-        function generateJournalctlHTML(rows, headers, centerTime, startTime, endTime) {{
+        function generateJournalctlHTML(rows, headers, centerTime, startTime, endTime, timeWindowSeconds) {{
             const centerFormatted = formatTimestamp(String(centerTime));
-            const startFormatted = formatTimestamp(String(startTime));
-            const endFormatted = formatTimestamp(String(endTime));
+            const startFormatted = timeWindowSeconds === 0 ? 'All logs' : formatTimestamp(String(startTime));
+            const endFormatted = timeWindowSeconds === 0 ? 'All logs' : formatTimestamp(String(endTime));
+            const titleTimeWindow = timeWindowSeconds === 0 ? 'All Logs' : `±${{timeWindowSeconds}}s`;
 
             let tableRows = '';
             rows.forEach(row => {{
@@ -1960,7 +1976,7 @@ class CSVToHTMLAnalyzer:
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Journalctl Logs ±5s</title>
+    <title>Journalctl Logs ${{titleTimeWindow}}</title>
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -2027,7 +2043,7 @@ class CSVToHTMLAnalyzer:
         <h1>Journalctl System Logs</h1>
         <div class="time-range">
             <strong>Center Time:</strong> ${{centerFormatted}}<br>
-            <strong>Time Range:</strong> ${{startFormatted}} to ${{endFormatted}} (±5 seconds)
+            <strong>Time Range:</strong> ${{startFormatted}} to ${{endFormatted}} ${{timeWindowSeconds === 0 ? '' : `(±${{timeWindowSeconds}} seconds)`}}
         </div>
     </div>
     <div class="container">
