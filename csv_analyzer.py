@@ -398,7 +398,29 @@ class CSVToHTMLAnalyzer:
                 ''')
                 
         filter_controls_html = '\n'.join(filter_controls)
-        
+
+        # Generate optional sections
+        docstring_html = ''
+        if docstring:
+            docstring_html = f'''
+        <div class="docstring-section" style="background: #e7f3ff; border-left: 4px solid #2196F3; color: #1565C0; padding: 15px 20px; margin: 15px 20px; border-radius: 4px;">
+            <h3 style="margin: 0 0 10px 0; color: #1565C0; font-size: 1.1em;">Test Description</h3>
+            <p style="margin: 0; white-space: pre-wrap; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6;">{html_escape(docstring)}</p>
+        </div>
+        '''
+
+        test_params_html = ''
+        if test_params:
+            params_rows = ''.join([f'<tr><td style="padding: 5px 10px; border: 1px solid #c8e6c9; font-weight: 500; background: #e8f5e9; width: 40%;">{html_escape(key)}</td><td style="padding: 5px 10px; border: 1px solid #c8e6c9; background: white;">{html_escape(str(value))}</td></tr>' for key, value in test_params.items()])
+            test_params_html = f'''
+        <div class="test-params-section" style="background: #f0f8f0; border-left: 4px solid #4CAF50; color: #2e7d32; padding: 15px 20px; margin: 15px 20px; border-radius: 4px;">
+            <h3 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 1.1em;">Test Parameters</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">
+                {params_rows}
+            </table>
+        </div>
+        '''
+
         return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -958,20 +980,8 @@ class CSVToHTMLAnalyzer:
         <div class="header">
             <h1>{html_escape(title)}</h1>
         </div>
-        {f'''
-        <div class="docstring-section" style="background: #e7f3ff; border-left: 4px solid #2196F3; color: #1565C0; padding: 15px 20px; margin: 15px 20px; border-radius: 4px;">
-            <h3 style="margin: 0 0 10px 0; color: #1565C0; font-size: 1.1em;">Test Description</h3>
-            <p style="margin: 0; white-space: pre-wrap; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6;">{html_escape(docstring)}</p>
-        </div>
-        ''' if docstring else ''}
-        {f'''
-        <div class="test-params-section" style="background: #f0f8f0; border-left: 4px solid #4CAF50; color: #2e7d32; padding: 15px 20px; margin: 15px 20px; border-radius: 4px;">
-            <h3 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 1.1em;">Test Parameters</h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">
-                {''.join([f'<tr><td style="padding: 5px 10px; border: 1px solid #c8e6c9; font-weight: 500; background: #e8f5e9; width: 40%;">{html_escape(key)}</td><td style="padding: 5px 10px; border: 1px solid #c8e6c9; background: white;">{html_escape(str(value))}</td></tr>' for key, value in test_params.items()])}
-            </table>
-        </div>
-        ''' if test_params else ''}
+        {docstring_html}
+        {test_params_html}
         <div class="controls">
             <div class="control-section">
                 <h3>Global Controls</h3>
