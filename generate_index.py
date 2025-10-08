@@ -61,6 +61,22 @@ def get_failure_messages_from_csv(output_dir, campaign, test_path, test_name):
         print(f'Warning: Could not extract failure messages for {test_name}: {e}')
     return []
 
+def get_commits_from_status(output_dir, campaign, test_path, test_name):
+    """
+    Extract git commit information from test status JSON file.
+    Returns dict of {repo_name: commit_hash}.
+    """
+    try:
+        status_file = output_dir / campaign / test_path / f'{test_name}_status.json'
+        if status_file.exists():
+            with open(status_file, 'r', encoding='utf-8') as f:
+                status_data = json.load(f)
+                if 'commits' in status_data:
+                    return status_data['commits']
+    except Exception as e:
+        print(f'Warning: Could not extract commits for {test_name}: {e}')
+    return {}
+
 def extract_campaign_info():
     output_dir = Path('output')
     report_files = list(output_dir.glob('**/report.json'))
@@ -125,6 +141,9 @@ def extract_campaign_info():
                             # Get failure messages
                             failure_messages = get_failure_messages_from_csv(output_dir, campaign, test_dir.name, test_name)
 
+                            # Get commit information
+                            commits = get_commits_from_status(output_dir, campaign, test_dir.name, test_name)
+
                             campaigns[campaign]['tests'].append({
                                 'name': test_name,
                                 'path': test_path,
@@ -132,7 +151,8 @@ def extract_campaign_info():
                                 'status': status,
                                 'start_time': start_time_str,
                                 'start_timestamp': start_timestamp,
-                                'failure_messages': failure_messages
+                                'failure_messages': failure_messages,
+                                'commits': commits
                             })
         except Exception as e:
             print(f'Warning: Could not process {report_file}: {e}')
@@ -178,6 +198,9 @@ def extract_campaign_info():
                 # Get failure messages
                 failure_messages = get_failure_messages_from_csv(output_dir, campaign, test_dir, test_name)
 
+                # Get commit information
+                commits = get_commits_from_status(output_dir, campaign, test_dir, test_name)
+
                 campaigns[campaign]['tests'].append({
                     'name': test_name,
                     'path': test_dir,
@@ -185,7 +208,8 @@ def extract_campaign_info():
                     'status': status,
                     'start_time': start_time_str,
                     'start_timestamp': start_timestamp,
-                    'failure_messages': failure_messages
+                    'failure_messages': failure_messages,
+                    'commits': commits
                 })
 
     # Sort tests within each campaign chronologically
@@ -255,6 +279,24 @@ def generate_index_html():
         }
         .campaign-title { font-size: 1.5em; font-weight: bold; margin: 0 0 5px 0; color: #495057; }
         .campaign-date { color: #6c757d; font-size: 0.9em; }
+        .campaign-commits {
+            margin-top: 10px; padding: 10px; background: #e6f3ff;
+            border-radius: 4px; border-left: 3px solid #2196F3;
+        }
+        .campaign-commits-title {
+            font-size: 0.85em; font-weight: bold; color: #0d47a1;
+            margin-bottom: 5px;
+        }
+        .campaign-commit {
+            font-size: 0.75em; color: #495057; margin: 3px 0;
+            font-family: monospace;
+        }
+        .campaign-commit-repo {
+            font-weight: bold; color: #0d47a1; margin-right: 5px;
+        }
+        .campaign-commit-hash {
+            color: #6c757d;
+        }
         .tests-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
             gap: 15px; margin-top: 15px;
@@ -369,7 +411,20 @@ def generate_index_html():
                 campaignDiv.className = 'campaign-section';
                 const campaignHeader = document.createElement('div');
                 campaignHeader.className = 'campaign-header';
-                campaignHeader.innerHTML = `<div class="campaign-title">${campaign.campaign}</div><div class="campaign-date">Date: ${campaign.date} • Tests shown in chronological order</div>`;
+
+                // Build commits HTML for campaign header
+                let commitsHtml = '';
+                if (campaign.tests && campaign.tests.length > 0 && campaign.tests[0].commits) {
+                    const commits = campaign.tests[0].commits;
+                    if (Object.keys(commits).length > 0) {
+                        const commitItems = Object.entries(commits).map(([repo, hash]) =>
+                            `<div class="campaign-commit"><span class="campaign-commit-repo">${repo}:</span><span class="campaign-commit-hash">${hash.substring(0, 8)} (${hash})</span></div>`
+                        ).join('');
+                        commitsHtml = `<div class="campaign-commits"><div class="campaign-commits-title">Git Commits:</div>${commitItems}</div>`;
+                    }
+                }
+
+                campaignHeader.innerHTML = `<div class="campaign-title">${campaign.campaign}</div><div class="campaign-date">Date: ${campaign.date} • Tests shown in chronological order</div>${commitsHtml}`;
                 const testsGrid = document.createElement('div');
                 testsGrid.className = 'tests-grid';
                 campaign.tests.forEach(test => {

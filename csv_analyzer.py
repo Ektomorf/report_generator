@@ -198,6 +198,29 @@ class CSVToHTMLAnalyzer:
 
         return test_params
 
+    def _extract_commits(self, csv_path: str = None) -> Dict[str, str]:
+        """Extract git commit information from status JSON file"""
+        commits = {}
+
+        if not csv_path:
+            return commits
+
+        # Find the status.json file in the same directory as the CSV
+        csv_path_obj = Path(csv_path)
+        status_json_path = csv_path_obj.parent / f"{csv_path_obj.stem.replace('_combined', '')}_status.json"
+
+        if status_json_path.exists():
+            try:
+                with open(status_json_path, 'r', encoding='utf-8') as f:
+                    status_data = json.load(f)
+                    # The JSON has a "commits" key containing the commit hashes
+                    if 'commits' in status_data:
+                        commits = status_data['commits']
+            except Exception as e:
+                print(f"Warning: Could not load commits from {status_json_path}: {e}")
+
+        return commits
+
     def _format_timestamp(self, timestamp_str: str) -> str:
         """Convert Unix timestamp (ms) to readable format yyyy-mm-dd hh:mm:ss,ms UTC"""
         if not timestamp_str or timestamp_str.strip() == '':
@@ -282,6 +305,9 @@ class CSVToHTMLAnalyzer:
         # Extract test parameters from params JSON file
         test_params = self._extract_test_params(self.csv_path)
 
+        # Extract git commit information
+        commits = self._extract_commits(self.csv_path)
+
         # Prepare data for JavaScript
         js_data = []
         for row in self.data:
@@ -302,7 +328,7 @@ class CSVToHTMLAnalyzer:
         # Group columns by category
         column_groups = self._group_columns()
 
-        html_content = self._generate_html_template(title, js_data, column_groups, docstring, test_params)
+        html_content = self._generate_html_template(title, js_data, column_groups, docstring, test_params, commits)
 
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
@@ -345,7 +371,7 @@ class CSVToHTMLAnalyzer:
         # Remove empty groups
         return {k: v for k, v in groups.items() if v}
         
-    def _generate_html_template(self, title: str, js_data: List[Dict], column_groups: Dict[str, List[str]], docstring: str = None, test_params: Dict[str, Any] = None) -> str:
+    def _generate_html_template(self, title: str, js_data: List[Dict], column_groups: Dict[str, List[str]], docstring: str = None, test_params: Dict[str, Any] = None, commits: Dict[str, str] = None) -> str:
         """Generate the complete HTML template"""
         
         # Column visibility checkboxes HTML
@@ -417,6 +443,18 @@ class CSVToHTMLAnalyzer:
             <h3 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 1.1em;">Test Parameters</h3>
             <table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">
                 {params_rows}
+            </table>
+        </div>
+        '''
+
+        commits_html = ''
+        if commits:
+            commits_rows = ''.join([f'<tr><td style="padding: 5px 10px; border: 1px solid #b3d9ff; font-weight: 500; background: #e6f3ff; width: 30%;">{html_escape(key)}</td><td style="padding: 5px 10px; border: 1px solid #b3d9ff; background: white; font-family: monospace; font-size: 0.9em;">{html_escape(str(value)[:8])} <span style="color: #6c757d; font-size: 0.85em;">({html_escape(str(value))})</span></td></tr>' for key, value in commits.items()])
+            commits_html = f'''
+        <div class="commits-section" style="background: #f0f7ff; border-left: 4px solid #2196F3; color: #0d47a1; padding: 15px 20px; margin: 15px 20px; border-radius: 4px;">
+            <h3 style="margin: 0 0 10px 0; color: #0d47a1; font-size: 1.1em;">Git Commits (Traceability)</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">
+                {commits_rows}
             </table>
         </div>
         '''
@@ -982,6 +1020,7 @@ class CSVToHTMLAnalyzer:
         </div>
         {docstring_html}
         {test_params_html}
+        {commits_html}
         <div class="controls">
             <div class="control-section">
                 <h3>Global Controls</h3>
