@@ -190,7 +190,20 @@ function createCampaignSection(campaign, tests) {
 
     const title = document.createElement('div');
     title.className = 'campaign-title';
-    title.textContent = campaign.campaign_name;
+
+    // Make campaign title a clickable link
+    const titleLink = document.createElement('a');
+    titleLink.href = `campaign.html?id=${campaign.campaign_id}`;
+    titleLink.textContent = campaign.campaign_name;
+    titleLink.style.color = 'inherit';
+    titleLink.style.textDecoration = 'none';
+    titleLink.addEventListener('mouseenter', () => {
+        titleLink.style.textDecoration = 'underline';
+    });
+    titleLink.addEventListener('mouseleave', () => {
+        titleLink.style.textDecoration = 'none';
+    });
+    title.appendChild(titleLink);
 
     const date = document.createElement('div');
     date.className = 'campaign-date';

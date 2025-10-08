@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Details</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="advanced.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Campaign Details</h1>
+            <nav class="breadcrumb">
+                <a href="index.html">← Back to All Campaigns</a>
+            </nav>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading campaign details...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <!-- Campaign Info -->
+        <div id="campaign-info" class="campaign-info-detail">
+            <h2 id="campaign-name">Loading...</h2>
+            <div class="campaign-meta">
+                <div class="meta-item">
+                    <strong>Date:</strong> <span id="campaign-date">-</span>
+                </div>
+                <div class="meta-item">
+                    <strong>Campaign ID:</strong> <span id="campaign-id">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campaign Statistics -->
+        <div class="campaign-stats-detail">
+            <div class="stat-card stat-total">
+                <div class="stat-number" id="total-tests">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat-card stat-passed">
+                <div class="stat-number" id="passed-tests">0</div>
+                <div class="stat-label">Passed Tests</div>
+            </div>
+            <div class="stat-card stat-failed">
+                <div class="stat-number" id="failed-tests">0</div>
+                <div class="stat-label">Failed Tests</div>
+            </div>
+            <div class="stat-card stat-rate">
+                <div class="stat-number" id="pass-rate">0%</div>
+                <div class="stat-label">Pass Rate</div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls">
+            <input
+                type="text"
+                id="search-input"
+                class="filter-input"
+                placeholder="Search tests by name..."
+            >
+            <select id="status-filter" class="filter-select">
+                <option value="">All Tests</option>
+                <option value="failed">Failed Tests Only</option>
+                <option value="passed">Passed Tests Only</option>
+                <option value="unknown">Unknown Status</option>
+            </select>
+            <button class="filter-btn filter-btn-secondary" onclick="clearFilters()">Clear Filters</button>
+            <button class="filter-btn filter-btn-export" onclick="exportCampaignTests()">📥 Export Campaign Tests</button>
+        </div>
+
+        <!-- Tests List -->
+        <div id="tests-container" class="tests-list"></div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination" style="display: none;">
+            <button id="prev-page" class="btn btn-secondary" onclick="prevPage()">← Previous</button>
+            <span id="page-info"></span>
+            <button id="next-page" class="btn btn-secondary" onclick="nextPage()">Next →</button>
+        </div>
+    </div>
+
+    <script src="campaign.js"></script>
+</body>
+</html>

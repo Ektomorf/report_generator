@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Details</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="advanced.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Test Details</h1>
+            <nav class="breadcrumb">
+                <a href="index.html">All Campaigns</a> &gt;
+                <a href="#" id="campaign-link">Campaign</a> &gt;
+                <span>Test</span>
+            </nav>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading test details...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <!-- Test Info -->
+        <div id="test-info" class="test-detail-info">
+            <div class="test-detail-header">
+                <h2 id="test-name">Loading...</h2>
+                <div id="test-status-badge" class="test-status">UNKNOWN</div>
+            </div>
+
+            <div class="test-detail-meta">
+                <div class="meta-row">
+                    <strong>Test ID:</strong> <span id="test-id">-</span>
+                </div>
+                <div class="meta-row">
+                    <strong>Campaign:</strong> <span id="campaign-name">-</span>
+                </div>
+                <div class="meta-row">
+                    <strong>Test Path:</strong> <code id="test-path">-</code>
+                </div>
+                <div class="meta-row">
+                    <strong>Start Time:</strong> <span id="start-time">-</span>
+                </div>
+            </div>
+
+            <div id="docstring-section" class="docstring-section" style="display: none;">
+                <h3>Description</h3>
+                <p id="docstring-text"></p>
+            </div>
+
+            <div id="params-section" class="params-section" style="display: none;">
+                <h3>Test Parameters</h3>
+                <table id="params-table" class="params-table"></table>
+            </div>
+
+            <div id="failures-section" class="failures-section" style="display: none;">
+                <h3>Failure Messages</h3>
+                <div id="failures-list"></div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="openAnalyzer()">
+                📊 Open Analyzer HTML
+            </button>
+            <button class="btn btn-secondary" onclick="downloadCSV()">
+                📥 Download Raw CSV
+            </button>
+            <button class="btn btn-secondary" onclick="viewResults()">
+                📋 View Test Results
+            </button>
+            <button class="btn btn-secondary" onclick="viewLogs()">
+                📜 View Test Logs
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="data-section" style="display: none;">
+            <h3>Test Results <button class="btn-small" onclick="hideResults()">Hide</button></h3>
+            <div id="results-container" class="data-container"></div>
+        </div>
+
+        <!-- Logs Section -->
+        <div id="logs-section" class="data-section" style="display: none;">
+            <h3>Test Logs <button class="btn-small" onclick="hideLogs()">Hide</button></h3>
+            <div class="log-filters">
+                <label>
+                    Filter by level:
+                    <select id="log-level-filter" onchange="filterLogs()">
+                        <option value="">All Levels</option>
+                        <option value="DEBUG">DEBUG</option>
+                        <option value="INFO">INFO</option>
+                        <option value="WARNING">WARNING</option>
+                        <option value="ERROR">ERROR</option>
+                        <option value="CRITICAL">CRITICAL</option>
+                    </select>
+                </label>
+            </div>
+            <div id="logs-container" class="data-container"></div>
+        </div>
+    </div>
+
+    <script src="test.js"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Search</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="advanced.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Advanced Search</h1>
+            <nav class="breadcrumb">
+                <a href="index.html">← Back to Dashboard</a>
+            </nav>
+        </div>
+
+        <!-- Search Form -->
+        <div class="search-form">
+            <h2>Search Criteria</h2>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="test-name-search">Test Name</label>
+                    <input type="text" id="test-name-search" class="form-input" placeholder="Enter test name...">
+                </div>
+
+                <div class="form-group">
+                    <label for="status-search">Status</label>
+                    <select id="status-search" class="form-input">
+                        <option value="">All</option>
+                        <option value="passed">Passed</option>
+                        <option value="failed">Failed</option>
+                        <option value="unknown">Unknown</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="campaign-search">Campaign</label>
+                    <select id="campaign-search" class="form-input">
+                        <option value="">All Campaigns</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="start-date-search">Start Date (From)</label>
+                    <input type="date" id="start-date-search" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="end-date-search">End Date (To)</label>
+                    <input type="date" id="end-date-search" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="keyword-search">Keyword Search</label>
+                    <input type="text" id="keyword-search" class="form-input" placeholder="Search in test names and failures...">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="performSearch()">🔍 Search</button>
+                <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
+                <button class="btn btn-secondary" onclick="exportResults()">📥 Export Results</button>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <!-- Results Info -->
+        <div id="results-info" class="results-info" style="display: none;">
+            <p><strong id="results-count">0</strong> test(s) found</p>
+        </div>
+
+        <!-- Results Table -->
+        <div id="results-section" style="display: none;">
+            <h2>Search Results</h2>
+            <div id="results-container" class="search-results-container"></div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="pagination" style="display: none;">
+                <button id="prev-page" class="btn btn-secondary" onclick="prevPage()">← Previous</button>
+                <span id="page-info"></span>
+                <button id="next-page" class="btn btn-secondary" onclick="nextPage()">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="search.js"></script>
+</body>
+</html>
