@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Campaign Browser</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Test Campaign Browser</h1>
+            <p>Browse test campaigns and analyze test results - SQL Edition</p>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls">
+            <input
+                type="text"
+                id="failure-filter"
+                class="filter-input"
+                placeholder="Filter tests by failure message text..."
+            >
+            <select id="status-filter" class="filter-select">
+                <option value="">All Tests</option>
+                <option value="failed">Failed Tests Only</option>
+                <option value="passed">Passed Tests Only</option>
+                <option value="unknown">Unknown Status</option>
+            </select>
+            <select id="campaign-filter" class="filter-select">
+                <option value="">All Campaigns</option>
+            </select>
+            <button class="filter-btn filter-btn-secondary" onclick="clearFilters()">Clear Filters</button>
+            <button class="filter-btn filter-btn-export" onclick="exportFailures()">📥 Export All Failures to CSV</button>
+            <span id="filter-info" class="filter-info"></span>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading test results...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <!-- Campaigns Container -->
+        <div id="campaigns-container"></div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination" style="display: none;">
+            <button id="prev-page" class="btn btn-secondary" onclick="prevPage()">← Previous</button>
+            <span id="page-info"></span>
+            <button id="next-page" class="btn btn-secondary" onclick="nextPage()">Next →</button>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="summary">
+            <h2>Summary Statistics</h2>
+            <div class="summary-stats">
+                <div class="stat-card stat-total">
+                    <div class="stat-number" id="total-tests">0</div>
+                    <div class="stat-label">Total Tests</div>
+                </div>
+                <div class="stat-card stat-passed">
+                    <div class="stat-number" id="passed-tests">0</div>
+                    <div class="stat-label">Passed Tests</div>
+                </div>
+                <div class="stat-card stat-failed">
+                    <div class="stat-number" id="failed-tests">0</div>
+                    <div class="stat-label">Failed Tests</div>
+                </div>
+                <div class="stat-card stat-campaigns">
+                    <div class="stat-number" id="total-campaigns">0</div>
+                    <div class="stat-label">Campaigns</div>
+                </div>
+                <div class="stat-card stat-rate">
+                    <div class="stat-number" id="pass-rate">0%</div>
+                    <div class="stat-label">Pass Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
