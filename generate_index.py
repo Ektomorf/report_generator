@@ -297,33 +297,41 @@ def generate_index_html():
         .campaign-commit-hash {
             color: #6c757d;
         }
-        .tests-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 15px; margin-top: 15px;
+        .tests-table-wrapper {
+            margin-top: 15px; overflow-x: auto;
         }
-        .test-card {
-            border: 1px solid #dee2e6; border-radius: 8px; padding: 15px;
-            background: white; transition: box-shadow 0.2s;
+        .tests-table {
+            width: 100%; border-collapse: collapse; background: white;
+            font-size: 0.9em;
         }
-        .test-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .test-card.failed { border-left: 4px solid #dc3545; background: #fff5f5; }
-        .test-card.passed { border-left: 4px solid #28a745; background: #f8fff8; }
-        .test-card.unknown { border-left: 4px solid #ffc107; background: #fffdf5; }
-        .test-card.hidden { display: none; }
-        .test-name { font-weight: bold; margin-bottom: 5px; color: #495057; }
-        .test-path { font-size: 0.85em; color: #6c757d; margin-bottom: 5px; font-family: monospace; }
-        .test-time { font-size: 0.9em; color: #28a745; margin-bottom: 10px; font-weight: bold; }
+        .tests-table th {
+            background: #f8f9fa; padding: 12px 10px; text-align: left;
+            border-bottom: 2px solid #dee2e6; font-weight: bold;
+            color: #495057; position: sticky; top: 0;
+        }
+        .tests-table td {
+            padding: 10px; border-bottom: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+        .tests-table tr.hidden { display: none; }
+        .tests-table tbody tr.failed { background: #fff5f5; border-left: 4px solid #dc3545; }
+        .tests-table tbody tr.passed { background: #f8fff8; border-left: 4px solid #28a745; }
+        .tests-table tbody tr.unknown { background: #fffdf5; border-left: 4px solid #ffc107; }
+        .tests-table tbody tr:hover { background: #f1f3f5; }
+        .test-name { font-weight: bold; color: #495057; }
+        .test-path { font-size: 0.85em; color: #6c757d; font-family: monospace; }
+        .test-time { font-size: 0.9em; color: #6c757d; }
         .test-status {
             display: inline-block; padding: 4px 8px; border-radius: 4px;
-            font-size: 0.8em; font-weight: bold; margin-bottom: 10px;
+            font-size: 0.85em; font-weight: bold; white-space: nowrap;
         }
         .status-failed { background: #f8d7da; color: #721c24; }
         .status-passed { background: #d4edda; color: #155724; }
         .status-unknown { background: #fff3cd; color: #856404; }
         .test-link {
             display: inline-block; background: #667eea; color: white;
-            padding: 8px 12px; text-decoration: none; border-radius: 4px;
-            font-size: 0.9em; transition: background 0.2s;
+            padding: 6px 12px; text-decoration: none; border-radius: 4px;
+            font-size: 0.85em; transition: background 0.2s; white-space: nowrap;
         }
         .test-link:hover { background: #5a67d8; text-decoration: none; color: white; }
         .summary { padding: 20px; background: #f8f9fa; border-top: 1px solid #dee2e6; }
@@ -425,35 +433,61 @@ def generate_index_html():
                 }
 
                 campaignHeader.innerHTML = `<div class="campaign-title">${campaign.campaign}</div><div class="campaign-date">Date: ${campaign.date} • Tests shown in chronological order</div>${commitsHtml}`;
-                const testsGrid = document.createElement('div');
-                testsGrid.className = 'tests-grid';
+
+                const tableWrapper = document.createElement('div');
+                tableWrapper.className = 'tests-table-wrapper';
+
+                const table = document.createElement('table');
+                table.className = 'tests-table';
+
+                // Create table header
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Status</th>
+                        <th>Start Time</th>
+                        <th>Failure Count</th>
+                        <th>Action</th>
+                    </tr>
+                `;
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
                 campaign.tests.forEach(test => {
                     totalTests++;
-                    const testCard = document.createElement('div');
-                    testCard.className = `test-card ${test.status}`;
-                    testCard.dataset.testName = test.name;
-                    testCard.dataset.testStatus = test.status;
+                    const row = document.createElement('tr');
+                    row.className = test.status;
+                    row.dataset.testName = test.name;
+                    row.dataset.testStatus = test.status;
 
                     let statusClass = 'status-unknown', statusText = 'Unknown';
                     if (test.status === 'failed') { statusClass = 'status-failed'; statusText = 'FAILED'; failedTests++; }
                     else if (test.status === 'passed') { statusClass = 'status-passed'; statusText = 'PASSED'; passedTests++; }
 
-                    // Build failure messages HTML if present
-                    let failuresHtml = '';
+                    // Count failures
+                    const failureCount = test.failure_messages ? test.failure_messages.length : 0;
+                    const failureDisplay = failureCount > 0 ? failureCount : '-';
+
+                    // Store failure messages in dataset for filtering
                     if (test.failure_messages && test.failure_messages.length > 0) {
-                        const messagesHtml = test.failure_messages.map(msg =>
-                            `<div class="test-failure-msg">${escapeHtml(msg)}</div>`
-                        ).join('');
-                        failuresHtml = `<div class="test-failures"><div class="test-failures-title">Failure Messages:</div>${messagesHtml}</div>`;
-                        // Store failure messages in dataset for filtering
-                        testCard.dataset.failureMessages = test.failure_messages.join(' ');
+                        row.dataset.failureMessages = test.failure_messages.join(' ');
                     }
 
-                    testCard.innerHTML = `<div class="test-name">${test.name}</div><div class="test-path">${test.path}</div><div class="test-time">⏱️ Started: ${test.start_time}</div><div class="test-status ${statusClass}">${statusText}</div>${failuresHtml}<a href="${campaign.campaign}/${test.path}/${test.file}" class="test-link" target="_blank">View Analysis →</a>`;
-                    testsGrid.appendChild(testCard);
+                    row.innerHTML = `
+                        <td><div class="test-name">${test.name}</div></td>
+                        <td><div class="test-status ${statusClass}">${statusText}</div></td>
+                        <td><div class="test-time">${test.start_time}</div></td>
+                        <td>${failureDisplay}</td>
+                        <td><a href="${campaign.campaign}/${test.path}/${test.file}" class="test-link" target="_blank">View →</a></td>
+                    `;
+                    tbody.appendChild(row);
                 });
+                table.appendChild(tbody);
+                tableWrapper.appendChild(table);
+
                 campaignDiv.appendChild(campaignHeader);
-                campaignDiv.appendChild(testsGrid);
+                campaignDiv.appendChild(tableWrapper);
                 container.appendChild(campaignDiv);
             });
             document.getElementById('total-tests').textContent = totalTests;
@@ -464,25 +498,25 @@ def generate_index_html():
 
         function applyFailureFilter() {
             const filterText = document.getElementById('failure-filter').value.toLowerCase();
-            const testCards = document.querySelectorAll('.test-card');
+            const testRows = document.querySelectorAll('.tests-table tbody tr');
             let visibleCount = 0;
             let hiddenCount = 0;
 
-            testCards.forEach(card => {
-                const failureMessages = card.dataset.failureMessages || '';
-                const testName = card.dataset.testName || '';
+            testRows.forEach(row => {
+                const failureMessages = row.dataset.failureMessages || '';
+                const testName = row.dataset.testName || '';
 
                 if (filterText === '') {
                     // No filter - show all
-                    card.classList.remove('hidden');
+                    row.classList.remove('hidden');
                     visibleCount++;
                 } else {
                     // Filter by failure message text or test name
                     if (failureMessages.toLowerCase().includes(filterText) || testName.toLowerCase().includes(filterText)) {
-                        card.classList.remove('hidden');
+                        row.classList.remove('hidden');
                         visibleCount++;
                     } else {
-                        card.classList.add('hidden');
+                        row.classList.add('hidden');
                         hiddenCount++;
                     }
                 }
@@ -492,16 +526,16 @@ def generate_index_html():
         }
 
         function showOnlyFailures() {
-            const testCards = document.querySelectorAll('.test-card');
+            const testRows = document.querySelectorAll('.tests-table tbody tr');
             let visibleCount = 0;
             let hiddenCount = 0;
 
-            testCards.forEach(card => {
-                if (card.dataset.testStatus === 'failed') {
-                    card.classList.remove('hidden');
+            testRows.forEach(row => {
+                if (row.dataset.testStatus === 'failed') {
+                    row.classList.remove('hidden');
                     visibleCount++;
                 } else {
-                    card.classList.add('hidden');
+                    row.classList.add('hidden');
                     hiddenCount++;
                 }
             });
@@ -511,8 +545,8 @@ def generate_index_html():
 
         function clearFilter() {
             document.getElementById('failure-filter').value = '';
-            const testCards = document.querySelectorAll('.test-card');
-            testCards.forEach(card => card.classList.remove('hidden'));
+            const testRows = document.querySelectorAll('.tests-table tbody tr');
+            testRows.forEach(row => row.classList.remove('hidden'));
             document.getElementById('filter-info').textContent = '';
         }
 
