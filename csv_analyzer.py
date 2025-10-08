@@ -522,6 +522,40 @@ class CSVToHTMLAnalyzer:
             margin: 0 0 15px 0;
             color: #495057;
         }}
+
+        .advanced-toggle {{
+            display: inline-block;
+            margin-bottom: 15px;
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }}
+
+        .advanced-toggle:hover {{
+            background: #5a6268;
+        }}
+
+        .advanced-toggle.active {{
+            background: #667eea;
+        }}
+
+        .advanced-toggle.active:hover {{
+            background: #5a67d8;
+        }}
+
+        .advanced-sections {{
+            display: none;
+        }}
+
+        .advanced-sections.visible {{
+            display: flex;
+            gap: 20px;
+        }}
         
         .global-controls {{
             display: flex;
@@ -997,6 +1031,10 @@ class CSVToHTMLAnalyzer:
                 min-width: auto;
             }}
 
+            .advanced-sections.visible {{
+                flex-direction: column;
+            }}
+
             th, td {{
                 padding: 4px;
                 font-size: 12px;
@@ -1033,7 +1071,7 @@ class CSVToHTMLAnalyzer:
                     <button class="btn" onclick="clearAllFilters()">Clear Filters</button>
                     <button class="btn btn-secondary" onclick="exportData()">Export Data</button>
                 </div>
-                
+
                 <div class="presets">
                     <select class="preset-select" onchange="loadPreset(this.value)">
                         <option value="">Select Preset...</option>
@@ -1041,19 +1079,25 @@ class CSVToHTMLAnalyzer:
                         <option value="results-only">Results Only</option>
                     </select>
                 </div>
+
+                <button class="advanced-toggle" onclick="toggleAdvanced()">
+                    ▶ Advanced Options
+                </button>
             </div>
-            
-            <div class="control-section">
-                <h3>Column Visibility</h3>
-                <div class="column-controls">
-                    {column_controls_html}
+
+            <div class="advanced-sections" id="advanced-sections">
+                <div class="control-section">
+                    <h3>Column Visibility</h3>
+                    <div class="column-controls">
+                        {column_controls_html}
+                    </div>
                 </div>
-            </div>
-            
-            <div class="control-section">
-                <h3>Column Filters</h3>
-                <div class="filter-controls">
-                    {filter_controls_html}
+
+                <div class="control-section">
+                    <h3>Column Filters</h3>
+                    <div class="filter-controls">
+                        {filter_controls_html}
+                    </div>
                 </div>
             </div>
         </div>
@@ -1492,7 +1536,22 @@ class CSVToHTMLAnalyzer:
             filters = {{}};
             applyFilters(); // Use applyFilters to respect the hide empty rows setting
         }}
-        
+
+        function toggleAdvanced() {{
+            const advancedSections = document.getElementById('advanced-sections');
+            const toggleButton = document.querySelector('.advanced-toggle');
+
+            if (advancedSections.classList.contains('visible')) {{
+                advancedSections.classList.remove('visible');
+                toggleButton.classList.remove('active');
+                toggleButton.innerHTML = '▶ Advanced Options';
+            }} else {{
+                advancedSections.classList.add('visible');
+                toggleButton.classList.add('active');
+                toggleButton.innerHTML = '▼ Advanced Options';
+            }}
+        }}
+
         function populateFilterOptions() {{
             // Populate select options for category columns
             columns.forEach(column => {{
