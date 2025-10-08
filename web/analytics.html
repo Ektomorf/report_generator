@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="advanced.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Analytics Dashboard</h1>
+            <nav class="breadcrumb">
+                <a href="index.html">← Back to Dashboard</a>
+            </nav>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading analytics...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <!-- Global Statistics -->
+        <div class="analytics-section">
+            <h2>Global Statistics</h2>
+            <div class="summary-stats">
+                <div class="stat-card stat-total">
+                    <div class="stat-number" id="total-tests">0</div>
+                    <div class="stat-label">Total Tests</div>
+                </div>
+                <div class="stat-card stat-passed">
+                    <div class="stat-number" id="passed-tests">0</div>
+                    <div class="stat-label">Passed Tests</div>
+                </div>
+                <div class="stat-card stat-failed">
+                    <div class="stat-number" id="failed-tests">0</div>
+                    <div class="stat-label">Failed Tests</div>
+                </div>
+                <div class="stat-card stat-rate">
+                    <div class="stat-number" id="pass-rate">0%</div>
+                    <div class="stat-label">Pass Rate</div>
+                </div>
+                <div class="stat-card stat-campaigns">
+                    <div class="stat-number" id="total-campaigns">0</div>
+                    <div class="stat-label">Campaigns</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campaign Trends -->
+        <div class="analytics-section">
+            <h2>Campaign Trends</h2>
+            <div class="chart-container">
+                <canvas id="campaign-trend-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Pass/Fail Distribution -->
+        <div class="analytics-section">
+            <h2>Pass/Fail Distribution</h2>
+            <div class="chart-container" style="max-width: 600px; margin: 0 auto;">
+                <canvas id="pass-fail-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Common Failures -->
+        <div class="analytics-section">
+            <h2>Top 10 Common Failures</h2>
+            <div id="common-failures-container"></div>
+        </div>
+
+        <!-- Campaign Comparison -->
+        <div class="analytics-section">
+            <h2>Campaign Comparison</h2>
+            <div class="chart-container">
+                <canvas id="campaign-comparison-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="analytics-section">
+            <h2>Recent Test Activity</h2>
+            <div id="recent-tests-container"></div>
+        </div>
+    </div>
+
+    <script src="analytics.js"></script>
+</body>
+</html>
