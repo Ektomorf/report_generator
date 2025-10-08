@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test-results-api
+    command: uvicorn api_server:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./test_results.db:/app/test_results.db
+      - ./output:/app/output:ro
+      - ./logs:/app/logs
+    environment:
+      - DATABASE_URL=sqlite:///test_results.db
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/stats/summary')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Web Frontend Service (Simple HTTP Server)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test-results-web
+    command: python -m http.server 8080 --directory /app/web
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./web:/app/web:ro
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: test-results-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./web:/usr/share/nginx/html/web:ro
+      - ./output:/usr/share/nginx/html/output:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    restart: unless-stopped
+    depends_on:
+      - api
+      - web
+
+  # Redis Cache (Optional - for future caching implementation)
+  redis:
+    image: redis:7-alpine
+    container_name: test-results-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
