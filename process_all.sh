@@ -8,12 +8,13 @@ echo "                    COMPLETE TEST DATA PROCESSING PIPELINE"
 echo "========================================================================"
 echo "This will process all test data in the following order:"
 echo "1. Convert log files to CSV format (flattening JSON data)"
-echo "2. Extract .tar archives in test campaign folders"
-echo "3. Convert journalctl.log files to CSV format (parsed system logs) [OPTIONAL]"
-echo "4. Convert JSON result files to CSV format"
-echo "5. Combine results and logs CSV files by timestamp"
-echo "6. Generate interactive HTML analyzers for each combined CSV"
-echo "7. Add test failure information to viewer and analyzer HTML files"
+echo "2. Combine all test logs into master log across ALL campaigns + per-campaign logs"
+echo "3. Extract .tar archives in test campaign folders"
+echo "4. Convert journalctl.log files to CSV format (parsed system logs) [OPTIONAL]"
+echo "5. Convert JSON result files to CSV format"
+echo "6. Combine results and logs CSV files by timestamp"
+echo "7. Generate interactive HTML analyzers for each combined CSV"
+echo "8. Add test failure information to viewer and analyzer HTML files"
 echo "========================================================================"
 echo ""
 
@@ -51,6 +52,25 @@ fi
 
 echo ""
 echo "✓ Step 1 Complete: CSV files with flattened JSON data created with _logs.csv suffix"
+echo ""
+
+# Step 1.25: Combine all logs into master log across all campaigns
+echo "========================================================================"
+echo "STEP 1.25: Combining all test logs into master log..."
+echo "========================================================================"
+echo "Creating ALL_CAMPAIGNS_master_log.csv combining all test campaigns..."
+echo "Also creating individual *_all_logs_combined.csv files per campaign..."
+echo ""
+
+python3 combine_all_logs.py output/ --verbose
+
+if [ $? -ne 0 ]; then
+    echo "ERROR: All logs combination failed!"
+    exit 1
+fi
+
+echo ""
+echo "✓ Step 1.25 Complete: Master log and per-campaign logs created"
 echo ""
 
 # Step 1.5: Extract tar files in test campaign folders
@@ -218,12 +238,14 @@ echo "Started at:  $start_time"
 echo "Completed at: $end_time"
 echo ""
 echo "Summary of generated files:"
-echo "• Extracted archives    - .tar files extracted to their respective folders"
+echo "• Extracted archives         - .tar files extracted to their respective folders"
 if [ $SKIP_JOURNALCTL -eq 0 ]; then
-    echo "• journalctl_logs.csv   - System logs converted to CSV (filtered to campaign timespan)"
+    echo "• journalctl_logs.csv        - System logs converted to CSV (filtered to campaign timespan)"
 fi
-echo "• *_logs.csv            - Log files converted to CSV with flattened JSON"
-echo "• *_results.csv         - JSON results converted to CSV"
+echo "• *_logs.csv                 - Log files converted to CSV with flattened JSON"
+echo "• ALL_CAMPAIGNS_master_log.csv - Master log combining ALL campaigns and tests"
+echo "• *_all_logs_combined.csv    - Per-campaign logs combining all tests in that campaign"
+echo "• *_results.csv              - JSON results converted to CSV"
 if [ $SKIP_JOURNALCTL -eq 0 ]; then
     echo "• *_combined.csv        - Results, logs, and journalctl system logs combined by timestamp"
 else
