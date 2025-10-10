@@ -181,6 +181,11 @@ def convert_journalctl_to_csv(input_file, output_file, start_time_ms=None, end_t
     Returns:
         tuple: (success_count, error_count, total_lines, filtered_count)
     """
+    # Skip if output file already exists
+    if output_file.exists():
+        logger.info(f"Skipping {input_file} - output already exists: {output_file}")
+        return (0, 0, 0, 0)
+
     success_count = 0
     error_count = 0
     total_lines = 0

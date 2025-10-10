@@ -188,6 +188,11 @@ def json_to_csv(json_file_path, csv_file_path=None, suffix=''):
         else:
             csv_file_path = json_file_path.replace('.json', '.csv')
 
+    # Skip if output file already exists
+    if os.path.exists(csv_file_path):
+        logging.info(f"Skipping {json_file_path} - output already exists: {csv_file_path}")
+        return
+
     flattened_data = process_json_file(json_file_path)
 
     if not flattened_data:

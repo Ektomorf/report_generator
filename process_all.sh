@@ -54,27 +54,29 @@ echo "✓ Step 1 Complete: CSV files with flattened JSON data created with _logs
 echo ""
 
 # Step 1.5: Extract tar files in test campaign folders
-echo "========================================================================"
-echo "STEP 1.5: Extracting .tar archives in test campaign folders..."
-echo "========================================================================"
-echo "Searching for and extracting .tar files..."
-echo ""
-
-find output/ -type f -name "*.tar" | while read -r tarfile; do
-    echo "Found archive: $tarfile"
-    dir=$(dirname "$tarfile")
-    echo "Extracting to: $dir"
-    tar -xf "$tarfile" -C "$dir"
-    if [ $? -eq 0 ]; then
-        echo "✓ Successfully extracted: $(basename "$tarfile")"
-    else
-        echo "✗ Failed to extract: $(basename "$tarfile")"
-    fi
+if [ $SKIP_JOURNALCTL -eq 0 ]; then
+    echo "========================================================================"
+    echo "STEP 1.5: Extracting .tar archives in test campaign folders..."
+    echo "========================================================================"
+    echo "Searching for and extracting .tar files..."
     echo ""
-done
 
-echo "✓ Step 1.5 Complete: All .tar archives extracted"
-echo ""
+    find output/ -type f -name "*.tar" | while read -r tarfile; do
+        echo "Found archive: $tarfile"
+        dir=$(dirname "$tarfile")
+        echo "Extracting to: $dir"
+        tar -xf "$tarfile" -C "$dir"
+        if [ $? -eq 0 ]; then
+            echo "✓ Successfully extracted: $(basename "$tarfile")"
+        else
+            echo "✗ Failed to extract: $(basename "$tarfile")"
+        fi
+        echo ""
+    done
+
+    echo "✓ Step 1.5 Complete: All .tar archives extracted"
+    echo ""
+fi
 
 # Step 1.75: Convert journalctl logs to CSV (optional)
 if [ $SKIP_JOURNALCTL -eq 0 ]; then
@@ -124,10 +126,15 @@ echo ""
 echo "========================================================================"
 echo "STEP 3: Combining CSV files from results and logs..."
 echo "========================================================================"
-echo "Combining CSV files based on timestamp (includes results, logs, and journalctl system logs)..."
-echo ""
-
-python3 combine_csv_files.py output/ --verbose
+if [ $SKIP_JOURNALCTL -eq 1 ]; then
+    echo "Combining CSV files based on timestamp (results and logs only, skipping journalctl)..."
+    echo ""
+    python3 combine_csv_files.py output/ --verbose --skip-journalctl
+else
+    echo "Combining CSV files based on timestamp (includes results, logs, and journalctl system logs)..."
+    echo ""
+    python3 combine_csv_files.py output/ --verbose
+fi
 
 if [ $? -ne 0 ]; then
     echo "ERROR: CSV combination failed!"
@@ -135,7 +142,11 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-echo "✓ Step 3 Complete: Combined CSV files created with _combined.csv suffix (includes journalctl system logs)"
+if [ $SKIP_JOURNALCTL -eq 1 ]; then
+    echo "✓ Step 3 Complete: Combined CSV files created with _combined.csv suffix (results and logs only)"
+else
+    echo "✓ Step 3 Complete: Combined CSV files created with _combined.csv suffix (includes journalctl system logs)"
+fi
 echo ""
 
 # Step 4: Generate HTML analyzers
@@ -146,7 +157,11 @@ echo "Creating HTML analyzers for all combined CSV files..."
 echo "This includes Unix timestamp conversion to readable format (yyyy-mm-dd hh:mm:ss,ms)"
 echo ""
 
-python3 csv_analyzer.py --batch output/
+if [ $SKIP_JOURNALCTL -eq 1 ]; then
+    python3 csv_analyzer.py --batch output/ --skip-journalctl
+else
+    python3 csv_analyzer.py --batch output/
+fi
 
 if [ $? -ne 0 ]; then
     echo "ERROR: HTML analyzer generation failed!"

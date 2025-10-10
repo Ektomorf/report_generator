@@ -2197,25 +2197,26 @@ def main():
     """Main function to process CSV files"""
     if len(sys.argv) < 2:
         print("Usage: python csv_analyzer.py <csv_file> [output_html]")
-        print("   or: python csv_analyzer.py --batch <directory>")
+        print("   or: python csv_analyzer.py --batch <directory> [--skip-journalctl]")
         sys.exit(1)
-        
+
     if sys.argv[1] == '--batch':
         # Batch process all combined CSV files
         if len(sys.argv) < 3:
-            print("Usage: python csv_analyzer.py --batch <directory>")
+            print("Usage: python csv_analyzer.py --batch <directory> [--skip-journalctl]")
             sys.exit(1)
-            
+
         batch_directory = sys.argv[2]
-        process_batch(batch_directory)
+        skip_journalctl = '--skip-journalctl' in sys.argv
+        process_batch(batch_directory, skip_journalctl=skip_journalctl)
     else:
         # Single file processing
         csv_file = sys.argv[1]
         output_html = sys.argv[2] if len(sys.argv) > 2 else None
-        
+
         if not output_html:
             output_html = str(Path(csv_file).with_suffix('.html'))
-            
+
         process_single_file(csv_file, output_html)
 
 
@@ -2224,7 +2225,12 @@ def process_single_file(csv_file: str, output_html: str):
     if not os.path.exists(csv_file):
         print(f"Error: CSV file not found: {csv_file}")
         sys.exit(1)
-        
+
+    # Skip if output HTML already exists
+    if os.path.exists(output_html):
+        print(f"Skipping {csv_file} - output already exists: {output_html}")
+        return
+
     try:
         analyzer = CSVToHTMLAnalyzer()
         analyzer.load_csv(csv_file)
@@ -2244,6 +2250,11 @@ def process_single_file(csv_file: str, output_html: str):
 
 def generate_journalctl_js(csv_file: str, output_js: str):
     """Convert journalctl CSV to JavaScript data file"""
+    # Skip if output JS already exists
+    if os.path.exists(output_js):
+        print(f"Skipping {csv_file} - output already exists: {output_js}")
+        return
+
     print(f"Generating journalctl data file: {output_js}")
 
     try:
@@ -2277,7 +2288,7 @@ def generate_journalctl_js(csv_file: str, output_js: str):
         traceback.print_exc()
 
 
-def process_batch(directory: str):
+def process_batch(directory: str, skip_journalctl: bool = False):
     """Process all *combined.csv files in directory recursively"""
     base_path = Path(directory)
     if not base_path.exists():
@@ -2294,25 +2305,28 @@ def process_batch(directory: str):
     print(f"Found {len(csv_files)} combined CSV files")
 
     # Find and generate journalctl_data.js for each test campaign
-    test_campaigns = set()
-    for csv_file in csv_files:
-        # Find the test campaign root (contains system_status folder)
-        for parent in csv_file.parents:
-            system_status = parent / 'system_status'
-            if system_status.exists():
-                test_campaigns.add(parent)
-                break
+    if not skip_journalctl:
+        test_campaigns = set()
+        for csv_file in csv_files:
+            # Find the test campaign root (contains system_status folder)
+            for parent in csv_file.parents:
+                system_status = parent / 'system_status'
+                if system_status.exists():
+                    test_campaigns.add(parent)
+                    break
 
-    # Generate journalctl_data.js for each campaign
-    for campaign_dir in test_campaigns:
-        # Try both naming patterns
-        journalctl_csv = campaign_dir / 'system_status' / 'journalctl_logs.csv'
-        if not journalctl_csv.exists():
-            journalctl_csv = campaign_dir / 'system_status' / 'journalctl_journalctl.csv'
+        # Generate journalctl_data.js for each campaign
+        for campaign_dir in test_campaigns:
+            # Try both naming patterns
+            journalctl_csv = campaign_dir / 'system_status' / 'journalctl_logs.csv'
+            if not journalctl_csv.exists():
+                journalctl_csv = campaign_dir / 'system_status' / 'journalctl_journalctl.csv'
 
-        if journalctl_csv.exists():
-            output_js = campaign_dir / 'journalctl_data.js'
-            generate_journalctl_js(str(journalctl_csv), str(output_js))
+            if journalctl_csv.exists():
+                output_js = campaign_dir / 'journalctl_data.js'
+                generate_journalctl_js(str(journalctl_csv), str(output_js))
+    else:
+        print("Skipping journalctl_data.js generation (--skip-journalctl flag)")
 
     for csv_file in csv_files:
         try:

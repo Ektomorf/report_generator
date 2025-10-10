@@ -89,9 +89,9 @@ def safe_json_parse(json_string):
     except Exception:
         pass
 
-    # If all parsing attempts fail, log and return empty dict
-    logging.warning(f"Failed to parse JSON after all attempts: {cleaned_string[:200]}...")
-    return {}
+    # If all parsing attempts fail, treat as plain text message
+    # Don't log warning - this is expected for plain text messages
+    return None
 
 def convert_timestamp_to_unix_ms(timestamp_str):
     """
@@ -238,6 +238,11 @@ def process_log_csv(input_file_path, output_file_path=None):
         base_name = os.path.splitext(input_file_path)[0]
         output_file_path = f"{base_name}_logs.csv"
 
+    # Skip if output file already exists
+    if os.path.exists(output_file_path):
+        logging.info(f"Skipping {input_file_path} - output already exists: {output_file_path}")
+        return
+
     logging.info(f"Processing {input_file_path} -> {output_file_path}")
 
     try:
@@ -285,7 +290,7 @@ def process_log_csv(input_file_path, output_file_path=None):
                     if message:
                         parsed_json = safe_json_parse(message)
 
-                        if parsed_json:
+                        if parsed_json is not None:
                             for key, value in parsed_json.items():
                                 # Handle nested dictionaries by flattening them
                                 if isinstance(value, dict):
@@ -332,7 +337,7 @@ def process_log_csv(input_file_path, output_file_path=None):
                         parsed_json = safe_json_parse(message)
 
                         # If JSON was successfully parsed, add parsed fields to the row
-                        if parsed_json:
+                        if parsed_json is not None:
                             for key, value in parsed_json.items():
                                 # Handle nested dictionaries by flattening them
                                 if isinstance(value, dict):

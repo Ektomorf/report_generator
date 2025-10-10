@@ -20,14 +20,15 @@ def setup_logging(verbose=False):
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
-def find_csv_sets(root_dir, pattern="**/*"):
+def find_csv_sets(root_dir, pattern="**/*", skip_journalctl=False):
     """
     Find sets of _results.csv, _logs.csv, and journalctl_logs.csv files.
-    
+
     Args:
         root_dir: Root directory to search in
         pattern: Glob pattern for searching
-        
+        skip_journalctl: If True, don't include journalctl logs
+
     Returns:
         List of tuples (results_csv_path, logs_csv_path, journalctl_logs_path, base_name)
         where any of the CSV paths can be None if the file doesn't exist
@@ -35,29 +36,29 @@ def find_csv_sets(root_dir, pattern="**/*"):
     sets = []
     results_pattern = os.path.join(root_dir, pattern + "_results.csv")
     results_files = glob.glob(results_pattern, recursive=True)
-    
+
     for results_file in results_files:
         # Derive the corresponding logs file paths
         base_name = results_file.replace("_results.csv", "")
         logs_file = base_name + "_logs.csv"
-        
+
         # Look for journalctl_logs.csv in the campaign directory (system_status folder)
         results_dir = os.path.dirname(results_file)
         # Go up to campaign level and look for system_status/journalctl_logs.csv
         campaign_dir = os.path.dirname(results_dir)
         journalctl_logs_file = os.path.join(campaign_dir, "system_status", "journalctl_logs.csv")
-        
+
         # Check which files exist
         logs_exists = os.path.exists(logs_file)
-        journalctl_exists = os.path.exists(journalctl_logs_file)
-        
+        journalctl_exists = os.path.exists(journalctl_logs_file) and not skip_journalctl
+
         if logs_exists or journalctl_exists:
             file_list = []
             if logs_exists:
                 file_list.append(f"{os.path.basename(logs_file)}")
             if journalctl_exists:
                 file_list.append("journalctl_logs.csv")
-            
+
             sets.append((
                 results_file,
                 logs_file if logs_exists else None,
@@ -67,25 +68,30 @@ def find_csv_sets(root_dir, pattern="**/*"):
             logging.info(f"Found set: {os.path.basename(results_file)} + {' + '.join(file_list)}")
         else:
             logging.warning(f"No corresponding logs files found for {results_file}")
-    
+
     return sets
 
 def combine_csv_files(results_csv, logs_csv, journalctl_csv, output_csv):
     """
     Combine results, logs, and journalctl CSV files using timestamp as index.
-    
+
     Args:
         results_csv: Path to results CSV file
         logs_csv: Path to logs CSV file (can be None)
         journalctl_csv: Path to journalctl logs CSV file (can be None)
         output_csv: Path for output combined CSV file
-        
+
     Returns:
         bool: True if successful, False otherwise
     """
+    # Skip if output file already exists
+    if os.path.exists(output_csv):
+        logging.info(f"Skipping - output already exists: {output_csv}")
+        return True
+
     try:
         dataframes = []
-        
+
         # Read results CSV (required)
         logging.debug(f"Reading results CSV: {results_csv}")
         results_df = pd.read_csv(results_csv)
@@ -232,18 +238,27 @@ Examples:
         action='store_true',
         help='Enable verbose logging'
     )
-    
+
+    parser.add_argument(
+        '--skip-journalctl',
+        action='store_true',
+        help='Skip including journalctl logs in the combined output'
+    )
+
     args = parser.parse_args()
-    
+
     setup_logging(args.verbose)
-    
+
     if not os.path.exists(args.input_directory):
         logging.error(f"Input directory does not exist: {args.input_directory}")
         return 1
-    
+
     # Find CSV sets
-    logging.info(f"Searching for CSV sets in: {args.input_directory}")
-    sets = find_csv_sets(args.input_directory, args.pattern)
+    if args.skip_journalctl:
+        logging.info(f"Searching for CSV sets in: {args.input_directory} (skipping journalctl)")
+    else:
+        logging.info(f"Searching for CSV sets in: {args.input_directory}")
+    sets = find_csv_sets(args.input_directory, args.pattern, skip_journalctl=args.skip_journalctl)
     
     if not sets:
         logging.warning("No CSV sets found!")
