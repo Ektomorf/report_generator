@@ -21,31 +21,39 @@ def clean_ansi_escapes(text):
 
 def extract_test_failures(report_json_path):
     """Extract failure information from report.json."""
-    with open(report_json_path, 'r', encoding='utf-8') as f:
-        report_data = json.load(f)
-    
+    try:
+        with open(report_json_path, 'r', encoding='utf-8') as f:
+            report_data = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"  WARNING: Failed to parse JSON file: {e}")
+        print(f"  Skipping malformed report.json at line {e.lineno}, column {e.colno}")
+        return {}
+    except Exception as e:
+        print(f"  WARNING: Error reading report.json: {e}")
+        return {}
+
     failures = {}
-    
+
     # Look through all tests
     for test in report_data.get('tests', []):
         nodeid = test.get('nodeid', '')
         outcome = test.get('outcome', '')
         longrepr = test.get('call', {}).get('longrepr', '')
-        
+
         # Only process failed tests that have longrepr
         if outcome == 'failed' and longrepr:
             # Clean the nodeid to match directory names
             test_name = nodeid.lstrip('::')
-            
+
             # Clean ANSI escape sequences
             clean_longrepr = clean_ansi_escapes(longrepr)
-            
+
             failures[test_name] = {
                 'nodeid': nodeid,
                 'outcome': outcome,
                 'longrepr': clean_longrepr
             }
-    
+
     return failures
 
 
@@ -133,36 +141,53 @@ def main():
         print("No output directories with report.json found")
         return
     
+    total_processed = 0
+    total_skipped = 0
+    total_errors = 0
+
     for output_dir in output_dirs:
-        print(f"Processing directory: {output_dir}")
-        
+        print(f"\nProcessing directory: {output_dir}")
+
         # Extract failures from report.json
         report_json_path = output_dir / 'report.json'
         failures = extract_test_failures(report_json_path)
-        print(f"Found {len(failures)} failed tests")
-        
+
+        if not failures and report_json_path.exists():
+            print(f"  No failed tests found (or JSON parse error)")
+            total_skipped += 1
+            continue
+
+        print(f"  Found {len(failures)} failed tests")
+
         # Find viewer and analyzer HTML files
         viewer_files = find_viewer_html_files(output_dir)
-        print(f"Found {len(viewer_files)} viewer/analyzer files")
-        
+        print(f"  Found {len(viewer_files)} viewer/analyzer files")
+
         # Process each viewer file
         processed_count = 0
         for html_path in viewer_files:
             test_name = extract_test_name_from_path(html_path)
-            
+
             # Check if this test has failure information
             if test_name in failures:
-                print(f"Adding failure info to: {html_path}")
+                print(f"  Adding failure info to: {html_path.name}")
                 try:
-                    add_failure_section_to_html(html_path, failures[test_name])
-                    processed_count += 1
+                    if add_failure_section_to_html(html_path, failures[test_name]):
+                        processed_count += 1
                 except Exception as e:
-                    print(f"Error processing {html_path}: {e}")
-            else:
-                print(f"No failure info found for test: {test_name}")
-        
-        print(f"Successfully processed {processed_count} viewer/analyzer files in {output_dir}")
-        print()
+                    print(f"  ERROR processing {html_path.name}: {e}")
+                    total_errors += 1
+
+        print(f"  ✓ Successfully processed {processed_count} viewer/analyzer files")
+        total_processed += processed_count
+
+    print(f"\n{'='*60}")
+    print(f"SUMMARY:")
+    print(f"  Total campaigns processed: {len(output_dirs)}")
+    print(f"  Total HTML files updated: {total_processed}")
+    print(f"  Campaigns skipped: {total_skipped}")
+    print(f"  Errors encountered: {total_errors}")
+    print(f"{'='*60}")
 
 
 if __name__ == "__main__":

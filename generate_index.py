@@ -6,9 +6,24 @@ Generate test campaign browser index.html
 import os
 import re
 import json
+import hashlib
 from pathlib import Path
 from datetime import datetime
 import pandas as pd
+
+def generate_campaign_id(campaign_name, date_str):
+    """Generate a unique campaign ID based on campaign name and date"""
+    combined = f"{campaign_name}_{date_str}"
+    hash_obj = hashlib.md5(combined.encode('utf-8'))
+    hash_hex = hash_obj.hexdigest()[:8].upper()
+    return f"CAMP-{hash_hex}"
+
+def generate_test_id(campaign_name, test_name, test_path):
+    """Generate a unique test ID based on campaign, test name, and path"""
+    combined = f"{campaign_name}_{test_name}_{test_path}"
+    hash_obj = hashlib.md5(combined.encode('utf-8'))
+    hash_hex = hash_obj.hexdigest()[:8].upper()
+    return f"TEST-{hash_hex}"
 
 def get_test_start_time(output_dir, campaign, test_path, test_name):
     """Extract start time from test status JSON file"""
@@ -99,8 +114,10 @@ def extract_campaign_info():
             else:
                 formatted_date = 'Unknown'
 
+            campaign_id = generate_campaign_id(campaign, formatted_date)
             campaigns[campaign] = {
                 'campaign': campaign,
+                'campaign_id': campaign_id,
                 'date': formatted_date,
                 'tests': []
             }
@@ -144,8 +161,10 @@ def extract_campaign_info():
                             # Get commit information
                             commits = get_commits_from_status(output_dir, campaign, test_dir.name, test_name)
 
+                            test_id = generate_test_id(campaign, test_name, test_path)
                             campaigns[campaign]['tests'].append({
                                 'name': test_name,
+                                'test_id': test_id,
                                 'path': test_path,
                                 'file': analyzer_file,
                                 'status': status,
@@ -178,8 +197,10 @@ def extract_campaign_info():
                 else:
                     formatted_date = 'Unknown'
 
+                campaign_id = generate_campaign_id(campaign, formatted_date)
                 campaigns[campaign] = {
                     'campaign': campaign,
+                    'campaign_id': campaign_id,
                     'date': formatted_date,
                     'tests': []
                 }
@@ -201,8 +222,10 @@ def extract_campaign_info():
                 # Get commit information
                 commits = get_commits_from_status(output_dir, campaign, test_dir, test_name)
 
+                test_id = generate_test_id(campaign, test_name, test_dir)
                 campaigns[campaign]['tests'].append({
                     'name': test_name,
+                    'test_id': test_id,
                     'path': test_dir,
                     'file': file_name,
                     'status': status,
@@ -216,7 +239,22 @@ def extract_campaign_info():
     campaign_list = list(campaigns.values())
     for campaign in campaign_list:
         campaign['tests'].sort(key=lambda x: x['start_timestamp'])
-    
+
+    # Sort campaigns chronologically by date (newest first)
+    def get_campaign_timestamp(campaign):
+        date_match = re.search(r'(\d{6})_(\d{6})', campaign['campaign'])
+        if date_match:
+            date_str = date_match.group(1) + date_match.group(2)
+            # Parse: DDMMYY_HHMMSS -> timestamp
+            try:
+                dt = datetime.strptime(date_str, '%d%m%y%H%M%S')
+                return dt.timestamp()
+            except:
+                pass
+        return 0  # Unknown dates go to the end
+
+    campaign_list.sort(key=get_campaign_timestamp, reverse=True)
+
     return campaign_list
 
 def generate_index_html():
@@ -274,10 +312,20 @@ def generate_index_html():
         }
         .campaign-section { padding: 20px; border-bottom: 1px solid #dee2e6; }
         .campaign-header {
-            background: #f8f9fa; padding: 15px; margin-bottom: 15px;
+            background: #f8f9fa; padding: 15px; margin-bottom: 0;
             border-radius: 8px; border-left: 4px solid #667eea;
+            cursor: pointer; user-select: none;
+            transition: background-color 0.2s;
+            display: flex; justify-content: space-between; align-items: center;
         }
+        .campaign-header:hover { background: #e9ecef; }
+        .campaign-header-left { flex: 1; }
         .campaign-title { font-size: 1.5em; font-weight: bold; margin: 0 0 5px 0; color: #495057; }
+        .campaign-toggle {
+            font-size: 1.5em; color: #667eea; font-weight: bold;
+            transition: transform 0.3s; margin-left: 15px;
+        }
+        .campaign-toggle.expanded { transform: rotate(90deg); }
         .campaign-date { color: #6c757d; font-size: 0.9em; }
         .campaign-commits {
             margin-top: 10px; padding: 10px; background: #e6f3ff;
@@ -296,6 +344,13 @@ def generate_index_html():
         }
         .campaign-commit-hash {
             color: #6c757d;
+        }
+        .campaign-content {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .campaign-content.expanded {
+            max-height: 10000px; transition: max-height 0.5s ease-in;
         }
         .tests-table-wrapper {
             margin-top: 15px; overflow-x: auto;
@@ -373,9 +428,11 @@ def generate_index_html():
             <p>Browse test campaigns and analyze test results</p>
         </div>
         <div class="filter-controls">
-            <input type="text" id="failure-filter" class="filter-input" placeholder="Filter tests by failure message text..." onkeyup="applyFailureFilter()">
+            <input type="text" id="general-filter" class="filter-input" placeholder="Filter by test name, failure message, test ID, or campaign ID..." onkeyup="applyGeneralFilter()">
+            <input type="text" id="test-id-filter" class="filter-input" placeholder="Filter by Test ID (e.g., TEST-1234ABCD)..." onkeyup="applyTestIdFilter()" style="max-width: 200px;">
+            <input type="text" id="campaign-id-filter" class="filter-input" placeholder="Filter by Campaign ID (e.g., CAMP-5678EFGH)..." onkeyup="applyCampaignIdFilter()" style="max-width: 200px;">
             <button class="filter-btn filter-btn-primary" onclick="showOnlyFailures()">Show Only Failed Tests</button>
-            <button class="filter-btn filter-btn-secondary" onclick="clearFilter()">Show All Tests</button>
+            <button class="filter-btn filter-btn-secondary" onclick="clearAllFilters()">Clear All Filters</button>
             <button class="filter-btn filter-btn-export" onclick="exportFailuresToCSV()">📥 Export All Failures to CSV</button>
             <span id="filter-info" class="filter-info"></span>
         </div>
@@ -411,14 +468,24 @@ def generate_index_html():
             return div.innerHTML;
         }
 
+        function toggleCampaign(campaignId) {
+            const content = document.getElementById(`campaign-content-${campaignId}`);
+            const toggle = document.getElementById(`campaign-toggle-${campaignId}`);
+            content.classList.toggle('expanded');
+            toggle.classList.toggle('expanded');
+        }
+
         function renderCampaigns() {
             const container = document.getElementById('campaigns-container');
             let totalTests = 0, passedTests = 0, failedTests = 0;
-            testData.forEach(campaign => {
+            testData.forEach((campaign, index) => {
                 const campaignDiv = document.createElement('div');
                 campaignDiv.className = 'campaign-section';
+                campaignDiv.dataset.campaignId = campaign.campaign_id;
+                campaignDiv.dataset.campaignName = campaign.campaign;
                 const campaignHeader = document.createElement('div');
                 campaignHeader.className = 'campaign-header';
+                campaignHeader.onclick = () => toggleCampaign(index);
 
                 // Build commits HTML for campaign header
                 let commitsHtml = '';
@@ -432,7 +499,18 @@ def generate_index_html():
                     }
                 }
 
-                campaignHeader.innerHTML = `<div class="campaign-title">${campaign.campaign}</div><div class="campaign-date">Date: ${campaign.date} • Tests shown in chronological order</div>${commitsHtml}`;
+                campaignHeader.innerHTML = `
+                    <div class="campaign-header-left">
+                        <div class="campaign-title">${campaign.campaign} <span style="font-size: 0.8em; color: #6c757d; font-weight: normal;">[${campaign.campaign_id}]</span></div>
+                        <div class="campaign-date">Date: ${campaign.date} • Tests shown in chronological order</div>
+                        ${commitsHtml}
+                    </div>
+                    <div class="campaign-toggle" id="campaign-toggle-${index}">▶</div>
+                `;
+
+                const campaignContent = document.createElement('div');
+                campaignContent.className = 'campaign-content';
+                campaignContent.id = `campaign-content-${index}`;
 
                 const tableWrapper = document.createElement('div');
                 tableWrapper.className = 'tests-table-wrapper';
@@ -445,6 +523,7 @@ def generate_index_html():
                 thead.innerHTML = `
                     <tr>
                         <th>Test Name</th>
+                        <th>Test ID</th>
                         <th>Status</th>
                         <th>Start Time</th>
                         <th>Failure Count</th>
@@ -459,7 +538,10 @@ def generate_index_html():
                     const row = document.createElement('tr');
                     row.className = test.status;
                     row.dataset.testName = test.name;
+                    row.dataset.testId = test.test_id;
                     row.dataset.testStatus = test.status;
+                    row.dataset.campaignId = campaign.campaign_id;
+                    row.dataset.campaignName = campaign.campaign;
 
                     let statusClass = 'status-unknown', statusText = 'Unknown';
                     if (test.status === 'failed') { statusClass = 'status-failed'; statusText = 'FAILED'; failedTests++; }
@@ -476,6 +558,7 @@ def generate_index_html():
 
                     row.innerHTML = `
                         <td><div class="test-name">${test.name}</div></td>
+                        <td><div style="font-family: monospace; font-size: 0.9em; color: #6c757d;">${test.test_id}</div></td>
                         <td><div class="test-status ${statusClass}">${statusText}</div></td>
                         <td><div class="test-time">${test.start_time}</div></td>
                         <td>${failureDisplay}</td>
@@ -485,9 +568,10 @@ def generate_index_html():
                 });
                 table.appendChild(tbody);
                 tableWrapper.appendChild(table);
+                campaignContent.appendChild(tableWrapper);
 
                 campaignDiv.appendChild(campaignHeader);
-                campaignDiv.appendChild(tableWrapper);
+                campaignDiv.appendChild(campaignContent);
                 container.appendChild(campaignDiv);
             });
             document.getElementById('total-tests').textContent = totalTests;
@@ -496,64 +580,145 @@ def generate_index_html():
             document.getElementById('total-campaigns').textContent = testData.length;
         }
 
-        function applyFailureFilter() {
-            const filterText = document.getElementById('failure-filter').value.toLowerCase();
+        function applyGeneralFilter() {
+            applyAllFilters();
+        }
+
+        function applyTestIdFilter() {
+            applyAllFilters();
+        }
+
+        function applyCampaignIdFilter() {
+            applyAllFilters();
+        }
+
+        function applyAllFilters() {
+            const generalFilter = document.getElementById('general-filter').value.toLowerCase();
+            const testIdFilter = document.getElementById('test-id-filter').value.toLowerCase();
+            const campaignIdFilter = document.getElementById('campaign-id-filter').value.toLowerCase();
+            
             const testRows = document.querySelectorAll('.tests-table tbody tr');
-            let visibleCount = 0;
-            let hiddenCount = 0;
+            const campaigns = document.querySelectorAll('.campaign-section');
+            let visibleTestCount = 0;
+            let hiddenTestCount = 0;
+            let activeCampaigns = new Set();
 
             testRows.forEach(row => {
-                const failureMessages = row.dataset.failureMessages || '';
-                const testName = row.dataset.testName || '';
+                const testName = (row.dataset.testName || '').toLowerCase();
+                const testId = (row.dataset.testId || '').toLowerCase();
+                const campaignId = (row.dataset.campaignId || '').toLowerCase();
+                const campaignName = (row.dataset.campaignName || '').toLowerCase();
+                const failureMessages = (row.dataset.failureMessages || '').toLowerCase();
 
-                if (filterText === '') {
-                    // No filter - show all
+                let showTest = true;
+
+                // Apply general filter (matches test name, failure messages, test ID, or campaign ID)
+                if (generalFilter) {
+                    showTest = showTest && (
+                        testName.includes(generalFilter) ||
+                        failureMessages.includes(generalFilter) ||
+                        testId.includes(generalFilter) ||
+                        campaignId.includes(generalFilter) ||
+                        campaignName.includes(generalFilter)
+                    );
+                }
+
+                // Apply test ID filter
+                if (testIdFilter) {
+                    showTest = showTest && testId.includes(testIdFilter);
+                }
+
+                // Apply campaign ID filter
+                if (campaignIdFilter) {
+                    showTest = showTest && campaignId.includes(campaignIdFilter);
+                }
+
+                if (showTest) {
                     row.classList.remove('hidden');
-                    visibleCount++;
+                    visibleTestCount++;
+                    activeCampaigns.add(campaignId);
                 } else {
-                    // Filter by failure message text or test name
-                    if (failureMessages.toLowerCase().includes(filterText) || testName.toLowerCase().includes(filterText)) {
-                        row.classList.remove('hidden');
-                        visibleCount++;
-                    } else {
-                        row.classList.add('hidden');
-                        hiddenCount++;
-                    }
+                    row.classList.add('hidden');
+                    hiddenTestCount++;
                 }
             });
 
-            updateFilterInfo(visibleCount, hiddenCount, filterText);
+            // Hide/show campaigns based on whether they have visible tests
+            campaigns.forEach(campaign => {
+                const campaignId = campaign.dataset.campaignId.toLowerCase();
+                if (activeCampaigns.has(campaignId) || (!generalFilter && !testIdFilter && !campaignIdFilter)) {
+                    campaign.style.display = 'block';
+                } else {
+                    campaign.style.display = 'none';
+                }
+            });
+
+            updateFilterInfo(visibleTestCount, hiddenTestCount);
         }
 
         function showOnlyFailures() {
+            // First clear all filters
+            clearAllFilters();
+            
             const testRows = document.querySelectorAll('.tests-table tbody tr');
+            const campaigns = document.querySelectorAll('.campaign-section');
             let visibleCount = 0;
             let hiddenCount = 0;
+            let activeCampaigns = new Set();
 
             testRows.forEach(row => {
                 if (row.dataset.testStatus === 'failed') {
                     row.classList.remove('hidden');
                     visibleCount++;
+                    activeCampaigns.add(row.dataset.campaignId.toLowerCase());
                 } else {
                     row.classList.add('hidden');
                     hiddenCount++;
                 }
             });
 
+            // Hide campaigns with no failed tests
+            campaigns.forEach(campaign => {
+                const campaignId = campaign.dataset.campaignId.toLowerCase();
+                if (activeCampaigns.has(campaignId)) {
+                    campaign.style.display = 'block';
+                } else {
+                    campaign.style.display = 'none';
+                }
+            });
+
             updateFilterInfo(visibleCount, hiddenCount, 'failed tests only');
         }
 
-        function clearFilter() {
-            document.getElementById('failure-filter').value = '';
+        function clearAllFilters() {
+            document.getElementById('general-filter').value = '';
+            document.getElementById('test-id-filter').value = '';
+            document.getElementById('campaign-id-filter').value = '';
+            
             const testRows = document.querySelectorAll('.tests-table tbody tr');
+            const campaigns = document.querySelectorAll('.campaign-section');
+            
             testRows.forEach(row => row.classList.remove('hidden'));
+            campaigns.forEach(campaign => campaign.style.display = 'block');
+            
             document.getElementById('filter-info').textContent = '';
         }
 
         function updateFilterInfo(visibleCount, hiddenCount, filterText) {
             const info = document.getElementById('filter-info');
-            if (hiddenCount > 0) {
-                info.textContent = `Showing ${visibleCount} test(s), hiding ${hiddenCount} test(s)${filterText ? ` (filter: "${filterText}")` : ''}`;
+            const generalFilter = document.getElementById('general-filter').value;
+            const testIdFilter = document.getElementById('test-id-filter').value;
+            const campaignIdFilter = document.getElementById('campaign-id-filter').value;
+            
+            let activeFilters = [];
+            if (generalFilter) activeFilters.push(`general: "${generalFilter}"`);
+            if (testIdFilter) activeFilters.push(`test ID: "${testIdFilter}"`);
+            if (campaignIdFilter) activeFilters.push(`campaign ID: "${campaignIdFilter}"`);
+            if (filterText) activeFilters.push(filterText);
+            
+            if (hiddenCount > 0 || activeFilters.length > 0) {
+                const filterInfo = activeFilters.length > 0 ? ` (${activeFilters.join(', ')})` : '';
+                info.textContent = `Showing ${visibleCount} test(s), hiding ${hiddenCount} test(s)${filterInfo}`;
             } else {
                 info.textContent = visibleCount > 0 ? `Showing all ${visibleCount} test(s)` : '';
             }
@@ -569,8 +734,10 @@ def generate_index_html():
                         test.failure_messages.forEach(message => {
                             failures.push({
                                 campaign: campaign.campaign,
+                                campaign_id: campaign.campaign_id,
                                 campaign_date: campaign.date,
                                 test_name: test.name,
+                                test_id: test.test_id,
                                 test_path: test.path,
                                 start_time: test.start_time,
                                 start_timestamp: test.start_timestamp,
@@ -607,8 +774,10 @@ def generate_index_html():
             // Add header
             csvRows.push([
                 'Campaign',
+                'Campaign ID',
                 'Campaign Date',
                 'Test Name',
+                'Test ID',
                 'Test Path',
                 'Start Time',
                 'Failure Message'
@@ -618,8 +787,10 @@ def generate_index_html():
             failures.forEach(failure => {
                 csvRows.push([
                     failure.campaign,
+                    failure.campaign_id,
                     failure.campaign_date,
                     failure.test_name,
+                    failure.test_id,
                     failure.test_path,
                     failure.start_time,
                     failure.failure_message

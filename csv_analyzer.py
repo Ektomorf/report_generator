@@ -2333,6 +2333,11 @@ def process_batch(directory: str, skip_journalctl: bool = False):
             # Generate HTML in same directory as CSV
             output_html = csv_file.with_name(f"{csv_file.stem}_analyzer.html")
 
+            # Skip if output HTML already exists
+            if output_html.exists():
+                print(f"Skipping {csv_file} - output already exists: {output_html}")
+                continue
+
             analyzer = CSVToHTMLAnalyzer()
             analyzer.load_csv(str(csv_file))
 
