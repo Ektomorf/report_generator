@@ -182,7 +182,12 @@ def extract_campaign_info():
 
     for file_path in analyzer_files:
         parts = file_path.parts
-        if len(parts) >= 3:
+
+        # Skip campaign-level _all_logs_combined_analyzer.html files (these are aggregated logs, not individual tests)
+        if '_all_logs_combined_analyzer.html' in str(file_path):
+            continue
+
+        if len(parts) >= 4:  # Need at least: output/campaign/test_dir/file_name
             campaign = parts[1]
             test_dir = parts[2]
             file_name = parts[3]

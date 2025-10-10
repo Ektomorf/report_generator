@@ -95,11 +95,11 @@ def combine_csv_files(results_csv, logs_csv, journalctl_csv, output_csv):
         # Read results CSV (required)
         logging.debug(f"Reading results CSV: {results_csv}")
         results_df = pd.read_csv(results_csv)
-        
+
         if 'timestamp' not in results_df.columns:
             logging.error(f"No 'timestamp' column found in results CSV: {results_csv}")
             return False
-            
+
         results_df = results_df.dropna(subset=['timestamp'])
         if results_df.empty:
             logging.warning(f"No valid timestamp data in results CSV: {results_csv}")
@@ -111,15 +111,15 @@ def combine_csv_files(results_csv, logs_csv, journalctl_csv, output_csv):
         except Exception as e:
             logging.error(f"Error converting timestamps to numeric in results: {e}")
             return False
-        
+
         dataframes.append(('results', results_df))
         logging.info(f"Results data: {len(results_df)} rows with valid timestamps")
-        
+
         # Read logs CSV (optional)
         if logs_csv and os.path.exists(logs_csv):
             logging.debug(f"Reading logs CSV: {logs_csv}")
             logs_df = pd.read_csv(logs_csv)
-            
+
             if 'timestamp' in logs_df.columns:
                 logs_df = logs_df.dropna(subset=['timestamp'])
                 if not logs_df.empty:
@@ -270,7 +270,7 @@ Examples:
     success_count = 0
     for results_csv, logs_csv, journalctl_csv, base_name in sets:
         logging.info(f"Processing: {os.path.basename(base_name)}")
-        
+
         # Determine output path
         if args.output:
             # Use specified output directory
@@ -279,15 +279,15 @@ Examples:
         else:
             # Use same directory as input
             output_csv = base_name + "_combined.csv"
-        
+
         # Combine the files
         if combine_csv_files(results_csv, logs_csv, journalctl_csv, output_csv):
             success_count += 1
         else:
             logging.error(f"Failed to process set: {base_name}")
-    
+
     logging.info(f"Successfully processed {success_count}/{len(sets)} CSV sets")
-    
+
     if success_count > 0:
         logging.info("Combined CSV files have been created with _combined.csv suffix")
         logging.info("The files include all columns from results, logs, and journalctl CSVs, indexed by timestamp")
